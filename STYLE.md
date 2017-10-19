@@ -52,18 +52,20 @@ It is *allowed* to use qualified imports for standard library and internal
 libraries.
 
 ### Indentation
-  * Use only spaces, never tabs. Indentation level is 2 characters. For Emacs, this
-means setting the variable haskell-indent-offset to 2.
+  * Use only spaces, never tabs. Indentation level is 2 characters. For Emacs, 
+this means setting the variable haskell-indent-offset to 2.
   * Line length should be at most 80 chars long including comments.
   * Use indentation-based structure, and not braces/semicolons. 
 
->>>
+>
 **Note** for `if-then-else` structures both in `do` and normal blocks should 
 be:  
-```if condition
+```
+if condition
   then expr1
-  else expr2```  
->>>
+  else expr2
+```
+>
 
   * Multi-line functions should be indented that way:  
 ```
@@ -72,7 +74,7 @@ f x =
   in  y
 ```
 
-Single line functions can be written that way:  
+  * Single line functions can be written that way:  
 `f x = x + 1`  
 
 ### Multi-line strings
@@ -127,7 +129,6 @@ arguments.
 ### White space
 Put new lines between top level declarations, but no new lines between type and 
 implementation. 
-
 ```
 f :: Int 
   -> Int
@@ -172,7 +173,7 @@ function
 #### Equals
 Do **not** align according to the name but to the equal sign.  
 ```
-let hello   = greetings
+let hello    = greetings
      persons = getAllPersons
 in ...
 ```
@@ -212,7 +213,7 @@ let a x = f (g (h x))
 let a = f . g . h
 ```
 
-And function composition:  
+And function composition may follow the same concept:  
 ```
 -- bad
 f (g (h x))
@@ -226,11 +227,11 @@ f . g . h $ x
 It is recommended to keep the use of extensions to a minimum, so that the code
 can be understood even if one is familiar with just Haskel98/Haskell2010. That
 said, some extensions are very common and useful, so they are recommended:  
-* Bang patterns: useful when you want to enforce strict evaluation 
+  * Bang patterns: useful when you want to enforce strict evaluation 
 (and better than repeated use of seq)
-* CPP: a few modules need this in order to account for configure-time options;
+  * CPP: a few modules need this in order to account for configure-time options;
 don’t overuse it, since it breaks multi-line strings
-* Template Haskell: we use this for automatically deriving JSON instances and
+  * Template Haskell: we use this for automatically deriving JSON instances and
 other similar boiler-plate.  
 
 Such extensions should be declared using the Language pragma:  

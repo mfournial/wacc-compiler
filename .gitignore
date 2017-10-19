@@ -1,7 +1,7 @@
+compile
 dist
 dist-*
 cabal-dev
-src-exe/*
 *.o
 *.hi
 *.chi

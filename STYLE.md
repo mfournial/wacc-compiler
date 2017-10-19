@@ -70,8 +70,8 @@ if condition
   * Multi-line functions should be indented that way:  
 ```haskell
 f x =
-  let y = x + 1
-  in  y
+    let y = x + 1
+    in  y
 ```
 
   * Single line functions can be written that way:  

@@ -1,5 +1,5 @@
 # Use docker image with haskell preinstalled for running jobs
-image: waskell-env
+image: mfournial/waskell-env
 
 stages: 
   - build

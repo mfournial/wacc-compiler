@@ -9,7 +9,7 @@ build:
   script:
     - stack build
   artifacts:
-    path:
+    paths:
       - "**/*.o"
       - "**/*.hi"
       - "src-exe/compile"

@@ -1,6 +1,17 @@
-compiler
+# Compiler for WACC
 ==========
 
-New Haskell project using stack template `tasty-travis`.
+## Testing
 
-Please read file `tutorial.md` for first steps in using the template.
+
+## Miscelaneous
+### Style guide
+You can find the style guide used for the project in `STYLE.md`.
+
+
+## Team
+Waskell group 20 formed of:  
+  * Kyle-James Condon (kc1616)
+  * Pranav Kalidindin (pvk16)
+  * Nathaniel         (ono16)
+  * Mike Fournial     (mmf115)

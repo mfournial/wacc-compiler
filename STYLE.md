@@ -23,7 +23,7 @@ way to fix small development objectives inside a module.
 
 ### Files
 Files must be `.hs` non-literate begining with haddock documentation:  
-```
+```haskell
 {-| Short module summary.
 Longer module description.
 
@@ -60,7 +60,7 @@ this means setting the variable haskell-indent-offset to 2.
 >
 **Note** for `if-then-else` structures both in `do` and normal blocks should 
 be:  
-```
+```haskell
 if condition
   then expr1
   else expr2
@@ -68,7 +68,7 @@ if condition
 >
 
   * Multi-line functions should be indented that way:  
-```
+```haskell
 f x =
   let y = x + 1
   in  y
@@ -81,7 +81,7 @@ f x =
 Multi-line strings should be written with a backslash at the end of the closing
 line and a second backslash at the beginning of the new line aligned with the
 original opening quotes.  
-```
+```haskell
 longString :: String
 longString = "This is a very very very long string that\
              \ needs to be split in two lines"
@@ -91,7 +91,7 @@ longString = "This is a very very very long string that\
 When declaring either data types, or using list literals, etc., the columns
 should be aligned, and for lists use a comma at the start of the line, not at
 the end. You must wrap the first element (newline after `=`).  
-```
+```haskell
 data OpCode =
       OpStartupInstance ...
     | OpShutdownInstance ...
@@ -113,7 +113,7 @@ myList =
 You can use inline notation for declaring your data elements, with a space
 around braces and after the comas.  
 
-```
+```haskell
 Tree t = { Leaf 'f', Tree { ... } }
 
 Node n = { ip = "8.8.8.8" }
@@ -129,7 +129,7 @@ arguments.
 ### White space
 Put new lines between top level declarations, but no new lines between type and 
 implementation. 
-```
+```haskell
 f :: Int 
   -> Int
 f x = x + 1
@@ -161,8 +161,8 @@ refactored in a function.
 
 #### Line too long
 Same as for function declaration, break aguments by line e.g.:  
-```
-function 
+```haskell
+function
   (very long args 1)
   (and $
     toooooooooooooooooooooooooooooooooooooooooooo 
@@ -172,14 +172,14 @@ function
 
 #### Equals
 Do **not** align according to the name but to the equal sign.  
-```
+```haskell
 let hello    = greetings
      persons = getAllPersons
 in ...
 ```
 
 #### Case _ of
-```
+```haskell
 case x of
   "hello"    -> putStr "greeting"
   ", world!" -> putStr "else"
@@ -191,7 +191,7 @@ to the rightmost element.
 
 #### Where clauses
 Where clauses should be placed inline with current indentation e.g.:
-```
+```haskell
 f x y =
   let x' = add x 1
       y' = add y 1
@@ -206,15 +206,15 @@ Do **not** use exceptions, use maybes!
 
 ### Point Free
 E V E R Y T H I N G   P O I N T   F R E E  
-```
--- bad
+```haskell
+-- NO
 let a x = f (g (h x))
--- good
+-- MORE
 let a = f . g . h
 ```
 
 And function composition may follow the same concept:  
-```
+```haskell
 -- bad
 f (g (h x))
 -- better
@@ -235,7 +235,7 @@ don’t overuse it, since it breaks multi-line strings
 other similar boiler-plate.  
 
 Such extensions should be declared using the Language pragma:  
-```
+```haskell
 {-# Language BangPatterns #-}
 
 {-| This is a small module... -}
@@ -243,7 +243,7 @@ Such extensions should be declared using the Language pragma:
 
 Pragmas that only refer to a function should be placed directly under
 (useful for `inline` pragma).  
-```
+```haskell
 succ a = a + 1
 {-# inline succ #-}
 ```
@@ -255,7 +255,7 @@ In many cases, it would be sufficient to only generate those 500 instances once
 and test all properties on those. To do this, create a property that uses
 conjoin to combine several properties into one. Use counterexample to add
 expressive error messages. For example:  
-```
+```haskell
 prop_myMegaProp :: myBigType -> Property
 prop_myMegaProp b =
   conjoin
@@ -277,7 +277,7 @@ subProperty2 b = ...`
 ### Comments
 Always use proper sentences; start with a capital letter and use punctuation in
 top level comments:  
-```
+```haskell
 -- | A function that does something.
 f :: ...
 ```
@@ -285,7 +285,7 @@ f :: ...
 For inline comments, start with a capital letter but no ending punctuation.
 Furthermore, align the comments together with a 2-space width from the end of 
 the item being commented:  
-```
+```haskell
 data Maybe a = Nothing  -- ^ Represents empty container
              | Just a   -- ^ Represents a single value
 ```

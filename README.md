@@ -1,5 +1,4 @@
 # Compiler for WACC
-==========
 
 ## Testing
 

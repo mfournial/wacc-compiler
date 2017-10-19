@@ -23,7 +23,8 @@ way to fix small development objectives inside a module.
 
 ### Files
 Files must be `.hs` non-literate begining with haddock documentation:  
-`{-| Short module summary.
+```
+{-| Short module summary.
 Longer module description.
 
 -}
@@ -34,33 +35,43 @@ Copyright (C) ...
 
 This program is free software ...
 
--}`  
+-}
+```  
 
 All module-level pragmas should be placed on top of the file, above the
 description.  
 
 ### Imports
 Imports should be placed in group, each sorted alphabetically in this order:  
-* Haskell standard library imports
-* External libraries imports
-* Internal libraries imports  
-It is allowed to use qualified imports for standard library and internal
+  * Haskell standard library imports
+  * External libraries imports
+  * Internal libraries imports  
+
+
+It is *allowed* to use qualified imports for standard library and internal
 libraries.
 
 ### Indentation
-* Use only spaces, never tabs. Indentation level is 2 characters. For Emacs, this
+  * Use only spaces, never tabs. Indentation level is 2 characters. For Emacs, this
 means setting the variable haskell-indent-offset to 2.
-* Line length should be at most 80 chars long including comments.
-* Use indentation-based structure, and not braces/semicolons.  
+  * Line length should be at most 80 chars long including comments.
+  * Use indentation-based structure, and not braces/semicolons. 
+
+>>>
 **Note** for `if-then-else` structures both in `do` and normal blocks should 
 be:  
-`if condition
+```if condition
   then expr1
-  else expr2`  
-* Multi-line functions should be indented that way:  
-`f x =
+  else expr2```  
+>>>
+
+  * Multi-line functions should be indented that way:  
+```
+f x =
   let y = x + 1
-  in  y`  
+  in  y
+```
+
 Single line functions can be written that way:  
 `f x = x + 1`  
 
@@ -68,15 +79,18 @@ Single line functions can be written that way:
 Multi-line strings should be written with a backslash at the end of the closing
 line and a second backslash at the beginning of the new line aligned with the
 original opening quotes.  
-`longString :: String
+```
+longString :: String
 longString = "This is a very very very long string that\
-             \ needs to be split in two lines"`  
+             \ needs to be split in two lines"
+```  
 
 ### Data declaration
 When declaring either data types, or using list literals, etc., the columns
 should be aligned, and for lists use a comma at the start of the line, not at
 the end. You must wrap the first element (newline after `=`).  
-`data OpCode =
+```
+data OpCode =
       OpStartupInstance ...
     | OpShutdownInstance ...
     | ...
@@ -91,13 +105,19 @@ myList =
   [ value1
   , value2
   , value3
-  ]`  
+  ]
+```
 
 You can use inline notation for declaring your data elements, with a space
 around braces and after the comas.  
-`Tree t = { Leaf 'f', Tree { ... } }` 
-`Node n = { ip = "8.8.8.8" }`  
-For lists it is more relaxed: `[1, 2, 4]`.  
+
+```
+Tree t = { Leaf 'f', Tree { ... } }
+
+Node n = { ip = "8.8.8.8" }
+```
+
+For lists declarations should match prelude's show function output: `[1, 2, 4]`.  
 
 ### Lambda functions
 Surround binary operators with a space. Do not put a space after `\` in lambda
@@ -108,12 +128,14 @@ arguments.
 Put new lines between top level declarations, but no new lines between type and 
 implementation. 
 
-`f :: Int 
-   -> Int
+```
+f :: Int 
+  -> Int
 f x = x + 1
 
 g :: String
-g = "Hello"`  
+g = "Hello"
+```
 
 ### Naming
 Functions should be named in mixedCase style, and types in CamelCase. Function
@@ -123,10 +145,10 @@ longer than 2 characters should be typed capitalised, not fully upper-cased
 
 For variable names, use descriptive names; it is only allowed to use very short
 names (e.g. a, b, i, j, etc.) when:  
-* the function is trivial, e.g.: `sum x y = x + y`
-* we talk about some very specific cases, e.g. iterators or accumulators:
+  * the function is trivial, e.g.: `sum x y = x + y`
+  * we talk about some very specific cases, e.g. iterators or accumulators:
 `map (\v -> v + 1) lst`
-* using x:xs for list elements and lists, etc.
+  * using x:xs for list elements and lists, etc.
 In general, short/one-letter names are allowed when we deal with polymorphic
 values and should be consistent with the Haskell prelude.  
 
@@ -138,23 +160,29 @@ refactored in a function.
 
 #### Line too long
 Same as for function declaration, break aguments by line e.g.:  
-`function 
+```
+function 
   (very long args 1)
   (and $
     toooooooooooooooooooooooooooooooooooooooooooo 
     long arg2!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  )`  
+  )
+```
 
 #### Equals
 Do **not** align according to the name but to the equal sign.  
-`let hello   = greetings
+```
+let hello   = greetings
      persons = getAllPersons
-in ...`
+in ...
+```
 
 #### Case _ of
-`case x of
+```
+case x of
   "hello"    -> putStr "greeting"
-  ", world!" -> putStr "else"`  
+  ", world!" -> putStr "else"
+```
 
 #### Comments
 As seen in the [comments](#comments) section, inline comments should be aligned
@@ -162,31 +190,37 @@ to the rightmost element.
 
 #### Where clauses
 Where clauses should be placed inline with current indentation e.g.:
-`f x y =
+```
+f x y =
   let x' = add x 1
       y' = add y 1
   in  x'' - y''
   where
     x'' = succ x'
-    y'' = succ y'`  
+    y'' = succ y'
+```
 
 ### Exceptions
 Do **not** use exceptions, use maybes!
 
 ### Point Free
 E V E R Y T H I N G   P O I N T   F R E E  
-`-- bad
+```
+-- bad
 let a x = f (g (h x))
 -- good
-let a = f . g . h`  
+let a = f . g . h
+```
 
 And function composition:  
-`-- bad
+```
+-- bad
 f (g (h x))
 -- better
 f $ g $ h x
 -- G O D 
-f . g . h $ x`
+f . g . h $ x
+```
 
 ### Extensions
 It is recommended to keep the use of extensions to a minimum, so that the code
@@ -200,14 +234,18 @@ don’t overuse it, since it breaks multi-line strings
 other similar boiler-plate.  
 
 Such extensions should be declared using the Language pragma:  
-`{-# Language BangPatterns #-}
+```
+{-# Language BangPatterns #-}
 
-{-| This is a small module... -}`  
+{-| This is a small module... -}
+```
 
 Pragmas that only refer to a function should be placed directly under
 (useful for `inline` pragma).  
-`succ a = a + 1
-{-# inline succ #-}`  
+```
+succ a = a + 1
+{-# inline succ #-}
+```
 
 ### Quick Check
 If you have big type that takes time to generate and several properties to test
@@ -216,7 +254,8 @@ In many cases, it would be sufficient to only generate those 500 instances once
 and test all properties on those. To do this, create a property that uses
 conjoin to combine several properties into one. Use counterexample to add
 expressive error messages. For example:  
-`prop_myMegaProp :: myBigType -> Property
+```
+prop_myMegaProp :: myBigType -> Property
 prop_myMegaProp b =
   conjoin
       [ counterexample
@@ -231,19 +270,25 @@ subProperty1 :: myBigType -> Bool
 subProperty1 b = ...
 
 subProperty2 :: myBigType -> Property
-subProperty2 b = ...`  
+subProperty2 b = ...`
+```
 
 ### Comments
 Always use proper sentences; start with a capital letter and use punctuation in
 top level comments:  
-`-- | A function that does something.
-f :: ...`  
+```
+-- | A function that does something.
+f :: ...
+```
 
 For inline comments, start with a capital letter but no ending punctuation.
 Furthermore, align the comments together with a 2-space width from the end of 
 the item being commented:  
-`data Maybe a = Nothing  -- ^ Represents empty container
-             | Just a   -- ^ Represents a single value`  
+```
+data Maybe a = Nothing  -- ^ Represents empty container
+             | Just a   -- ^ Represents a single value
+```
+
 The comments should be clear enough so that one doesn’t need to look at the 
 code to understand what the item does/is.  
 

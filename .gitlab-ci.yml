@@ -1,0 +1,20 @@
+# Use docker image with haskell preinstalled for running jobs
+image: waskell-env
+
+stages: 
+  - build
+  - test
+
+build:
+  script:
+    - stack build
+  artifacts:
+    path:
+      - "**/*.o"
+      - "**/*.hi:
+      - "src-exe/compile"
+
+test:
+  script:
+    - stack test
+

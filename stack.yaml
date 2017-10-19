@@ -64,3 +64,8 @@ extra-package-dbs: []
 # 
 # Allow a newer minor version of GHC than the snapshot specifies
 # compiler-check: newer-minor
+
+# Prepares to have a docker runtime
+## Enables docker runtime env for CI
+#docker:
+#  enable: true

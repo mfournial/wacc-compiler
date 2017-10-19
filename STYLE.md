@@ -68,8 +68,9 @@ if condition
 >
 
   * Multi-line functions should be indented that way:  
+
 ```haskell
-id x =
+id x = 
   let y = succ x
   in  pred y
 ```

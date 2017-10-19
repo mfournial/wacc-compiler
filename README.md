@@ -1,7 +1,9 @@
 # Compiler for WACC
+[![pipeline status](https://gitlab.doc.ic.ac.uk/waskell/compiler/badges/master/pipeline.svg)](https://gitlab.doc.ic.ac.uk/waskell/compiler/commits/master)
 
 ## Testing
-
+Automatic Pipeline CI using gitlab's built in pipeline package.  
+Slack + jiri (jirio bot on Slack)
 
 ## Miscelaneous
 ### Style guide

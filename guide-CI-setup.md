@@ -34,7 +34,7 @@ Now let's create the container:
 ```
 $ docker pull fpco/stack-build
 $ docker run -i -t fpco/stack-build /bin/bash
-$ cd homes/
+$ cd home/
 $ stack setup
 $ stack new op tasty-travis
 $ cd op

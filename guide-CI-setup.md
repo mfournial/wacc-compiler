@@ -9,7 +9,7 @@
 ## Getting gitlab-runner
 
 Install gitlab runner as a background process:  
- * [linux](https://docs.gitlab.com/runner/install/linux-manually.html)  
+ * [linux](https://docs.gitlab.com/runner/install/linux-repository.html)  
  * [macOS](https://docs.gitlab.com/runner/install/osx.html)
 
 Register the runner: `$ gitlab-runner register`  

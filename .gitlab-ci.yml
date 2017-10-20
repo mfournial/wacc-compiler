@@ -7,7 +7,7 @@ stages:
 
 build:
   script:
-    - stack build -- coverage
+    - stack build
   artifacts:
     paths:
       - "src-exe/compile"

@@ -7,14 +7,12 @@ stages:
 
 build:
   script:
-    - stack build
+    - stack build -- coverage
   artifacts:
     paths:
-      - "**/*.o"
-      - "**/*.hi"
       - "src-exe/compile"
 
 test:
   script:
-    - stack test
+      - stack test --coverage
 

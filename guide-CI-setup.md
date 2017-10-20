@@ -19,7 +19,7 @@ Register the runner: `$ gitlab-runner register`
  4. "Kyle's-XPS-runner"
  5. nothing(press enter don't write nothing you idiot)
  6. false
- 7. false
+ 7. (false) optional? check if it asks for stuff
  8. docker
  9. waskell-env (if you actually named your commit image waskell-env)
 

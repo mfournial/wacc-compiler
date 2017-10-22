@@ -11,6 +11,19 @@ and where it was all mashed together, [google Ganeti's style](http://www.cs.calt
 
 ## Guide
 
+### Git style
+
+#### Commits
+Commits titles should start by a capital letter, no full stop and in present
+tense under 68 characters. It can include a description (skip a line) that
+explains in much details the changes made in that commit.
+
+#### Rebase
+Use `git rebase -i` if you feel like 2 or more of your commits should be merged
+together (like having to push to check the `.md` files display properly).  
+Try and avoid merging branches by using `git pull --rebase` instead of 
+`git pull`.
+
 ### Documentation
 Follow the [Haddock](https://www.haskell.org/haddock/) style for writing 
 documentation. All functions called outside the module should have

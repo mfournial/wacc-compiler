@@ -37,6 +37,7 @@ executable compiler-exe
   hs-source-dirs:    src-exe
   main-is:           Main.hs
   build-depends:     base >= 4.8 && < 5
+                   , bytestring >= 0.10 && < 0.11
                    , compiler
 
 test-suite compiler-test

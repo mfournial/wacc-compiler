@@ -28,7 +28,7 @@ compileInput :: UserInput -> CompileOutput
 compileInput = undefined
 
 compile :: UserInput -> IO ()
-compile input = either handleError writeOutput (compileInput input)
+compile = either handleError writeOutput . compileInput
 
 main :: IO ()
 main = do

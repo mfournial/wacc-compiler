@@ -1,3 +1,5 @@
+compile
+src-exe/compiler-exe
 dist
 dist-*
 cabal-dev

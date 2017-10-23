@@ -3,6 +3,7 @@
 all: build
 
 build: 
+	rm -f compile
 	stack install --local-bin-path src-exe
 	ln -s src-exe/compiler-exe compile
 

@@ -37,11 +37,16 @@ way to fix small development objectives inside a module.
 ### Files
 Files must be `.hs` non-literate begining with haddock documentation:  
 ```haskell
-{-| Short module summary.
+{-|
+Module      : _._ (library name)
+Description : Short description
+Maintainer  : imperialshorcode@ic.ac.uk
+Stability   : development (experimental)
+Portability : POSIX
+
 Longer module description.
 
 -}
-
 {-
 
 Copyright (C) ...
@@ -49,6 +54,8 @@ Copyright (C) ...
 This program is free software ...
 
 -}
+Blank line
+module .....
 ```  
 
 All module-level pragmas should be placed on top of the file, above the

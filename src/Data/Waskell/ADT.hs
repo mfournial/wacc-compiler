@@ -11,7 +11,7 @@ compiler. This module is designed to be imported qualified to avoid conflicts
 with the prelude. E.g @import qualified Data.Waskell as W@
 -}
 
-module Data.Waskell
+module Data.Waskell.ADT
   (
     WaccTree,
     Program,

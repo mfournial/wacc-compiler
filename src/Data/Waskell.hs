@@ -2,19 +2,13 @@
 Module      : Data.Waskell
 Description : Short description
 Maintainer  : kc1616@ic.ac.uk
+License     : ISC
 Stability   : experimental
 Portability : POSIX
 
 This module provides the abstract syntax tree data types for the Waskell 
 compiler. This module is designed to be imported qualified to avoid conflicts 
 with the prelude. E.g @import qualified Data.Waskell as W@
--}
-{-
-
-Copyright (C) 2017 Waskell
-
-READ LICENCE FILE
-
 -}
 
 module Data.Waskell
@@ -47,21 +41,27 @@ type PairElem = (PairAccess, Expression)
 type ArrayElem = (Ident, P.Int)
 type Ident = P.String
 
-data Type = Int | Bool | Char | String | Array Type | Pair (Type, Type)
+data Type = Int 
+          | Bool 
+          | Char 
+          | String 
+          | Array Type 
+          | Pair (Type, Type)
+
 data UnaryOperator = Not | UMinus | Len | Ord | Chr
 data BinaryOperator = Times 
-                      | Divide
-                      | Modulo
-                      | Plus 
-                      | Minus 
-                      | GreaterThan 
-                      | GreaterEqual
-                      | LessThan
-                      | LessEqual
-                      | Equals
-                      | NotEquals
-                      | And
-                      | Or
+                    | Divide
+                    | Modulo
+                    | Plus 
+                    | Minus 
+                    | GreaterThan 
+                    | GreaterEqual
+                    | LessThan
+                    | LessEqual
+                    | Equals
+                    | NotEquals
+                    | And
+                    | Or
 
 data Statement = Skip 
                | Declare Type Ident AssignRight

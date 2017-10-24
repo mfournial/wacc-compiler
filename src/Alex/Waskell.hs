@@ -25,5 +25,7 @@ module Alex.Wakell
 import qualified Data.Waskell as W
 import qualified Data.ByteString.Lazy as B
 
-getTokens :: ByteString -> [Token]
+newtype Token = Token Int
+
+getTokens :: B.ByteString -> [Token]
 getTokens = undefined

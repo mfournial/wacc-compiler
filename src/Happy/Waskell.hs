@@ -19,8 +19,7 @@ module Happy.Wakell
 import qualified Data.Waskell as W
 import qualified Data.ByteString.Lazy as B
 
-data Token = P Int
-           | NULL
+newtype Token = Token Int
 
 generateAST :: [Token] -> W.WaccTree
 generateAST = undefined

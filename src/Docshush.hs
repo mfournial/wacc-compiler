@@ -11,10 +11,10 @@ module DOcshush where
 --  >>> after one
 --  2
 --
---  prop> before . after $ x == x
+--  prop> x == before (after x)
 --  
 before :: Int -> Int
-before = (1+)
+before = pred
 
 after :: Int -> Int
-after = (1-)
+after = succ

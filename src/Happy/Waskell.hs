@@ -11,7 +11,7 @@ This module should not conflict with libraries and is designed to be imported
 qualified. E.g. @import qualified Happy.Waskell as H@
 -}
 
-module Happy.Wakell
+module Happy.Waskell
   (
     generateAST
   ) where

@@ -22,7 +22,7 @@ module Alex.Wakell
     getTokens
   ) where
 
-import qualified Data.Waskell as W
+import qualified Data.Waskell.ADT as W
 import qualified Data.ByteString.Lazy as B
 
 newtype Token = Token Int

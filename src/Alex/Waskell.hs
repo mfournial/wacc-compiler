@@ -17,7 +17,7 @@ READ LICENCE FILE
 
 -}
 
-module Alex.Wakell
+module Alex.Waskell
   (
     getTokens
   ) where

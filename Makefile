@@ -11,6 +11,8 @@ test:
 	stack test --coverage
 
 clean:
+	rm -f compile
+	rm -f src-exe/compiler-exe
 	stack clean
 
 .PHONY: all test clean

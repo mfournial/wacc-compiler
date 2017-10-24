@@ -5,39 +5,29 @@ import Test.Tasty.HUnit
 -- import Data.Waskell TODO uncomment when have replaced undef by list of tokens
 
 main :: IO ()
-main = defaultMain $ testGroup "all-tests" tests
+main = defaultMain $ testGroup "Unit Tests" tests
 
 tests :: [TestTree]
 tests =
-  [ testCase "Test for test" (succ 43 @?= (44 :: Int))
-  -- , testGroup "SmallCheck" scTests
-  -- , testGroup "Unit Tests" huTests
-  ]
-
-scTests :: [TestTree]
-scTests = undefined -- TODO Write some tests for functions inside the class
-
-huTests :: [TestTree]
-huTests =
   [ testGroup "Valid wacc files" validTests
-  , testGroup "Invalid wacc files" invalidTests
+--  , testGroup "Invalid wacc files" invalidTests
   ]
 
 validTests :: [TestTree]
 validTests =
-  [ testGroup "Advanced" advanceTests  
-  , testGroup "Array" arrayTests 
-  , testGroup "Basic" basicTests
-  , testGroup "Expression" expressionsTests
-  , testGroup "Functions" functionsTests
-  , testGroup "If" ifTests
-  , testGroup "IO" ioTests
-  , testGroup "Pairs" pairsTests
-  , testGroup "RuntimeErr" runtimeErrTests
-  , testGroup "Scope" scopeTests
-  , testGroup "Sequence" sequenceTests
-  , testGroup "Variable" variablesTests
-  , testGroup "W" whileTests
+  [ -- testGroup "Advanced" advanceTests  
+  -- , testGroup "Arrays" arrayTests 
+  -- , testGroup "Basic" basicTests
+  -- , testGroup "Expressions" expressionsTests
+  -- , testGroup "Functions" functionsTests
+  -- , testGroup "If" ifTests
+  -- , testGroup "IO" ioTests
+  -- , testGroup "Pairs" pairsTests
+  -- , testGroup "RuntimeErr" runtimeErrTests
+  -- , testGroup "Scope" scopeTests
+  -- , testGroup "Sequences" sequenceTests
+  -- , testGroup "Variables" variablesTests
+  -- , testGroup "While" whileTests
   ] 
 
 invalidTests :: [TestTree]
@@ -109,7 +99,7 @@ printRef = undefined
 basicTests :: [TestTree]
 basicTests =
   [ testGroup "Exit statements" exitTests
-  , testGroup "Skip statements" skipTests
+  , testCase "Skip statement" skip
   ]
 
 exitTests :: [TestTree]
@@ -131,13 +121,6 @@ exitBasic2 = undefined
 
 exitWrap :: Assertion
 exitWrap = undefined
-
-skipTests :: [TestTree]
-skipTests =
-  [ testCase "Comment" comment
-  , testCase "Comment In Line" commentInLine
-  , testCase "Skip" skip
-  ]
 
 comment :: Assertion
 comment = undefined

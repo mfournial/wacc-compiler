@@ -26,18 +26,18 @@ huTests =
 validTests :: [TestTree]
 validTests =
   [ testGroup "Advanced" advanceTests  
-  , testGroup "Array" arrayTests 
+  , testGroup "Arrays" arrayTests 
   , testGroup "Basic" basicTests
-  , testGroup "Expression" expressionsTests
+  , testGroup "Expressions" expressionsTests
   , testGroup "Functions" functionsTests
   , testGroup "If" ifTests
   , testGroup "IO" ioTests
   , testGroup "Pairs" pairsTests
   , testGroup "RuntimeErr" runtimeErrTests
   , testGroup "Scope" scopeTests
-  , testGroup "Sequence" sequenceTests
-  , testGroup "Variable" variablesTests
-  , testGroup "W" whileTests
+  , testGroup "Sequences" sequenceTests
+  , testGroup "Variables" variablesTests
+  , testGroup "While" whileTests
   ] 
 
 invalidTests :: [TestTree]

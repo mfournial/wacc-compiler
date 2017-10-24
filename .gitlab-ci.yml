@@ -4,6 +4,9 @@ image: mfournial/waskell-env
 stages: 
   - build
   - test
+  
+only:
+  - master
 
 build:
   script:

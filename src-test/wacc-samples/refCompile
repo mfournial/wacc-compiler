@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 # comand line script that sends an HTTPS request to the WACC compiler web interface and interprets the JSON response
 
 require "rest-client"

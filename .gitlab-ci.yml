@@ -4,11 +4,10 @@ image: mfournial/waskell-env
 stages: 
   - build
   - test
-  
-only:
-  - master
 
 build:
+  only:
+    - master
   script:
     - stack build
   artifacts:

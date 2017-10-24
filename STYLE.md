@@ -41,17 +41,11 @@ Files must be `.hs` non-literate begining with haddock documentation:
 Module      : _._ (library name)
 Description : Short description
 Maintainer  : imperialshorcode@ic.ac.uk
+License     : ISC
 Stability   : development (experimental)
 Portability : POSIX
 
 Longer module description.
-
--}
-{-
-
-Copyright (C) ...
-
-This program is free software ...
 
 -}
 Blank line

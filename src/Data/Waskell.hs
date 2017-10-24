@@ -5,10 +5,18 @@ Maintainer  : kc1616@ic.ac.uk
 Stability   : experimental
 Portability : POSIX
 
-This module provides the abstract syntax tree for the Waskell compiler.
-This module is designed to imported qualified to avoid conflicts with
-the prelude. E.g @import qualified Data.Waskell as W@
+This module provides the abstract syntax tree data types for the Waskell 
+compiler. This module is designed to be imported qualified to avoid conflicts 
+with the prelude. E.g @import qualified Data.Waskell as W@
 -}
+{-
+
+Copyright (C) 2017 Waskell
+
+READ LICENCE FILE
+
+-}
+
 module Data.Waskell
   (
     WaccTree,

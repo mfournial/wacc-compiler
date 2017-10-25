@@ -1,0 +1,10 @@
+Expression. Exp ::= IntLiteral ;
+
+
+rules BaseType ::= "int" | "bool" | "char" | "string" ;
+
+position token Identifier ('_' | lower (letter | digit | '_')*) ;
+
+position token IntLiteral ((["+-"])? digit+) ;
+
+comment "#" ;

@@ -1,4 +1,6 @@
-
+-- | Parameter
+Param . Parameter ::= Type Identifier ;
+separator nonempty Parameter "," ;
 
 -- | Statements
 StatSkip . Statement ::= "skip" ;

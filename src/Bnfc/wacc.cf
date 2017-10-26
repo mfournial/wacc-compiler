@@ -1,21 +1,39 @@
 
 
+-- | Statements
+StatSkip . Statement ::= "skip" ;
+StatDecAss . Statement ::= Type Identifier "=" AssignRhs ;
+StatAss . Statement ::= AssignLhs "=" AssignRhs ;
+StatRead . Statement ::= "read" Exp ;
+StatFree . Statement ::= "free" Exp ;
+StatReturn . Statement ::= "return" Exp;
+StatExit . Statement ::= "exit" Exp ;
+StatPrint . Statement ::= "print" Exp ;
+StatePrintLn . Statement ::= "println" Exp ;
+StatIf . Statement ::= "if" Exp "then" [Statement] "else" [Statement] "fi" ;
+StatWhile . Statement ::= "while" Exp "do" [Statement] "done" ;
+StatScope . Statement ::= "begin" [Statement] "end" ;
+
+(:[]). [Statement] ::= Statement ;
+(:). [Statement] ::= Statement [Statement] ;
+
 -- | Assign left hand side
-AssignToIdent . AssignLHS ::= Identifier ;
-AssignToArrayElem . AssignLHS ::= ArrayElem ;
-AssignToPair . AssignLHS ::= PairElem ;
+AssignToIdent    . AssignLhs ::= Identifier ;
+AssignToArrayElem. AssignLhs ::= ArrayElem ;
+AssignToPair     . AssignLhs ::= PairElem ;
 
 
 -- | Assign Right hand side
 AssignExp          . AssignRhs ::= Exp ;
 AssignArrayLit     . AssignRhs ::= ArrayDeclarationLiteral ;
 AssignPair         . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
-AssignPairElem     . AssignRHS ::= PairElem ;
-AssignFunctionCall . AssignRHS ::= "call" Identifier "(" ArgumentList ")" ;
+AssignPairElem     . AssignRhs ::= PairElem ;
+AssignFunctionCall . AssignRhs ::= "call" Identifier "(" ArgumentList ")" ;
 
 
 -- | Argument list for function
-ArgumentList . ArgumentList ::= [Elem] ;
+ArgumentList . ArgumentList ::= [Exp];
+terminator Exp "," ;
 
 
 -- | Pair Element return

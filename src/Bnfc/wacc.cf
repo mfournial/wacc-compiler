@@ -1,21 +1,29 @@
 
-AssignExp . AssignRhs ::= Exp ;
-AssignArrayLit . AssignRhs ::= ArrayLiteral ;
-AssignPair . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
-AssignPairElem . AssignRHS ::= PairElem ;
+
+
+
+-- | Assign Right hand side
+AssignExp          . AssignRhs ::= Exp ;
+AssignArrayLit     . AssignRhs ::= ArrayLiteral ;
+AssignPair         . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
+AssignPairElem     . AssignRHS ::= PairElem ;
 AssignFunctionCall . AssignRHS ::= "call" Identifier "(" ArgumentList ")" ;
+
 
 -- | Argument list for function
 ArgumentList . ArgumentList ::= [Elem] ;
+
 
 -- | Pair Element return
 PairFst . PairElem ::= "fst" Exp ;
 PairSnd . PairElem ::= "snd" Exp ;
 
+
 -- | Global types
 BaseType  . Type ::= BaseType ;
 ArrayType . Type ::= ArrayDeclarationLiteral ;
 PairType  . Type ::= "pair" "(" PairElemType "," PairElemType ")" ;
+
 
 -- | Base type
 IntType    . BaseType ::= "int" ;
@@ -26,15 +34,17 @@ StringType . BaseType ::= "string" ;
 -- | Array Type Declaration literal
 ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
 
-ArrayLiteral     . ArrayLiteral ::= "[" ArrayElemLiteral "]" ;
+ArrayLiteral     . ArrayLiteral     ::= "[" ArrayElemLiteral "]" ;
 ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
 (:[])            . [Exp] ::= Exp ;
 (:)							 . [Exp] ::= Exp "," [Exp] ;
+
 
 -- | Pair Element type
 PairElemTypeBase  . PairElemType ::= BaseType ;
 PairElemTypeArray . PairElemType ::= ArrayDeclarationLiteral ;
 PairElemTypePair  . PairElemType ::= "pair" ;
+
 
 -- | Expression
 IntExp     . Exp ::= IntLiteral ;
@@ -49,24 +59,26 @@ BExp       . Exp ::= Exp BinaryOperator Exp ;
 BracketExp . Exp ::= "(" Exp ")" ;
 Dummy . Exp ::= Type ;
 
+
 -- | Int literal declaration data
 IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
 IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
+
 
 -- | Array Element structure ()
 ArrayAccess . ArrayAccess   ::= "[" Exp "]" ;
 (:[])       . [ArrayAccess] ::= ArrayAccess ;
 (:)					. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
 
--- | Unary operator
+
+-- | Operators
 UBang   . UnaryOperator ::= "!" ;
 UMinus  . UnaryOperator ::= "-" ;
 ULenght . UnaryOperator ::= "len" ;
 UOrd    . UnaryOperator ::= "ord" ;
 UChr    . UnaryOperator ::= "char" ;
 
--- | Binary operator
 BTimes    . BinaryOperator ::= "*" ;
 BDivide   . BinaryOperator ::= "/" ;
 BModulus  . BinaryOperator ::= "%" ;
@@ -81,6 +93,7 @@ BNotEqual . BinaryOperator ::= "!-" ;
 BAnd      . BinaryOperator ::= "&&" ;
 BOr       . BinaryOperator ::= "||" ;
 
+
 -- | Tokens recognition
 -- Note the @position@ keyword enables us to keep the position in the ADT tree for clearer 
 -- semantic analysis error messages. The pseudo regex language used after
@@ -93,6 +106,7 @@ position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt"])) '\'') ;
 position token PairLiteral ({"null"}) ;
 position token Identifier (('_' | lower) (letter | digit | '_')*) ;
 position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt"]))* '"') ;
+
 
 -- | Comment parser
 comment "#" ;

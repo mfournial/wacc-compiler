@@ -1,5 +1,9 @@
 
-
+AssignExp . AssignRhs ::= Exp ;
+AssignArrayLit . AssignRhs ::= ArrayLiteral ;
+AssignPair . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
+AssignPairElem . AssignRHS ::= PairElem ;
+AssignFunctionCall . AssignRHS ::= "call" Identifier "(" ArgumentList ")" ;
 
 -- | Argument list for function
 ArgumentList . ArgumentList ::= [Elem] ;

@@ -31,7 +31,7 @@ StatWhile    . Statement ::= "while" Expression "do" [Statement] "done" ;
 StatScope    . Statement ::= "begin" [Statement] "end" ;
 
 (:[]). [Statement] ::= Statement ;
-(:)  . [Statement] ::= Statement [Statement] ;
+(:)  . [Statement] ::= Statement ";" [Statement] ;
 
 
 -- | Assign left hand side

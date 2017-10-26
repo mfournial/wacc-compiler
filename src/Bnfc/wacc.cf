@@ -1,10 +1,25 @@
-Expression. Exp ::= IntLiteral ;
+IntExp.   Exp ::= IntLiteral ;
+BoolExp.  Exp ::= BoolLiteral ;
+CharExpr. Exp ::= CharLiteral ;
+StringExpr. Exp ::= StringLiteral ;
+PairExpr. Exp ::= PairLiteral ;
 
 
 rules BaseType ::= "int" | "bool" | "char" | "string" ;
 
+IntPlus.    IntLiteral ::= Plus IntDigit ;
+IntMinus.   IntLiteral ::= Minus IntDigit ;
+IntLiteral. IntLiteral ::= IntDigit ;
+
+position token IntDigit (digit+) ;
+position token Plus ({"+"}) ;
+position token Minus ({"-"}) ;
+
+
+position token BoolLiteral ({"true"} | {"false"}) ;
+position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt"])) '\'') ;
+position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt"]))* '"') ;
+position token PairLiteral ({"null"}) ;
+
 position token Identifier ('_' | lower (letter | digit | '_')*) ;
-
-position token IntLiteral ((["+-"])? digit+) ;
-
 comment "#" ;

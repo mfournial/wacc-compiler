@@ -1,10 +1,14 @@
 
 
+-- | Assign left hand side
+AssignToIdent . AssignLHS ::= Identifier ;
+AssignToArrayElem . AssignLHS ::= ArrayElem ;
+AssignToPair . AssignLHS ::= PairElem ;
 
 
 -- | Assign Right hand side
 AssignExp          . AssignRhs ::= Exp ;
-AssignArrayLit     . AssignRhs ::= ArrayLiteral ;
+AssignArrayLit     . AssignRhs ::= ArrayDeclarationLiteral ;
 AssignPair         . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
 AssignPairElem     . AssignRHS ::= PairElem ;
 AssignFunctionCall . AssignRHS ::= "call" Identifier "(" ArgumentList ")" ;
@@ -34,7 +38,7 @@ StringType . BaseType ::= "string" ;
 -- | Array Type Declaration literal
 ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
 
-ArrayLiteral     . ArrayLiteral     ::= "[" ArrayElemLiteral "]" ;
+ArrayElem        . ArrayElem        ::= Identifier "[" ArrayElemLiteral "]" ;
 ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
 (:[])            . [Exp] ::= Exp ;
 (:)							 . [Exp] ::= Exp "," [Exp] ;
@@ -57,7 +61,6 @@ ArrayExpr  . Exp ::= Identifier ArrayAccess;
 UExpr      . Exp ::= UnaryOperator Exp ;
 BExp       . Exp ::= Exp BinaryOperator Exp ;
 BracketExp . Exp ::= "(" Exp ")" ;
-Dummy . Exp ::= Type ;
 
 
 -- | Int literal declaration data

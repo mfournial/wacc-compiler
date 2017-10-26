@@ -5,6 +5,8 @@ StringExpr. Exp ::= StringLiteral ;
 PairExpr. Exp ::= PairLiteral ;
 IdentExpr. Exp  ::= Identifier;
 ArrayExpr. Exp ::= ArrayElem ;
+UExpr. Exp ::= UnaryOperator Exp ;
+BExp. Exp ::= Exp BinaryOperator Exp ;
 
 rules BaseType ::= "int" | "bool" | "char" | "string" ;
 
@@ -15,6 +17,26 @@ ArrayElem. ArrayElem ::= Identifier [ArrayAccess];
 ArrayAccess. ArrayAccess ::= "[" Exp "]" ;
 (:[]). [ArrayAccess] ::=  ArrayAccess ;
 (:). [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
+
+UBang  . UnaryOperator ::= "!" ;
+UMinus . UnaryOperator ::= "-" ;
+ULenght. UnaryOperator ::= "len" ;
+UOrd   . UnaryOperator ::= "ord" ;
+UChr   . UnaryOperator ::= "char" ;
+
+BTimes    . BinaryOperator ::= "*" ;
+BDivide   . BinaryOperator ::= "/" ;
+BModulus  . BinaryOperator ::= "%" ;
+BPlus     . BinaryOperator ::= "+" ;
+BMinus    . BinaryOperator ::= "-" ;
+BMore     . BinaryOperator ::= ">" ;
+BLess     . BinaryOperator ::= "<" ;
+BMoreEqual. BinaryOperator ::= ">=" ;
+BLessEqual. BinaryOperator ::= "<=" ;
+BEqual    . BinaryOperator ::= "==" ;
+BNotEqual . BinaryOperator ::= "!-" ;
+BAnd      . BinaryOperator ::= "&&" ;
+BOr       . BinaryOperator ::= "||" ;
 
 position token IntDigit (digit+) ;
 position token Plus ({"+"}) ;

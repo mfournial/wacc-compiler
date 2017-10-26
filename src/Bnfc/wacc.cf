@@ -1,23 +1,29 @@
+-- | Function
+Function . Function ::= Type Indentifier "(" [Parameter] ")" "is" [Statement] "end" ;
+
+
 -- | Parameter
 Param . Parameter ::= Type Identifier ;
 separator nonempty Parameter "," ;
 
+
 -- | Statements
-StatSkip . Statement ::= "skip" ;
-StatDecAss . Statement ::= Type Identifier "=" AssignRhs ;
-StatAss . Statement ::= AssignLhs "=" AssignRhs ;
-StatRead . Statement ::= "read" Exp ;
-StatFree . Statement ::= "free" Exp ;
-StatReturn . Statement ::= "return" Exp;
-StatExit . Statement ::= "exit" Exp ;
-StatPrint . Statement ::= "print" Exp ;
+StatSkip     . Statement ::= "skip" ;
+StatDecAss   . Statement ::= Type Identifier "=" AssignRhs ;
+StatAss      . Statement ::= AssignLhs "=" AssignRhs ;
+StatRead     . Statement ::= "read" Exp ;
+StatFree     . Statement ::= "free" Exp ;
+StatReturn   . Statement ::= "return" Exp;
+StatExit     . Statement ::= "exit" Exp ;
+StatPrint    . Statement ::= "print" Exp ;
 StatePrintLn . Statement ::= "println" Exp ;
-StatIf . Statement ::= "if" Exp "then" [Statement] "else" [Statement] "fi" ;
-StatWhile . Statement ::= "while" Exp "do" [Statement] "done" ;
-StatScope . Statement ::= "begin" [Statement] "end" ;
+StatIf       . Statement ::= "if" Exp "then" [Statement] "else" [Statement] "fi" ;
+StatWhile    . Statement ::= "while" Exp "do" [Statement] "done" ;
+StatScope    . Statement ::= "begin" [Statement] "end" ;
 
 (:[]). [Statement] ::= Statement ;
-(:). [Statement] ::= Statement [Statement] ;
+(:)  . [Statement] ::= Statement [Statement] ;
+
 
 -- | Assign left hand side
 AssignToIdent    . AssignLhs ::= Identifier ;

@@ -13,7 +13,8 @@ Dummy . Exp ::= Type ;
 
 -- | Global types
 BaseType  . Type ::= BaseType ;
-ArrayType . Type ::= Type "[]" ;
+ArrayType . Type ::= ArrayDeclarationLiteral ;
+PairType  . Type ::= "pair" "(" PairElemType "," PairElemType ")" ;
 
 -- | Base type
 IntType    . BaseType ::= "int" ;
@@ -22,10 +23,17 @@ CharType   . BaseType ::= "char" ;
 StringType . BaseType ::= "string" ;
 
 -- | Array Type Declaration literal
+ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
+
 ArrayLiteral     . ArrayLiteral ::= "[" ArrayElemLiteral "]" ;
 ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
 (:[])            . [Exp] ::= Exp ;
 (:)							 . [Exp] ::= Exp "," [Exp] ;
+
+-- | Pair Element type
+PairElemTypeBase  . PairElemType ::= BaseType ;
+PairElemTypeArray . PairElemType ::= ArrayDeclarationLiteral ;
+PairElemTypePair  . PairElemType ::= "pair" ;
 
 -- | Int literal declaration data
 IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;

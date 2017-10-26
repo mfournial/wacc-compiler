@@ -1,40 +1,40 @@
---| Expression
+-- | Expression
 IntExp     . Exp ::= IntLiteral ;
 BoolExp    . Exp ::= BoolLiteral ;
 CharExpr   . Exp ::= CharLiteral ;
 StringExpr . Exp ::= StringLiteral ;
 PairExpr   . Exp ::= PairLiteral ;
-IdentExpr  . Exp  ::= Identifier;
+IdentExpr  . Exp ::= Identifier;
 ArrayExpr  . Exp ::= ArrayElem ;
 UExpr      . Exp ::= UnaryOperator Exp ;
 BExp       . Exp ::= Exp BinaryOperator Exp ;
 BracketExp . Exp ::= "(" Exp ")" ;
 
---| Base type
+-- | Base type
 IntType   . BaseType ::= "int" ;
 BoolType  . BaseType ::= "bool" ;
 CharType  . BaseType ::= "char" ;
 StringType. BaseType ::= "string" ;
 
---| Int literal declaration data
+-- | Int literal declaration data
 IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
 IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
 
---| Array Element structure ()
-ArrayElem   . ArrayElem ::= Identifier [ArrayAccess];
-ArrayAccess . ArrayAccess ::= "[" Exp "]" ;
-(:[])       . [ArrayAccess] ::=  ArrayAccess ;
+-- | Array Element structure ()
+ArrayElem   . ArrayElem     ::= Identifier [ArrayAccess];
+ArrayAccess . ArrayAccess   ::= "[" Exp "]" ;
+(:[])       . [ArrayAccess] ::= ArrayAccess ;
 (:)					. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
 
---| Unary operator
+-- | Unary operator
 UBang   . UnaryOperator ::= "!" ;
 UMinus  . UnaryOperator ::= "-" ;
 ULenght . UnaryOperator ::= "len" ;
 UOrd    . UnaryOperator ::= "ord" ;
 UChr    . UnaryOperator ::= "char" ;
 
---| Binary operator
+-- | Binary operator
 BTimes    . BinaryOperator ::= "*" ;
 BDivide   . BinaryOperator ::= "/" ;
 BModulus  . BinaryOperator ::= "%" ;
@@ -49,6 +49,12 @@ BNotEqual . BinaryOperator ::= "!-" ;
 BAnd      . BinaryOperator ::= "&&" ;
 BOr       . BinaryOperator ::= "||" ;
 
+-- | Array Declaration literal
+ArrayLiteral . ArrayLiteral ::= "[" ArrayElemLiteral "]" ;
+ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
+(:[])            . [Exp] ::= Exp ;
+(:)							 . [Exp] ::= Exp "," [Exp] ;
+
 -- | Tokens recognition
 -- Note the @position@ keyword enables us to keep the position in the ADT tree for clearer 
 -- semantic analysis error messages. The pseudo regex language used after
@@ -62,5 +68,5 @@ position token PairLiteral ({"null"}) ;
 position token Identifier (('_' | lower) (letter | digit | '_')*) ;
 position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt"]))* '"') ;
 
---| Comment parser
+-- | Comment parser
 comment "#" ;

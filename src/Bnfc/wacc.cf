@@ -4,17 +4,28 @@ BoolExp    . Exp ::= BoolLiteral ;
 CharExpr   . Exp ::= CharLiteral ;
 StringExpr . Exp ::= StringLiteral ;
 PairExpr   . Exp ::= PairLiteral ;
-IdentExpr  . Exp ::= Identifier;
-ArrayExpr  . Exp ::= ArrayElem ;
+IdentExpr  . Exp ::= Identifier ;
+ArrayExpr  . Exp ::= Identifier ArrayAccess;
 UExpr      . Exp ::= UnaryOperator Exp ;
 BExp       . Exp ::= Exp BinaryOperator Exp ;
 BracketExp . Exp ::= "(" Exp ")" ;
+Dummy . Exp ::= Type ;
+
+-- | Global types
+BaseType  . Type ::= BaseType ;
+ArrayType . Type ::= Type "[]" ;
 
 -- | Base type
-IntType   . BaseType ::= "int" ;
-BoolType  . BaseType ::= "bool" ;
-CharType  . BaseType ::= "char" ;
-StringType. BaseType ::= "string" ;
+IntType    . BaseType ::= "int" ;
+BoolType   . BaseType ::= "bool" ;
+CharType   . BaseType ::= "char" ;
+StringType . BaseType ::= "string" ;
+
+-- | Array Type Declaration literal
+ArrayLiteral     . ArrayLiteral ::= "[" ArrayElemLiteral "]" ;
+ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
+(:[])            . [Exp] ::= Exp ;
+(:)							 . [Exp] ::= Exp "," [Exp] ;
 
 -- | Int literal declaration data
 IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
@@ -22,7 +33,6 @@ IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
 
 -- | Array Element structure ()
-ArrayElem   . ArrayElem     ::= Identifier [ArrayAccess];
 ArrayAccess . ArrayAccess   ::= "[" Exp "]" ;
 (:[])       . [ArrayAccess] ::= ArrayAccess ;
 (:)					. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
@@ -49,16 +59,10 @@ BNotEqual . BinaryOperator ::= "!-" ;
 BAnd      . BinaryOperator ::= "&&" ;
 BOr       . BinaryOperator ::= "||" ;
 
--- | Array Declaration literal
-ArrayLiteral . ArrayLiteral ::= "[" ArrayElemLiteral "]" ;
-ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
-(:[])            . [Exp] ::= Exp ;
-(:)							 . [Exp] ::= Exp "," [Exp] ;
-
 -- | Tokens recognition
 -- Note the @position@ keyword enables us to keep the position in the ADT tree for clearer 
 -- semantic analysis error messages. The pseudo regex language used after
-
+-- TODO see which should be kept as tokens and which should be leftout
 position token IntDigit (digit+) ;
 position token PlusLiteral ({"+"}) ;
 position token MinusLiteral ({"-"}) ;

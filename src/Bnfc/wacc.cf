@@ -7,6 +7,7 @@ IdentExpr. Exp  ::= Identifier;
 ArrayExpr. Exp ::= ArrayElem ;
 UExpr. Exp ::= UnaryOperator Exp ;
 BExp. Exp ::= Exp BinaryOperator Exp ;
+BracketExp. Exp ::= "(" Exp ")" ;
 
 rules BaseType ::= "int" | "bool" | "char" | "string" ;
 

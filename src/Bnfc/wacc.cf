@@ -8,12 +8,12 @@ Program . Program ::= "begin" [Function] [Statement] "end" ;
 
 -- | Function
 Function . Function ::= Type Identifier "(" [Parameter] ")" "is" [Statement] "end" ;
-terminator Function "" ;
+terminator Function "" ; 
 
 
 -- | Parameter
 Param . Parameter ::= Type Identifier ;
-separator nonempty Parameter "," ;
+separator Parameter "," ;
 
 
 -- | Statements
@@ -25,7 +25,7 @@ StatFree     . Statement ::= "free" Expression ;
 StatReturn   . Statement ::= "return" Expression;
 StatExit     . Statement ::= "exit" Expression ;
 StatPrint    . Statement ::= "print" Expression ;
-StatePrintLn . Statement ::= "println" Expression ;
+StatPrintLn  . Statement ::= "println" Expression ;
 StatIf       . Statement ::= "if" Expression "then" [Statement] "else" [Statement] "fi" ;
 StatWhile    . Statement ::= "while" Expression "do" [Statement] "done" ;
 StatScope    . Statement ::= "begin" [Statement] "end" ;
@@ -48,7 +48,7 @@ AssignPairElem     . AssignRhs ::= PairElem ;
 AssignFunctionCall . AssignRhs ::= "call" Identifier "(" ArgumentList ")" ;
 
 
--- | Argument list for function
+-- | Argument list for calling function
 ArgumentList . ArgumentList ::= [Expression];
 terminator Expression "," ;
 

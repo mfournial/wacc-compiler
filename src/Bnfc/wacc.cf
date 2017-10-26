@@ -1,15 +1,6 @@
--- | Expression
-IntExp     . Exp ::= IntLiteral ;
-BoolExp    . Exp ::= BoolLiteral ;
-CharExpr   . Exp ::= CharLiteral ;
-StringExpr . Exp ::= StringLiteral ;
-PairExpr   . Exp ::= PairLiteral ;
-IdentExpr  . Exp ::= Identifier ;
-ArrayExpr  . Exp ::= Identifier ArrayAccess;
-UExpr      . Exp ::= UnaryOperator Exp ;
-BExp       . Exp ::= Exp BinaryOperator Exp ;
-BracketExp . Exp ::= "(" Exp ")" ;
-Dummy . Exp ::= Type ;
+-- | Pair Element return
+PairFst . PairElem ::= "fst" Exp ;
+PairSnd . PairElem ::= "snd" Exp ;
 
 -- | Global types
 BaseType  . Type ::= BaseType ;
@@ -34,6 +25,19 @@ ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
 PairElemTypeBase  . PairElemType ::= BaseType ;
 PairElemTypeArray . PairElemType ::= ArrayDeclarationLiteral ;
 PairElemTypePair  . PairElemType ::= "pair" ;
+
+-- | Expression
+IntExp     . Exp ::= IntLiteral ;
+BoolExp    . Exp ::= BoolLiteral ;
+CharExpr   . Exp ::= CharLiteral ;
+StringExpr . Exp ::= StringLiteral ;
+PairExpr   . Exp ::= PairLiteral ;
+IdentExpr  . Exp ::= Identifier ;
+ArrayExpr  . Exp ::= Identifier ArrayAccess;
+UExpr      . Exp ::= UnaryOperator Exp ;
+BExp       . Exp ::= Exp BinaryOperator Exp ;
+BracketExp . Exp ::= "(" Exp ")" ;
+Dummy . Exp ::= Type ;
 
 -- | Int literal declaration data
 IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;

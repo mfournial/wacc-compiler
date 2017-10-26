@@ -1,3 +1,9 @@
+
+
+
+-- | Argument list for function
+ArgumentList . ArgumentList ::= [Elem] ;
+
 -- | Pair Element return
 PairFst . PairElem ::= "fst" Exp ;
 PairSnd . PairElem ::= "snd" Exp ;

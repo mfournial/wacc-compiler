@@ -1,5 +1,14 @@
+-- | WACC TREE
+WaccTree . Exp ::= Program ;
+
+
+-- | Program Root
+Program . Program ::= "begin" [Function] [Statement] "end" ;
+
+
 -- | Function
-Function . Function ::= Type Indentifier "(" [Parameter] ")" "is" [Statement] "end" ;
+Function . Function ::= Type Identifier "(" [Parameter] ")" "is" [Statement] "end" ;
+terminator Function "" ;
 
 
 -- | Parameter
@@ -11,14 +20,14 @@ separator nonempty Parameter "," ;
 StatSkip     . Statement ::= "skip" ;
 StatDecAss   . Statement ::= Type Identifier "=" AssignRhs ;
 StatAss      . Statement ::= AssignLhs "=" AssignRhs ;
-StatRead     . Statement ::= "read" Exp ;
-StatFree     . Statement ::= "free" Exp ;
-StatReturn   . Statement ::= "return" Exp;
-StatExit     . Statement ::= "exit" Exp ;
-StatPrint    . Statement ::= "print" Exp ;
-StatePrintLn . Statement ::= "println" Exp ;
-StatIf       . Statement ::= "if" Exp "then" [Statement] "else" [Statement] "fi" ;
-StatWhile    . Statement ::= "while" Exp "do" [Statement] "done" ;
+StatRead     . Statement ::= "read" Expression ;
+StatFree     . Statement ::= "free" Expression ;
+StatReturn   . Statement ::= "return" Expression;
+StatExit     . Statement ::= "exit" Expression ;
+StatPrint    . Statement ::= "print" Expression ;
+StatePrintLn . Statement ::= "println" Expression ;
+StatIf       . Statement ::= "if" Expression "then" [Statement] "else" [Statement] "fi" ;
+StatWhile    . Statement ::= "while" Expression "do" [Statement] "done" ;
 StatScope    . Statement ::= "begin" [Statement] "end" ;
 
 (:[]). [Statement] ::= Statement ;
@@ -32,21 +41,21 @@ AssignToPair     . AssignLhs ::= PairElem ;
 
 
 -- | Assign Right hand side
-AssignExp          . AssignRhs ::= Exp ;
+AssignExp          . AssignRhs ::= Expression ;
 AssignArrayLit     . AssignRhs ::= ArrayDeclarationLiteral ;
-AssignPair         . AssignRhs ::= "newpair" "(" Exp "," Exp ")" ;
+AssignPair         . AssignRhs ::= "newpair" "(" Expression "," Expression ")" ;
 AssignPairElem     . AssignRhs ::= PairElem ;
 AssignFunctionCall . AssignRhs ::= "call" Identifier "(" ArgumentList ")" ;
 
 
 -- | Argument list for function
-ArgumentList . ArgumentList ::= [Exp];
-terminator Exp "," ;
+ArgumentList . ArgumentList ::= [Expression];
+terminator Expression "," ;
 
 
 -- | Pair Element return
-PairFst . PairElem ::= "fst" Exp ;
-PairSnd . PairElem ::= "snd" Exp ;
+PairFst . PairElem ::= "fst" Expression ;
+PairSnd . PairElem ::= "snd" Expression ;
 
 
 -- | Global types
@@ -65,9 +74,9 @@ StringType . BaseType ::= "string" ;
 ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
 
 ArrayElem        . ArrayElem        ::= Identifier "[" ArrayElemLiteral "]" ;
-ArrayElemLiteral . ArrayElemLiteral ::= [Exp] ;
-(:[])            . [Exp] ::= Exp ;
-(:)							 . [Exp] ::= Exp "," [Exp] ;
+ArrayElemLiteral . ArrayElemLiteral ::= [Expression] ;
+(:[])            . [Expression] ::= Expression ;
+(:)							 . [Expression] ::= Expression "," [Expression] ;
 
 
 -- | Pair Element type
@@ -77,16 +86,16 @@ PairElemTypePair  . PairElemType ::= "pair" ;
 
 
 -- | Expression
-IntExp     . Exp ::= IntLiteral ;
-BoolExp    . Exp ::= BoolLiteral ;
-CharExpr   . Exp ::= CharLiteral ;
-StringExpr . Exp ::= StringLiteral ;
-PairExpr   . Exp ::= PairLiteral ;
-IdentExpr  . Exp ::= Identifier ;
-ArrayExpr  . Exp ::= Identifier ArrayAccess;
-UExpr      . Exp ::= UnaryOperator Exp ;
-BExp       . Exp ::= Exp BinaryOperator Exp ;
-BracketExp . Exp ::= "(" Exp ")" ;
+IntExp     . Expression ::= IntLiteral ;
+BoolExp    . Expression ::= BoolLiteral ;
+CharExpr   . Expression ::= CharLiteral ;
+StringExpr . Expression ::= StringLiteral ;
+PairExpr   . Expression ::= PairLiteral ;
+IdentExpr  . Expression ::= Identifier ;
+ArrayExpr  . Expression ::= Identifier ArrayAccess;
+UExpr      . Expression ::= UnaryOperator Expression ;
+BExp       . Expression ::= Expression BinaryOperator Expression ;
+BracketExp . Expression ::= "(" Expression ")" ;
 
 
 -- | Int literal declaration data
@@ -96,7 +105,7 @@ IntLiteral . IntLiteral ::= IntDigit ;
 
 
 -- | Array Element structure ()
-ArrayAccess . ArrayAccess   ::= "[" Exp "]" ;
+ArrayAccess . ArrayAccess   ::= "[" Expression "]" ;
 (:[])       . [ArrayAccess] ::= ArrayAccess ;
 (:)					. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
 

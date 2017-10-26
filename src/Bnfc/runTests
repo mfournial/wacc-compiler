@@ -1,0 +1,12 @@
+#!/usr/bin/env perl
+
+use v5.14;
+
+use Cwd qw(cwd);
+my $dir = cwd;
+
+my @files = split("\n", `find ../../src-test/wacc-samples/valid/ -type f`);
+
+for my $file (@files) {
+	print `./testWacc $file`;
+}

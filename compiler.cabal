@@ -28,8 +28,9 @@ library
   default-language:  Haskell2010
   ghc-options:       -Wall -Werror -fno-warn-unused-top-binds -O2
   hs-source-dirs:    src
-  exposed-modules:   Data.Waskell.ADT
+  exposed-modules:   Data.Waskell.Error
   build-depends:     base >= 4.8 && < 5
+                   , bytestring >= 0.10 && < 0.11
 
 executable compiler-exe
   default-language:  Haskell2010

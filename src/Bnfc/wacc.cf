@@ -102,32 +102,32 @@ BExp       . Expression ::= Expression BinaryOperator Expression ;
 BracketExp . Expression ::= "(" Expression ")" ;
 
 
--- | Int literal declaration data
-IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
-IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
-IntLiteral . IntLiteral ::= IntDigit ;
-
-
 -- | Operators
 UBang   . UnaryOperator ::= "!" ;
-UMinus  . UnaryOperator ::= "-" ;
+UMinus  . UnaryOperator ::= MinusLiteral ;
 ULenght . UnaryOperator ::= "len" ;
 UOrd    . UnaryOperator ::= "ord" ;
 UChr    . UnaryOperator ::= "chr" ;
 
-BTimes    . BinaryOperator ::= "*" ;
-BDivide   . BinaryOperator ::= "/" ;
-BModulus  . BinaryOperator ::= "%" ;
-BPlus     . BinaryOperator ::= PlusLiteral ;
-BMinus    . BinaryOperator ::= MinusLiteral ;
-BMore     . BinaryOperator ::= ">" ;
-BLess     . BinaryOperator ::= "<" ;
-BMoreEqual. BinaryOperator ::= ">=" ;
-BLessEqual. BinaryOperator ::= "<=" ;
-BEqual    . BinaryOperator ::= "==" ;
-BNotEqual . BinaryOperator ::= "!=" ;
-BAnd      . BinaryOperator ::= "&&" ;
-BOr       . BinaryOperator ::= "||" ;
+
+BTimes     . BinaryOperator ::= "*" ;
+BDivide    . BinaryOperator ::= "/" ;
+BModulus   . BinaryOperator ::= "%" ;
+BPlus      . BinaryOperator ::= PlusLiteral;
+BMinus     . BinaryOperator ::= MinusLiteral;
+BMore      . BinaryOperator ::= ">" ;
+BLess      . BinaryOperator ::= "<" ;
+BMoreEqual . BinaryOperator ::= ">=" ;
+BLessEqual . BinaryOperator ::= "<=" ;
+BEqual     . BinaryOperator ::= "==" ;
+BNotEqual  . BinaryOperator ::= "!=" ;
+BAnd       . BinaryOperator ::= "&&" ;
+BOr        . BinaryOperator ::= "||" ;
+
+-- | Int literal declaration data
+IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
+IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
+IntLiteral . IntLiteral ::= IntDigit ;
 
 
 -- | Tokens recognition
@@ -135,8 +135,8 @@ BOr       . BinaryOperator ::= "||" ;
 -- semantic analysis error messages. The pseudo regex language used after
 -- TODO see which should be kept as tokens and which should be leftout
 position token IntDigit (digit+) ;
-position token PlusLiteral ({"+"}) ;
-position token MinusLiteral ({"-"}) ;
+position token PlusLiteral ('+') ;
+position token MinusLiteral ('-') ;
 position token BoolLiteral ({"true"} | {"false"}) ;
 position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token PairLiteral ({"null"}) ;

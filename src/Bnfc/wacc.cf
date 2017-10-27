@@ -138,7 +138,7 @@ position token IntDigit (digit+) ;
 position token PlusLiteral ({"+"}) ;
 position token MinusLiteral ({"-"}) ;
 position token BoolLiteral ({"true"} | {"false"}) ;
-position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt"])) '\'') ;
+position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token PairLiteral ({"null"}) ;
 position token Identifier (('_' | lower) (letter | digit | '_')*) ;
 position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt"]))* '"') ;

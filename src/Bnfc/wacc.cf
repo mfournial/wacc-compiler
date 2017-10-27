@@ -118,8 +118,8 @@ UChr    . UnaryOperator ::= "chr" ;
 BTimes    . BinaryOperator ::= "*" ;
 BDivide   . BinaryOperator ::= "/" ;
 BModulus  . BinaryOperator ::= "%" ;
-BPlus     . BinaryOperator ::= "+" ;
-BMinus    . BinaryOperator ::= "-" ;
+BPlus     . BinaryOperator ::= PlusLiteral ;
+BMinus    . BinaryOperator ::= MinusLiteral ;
 BMore     . BinaryOperator ::= ">" ;
 BLess     . BinaryOperator ::= "<" ;
 BMoreEqual. BinaryOperator ::= ">=" ;
@@ -141,7 +141,7 @@ position token BoolLiteral ({"true"} | {"false"}) ;
 position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token PairLiteral ({"null"}) ;
 position token Identifier (('_' | lower) (letter | digit | '_')*) ;
-position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt"]))* '"') ;
+position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""]))* '"') ;
 
 
 -- | Comment parser

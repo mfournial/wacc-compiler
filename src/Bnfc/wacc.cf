@@ -34,23 +34,23 @@ StatScope    . Statement ::= "begin" [Statement] "end" ;
 (:)  . [Statement] ::= Statement ";" [Statement] ;
 
 
--- | Assign left hand side
+-- | Assign left hand side (LHS)
 AssignToIdent    . AssignLhs ::= Identifier ;
 AssignToArrayElem. AssignLhs ::= ArrayElem ;
 AssignToPair     . AssignLhs ::= PairElem ;
 
 
--- | Assign Right hand side
+-- | Assign Right hand side (RHS)
 AssignExp          . AssignRhs ::= Expression ;
-AssignArrayLit     . AssignRhs ::= ArrayDeclarationLiteral ;
+AssignArrayLit     . AssignRhs ::= ArrayLiteral ;
 AssignPair         . AssignRhs ::= "newpair" "(" Expression "," Expression ")" ;
 AssignPairElem     . AssignRhs ::= PairElem ;
-AssignFunctionCall . AssignRhs ::= "call" Identifier "(" ArgumentList ")" ;
+AssignFunctionCall . AssignRhs ::= "call" Identifier "(" [ArgumentList] ")" ;
 
 
 -- | Argument list for calling function
-ArgumentList . ArgumentList ::= [Expression];
-terminator Expression "," ;
+ArgumentList . ArgumentList ::= Expression;
+separator ArgumentList "," ;
 
 
 -- | Pair Element return
@@ -73,10 +73,14 @@ StringType . BaseType ::= "string" ;
 -- | Array Type Declaration literal
 ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
 
-ArrayElem        . ArrayElem        ::= Identifier "[" ArrayElemLiteral "]" ;
-ArrayElemLiteral . ArrayElemLiteral ::= [Expression] ;
-(:[])            . [Expression] ::= Expression ;
-(:)							 . [Expression] ::= Expression "," [Expression] ;
+ArrayElem   .  ArrayElem    ::= Identifier [ArrayAccess] ;
+ArrayAccess .  ArrayAccess  ::= "[" Expression "]" ;
+(:[])       . [ArrayAccess] ::= ArrayAccess ;
+(:)   		  . [ArrayAccess] ::= ArrayAccess [ArrayAccess] ;
+
+ArrayLiteral     . ArrayLiteral     ::= "[" [ArrayLiteralElem] "]" ;
+ArrayLiteralElem . ArrayLiteralElem ::= Expression ;
+separator ArrayLiteralElem "," ;
 
 
 -- | Pair Element type
@@ -92,7 +96,7 @@ CharExpr   . Expression ::= CharLiteral ;
 StringExpr . Expression ::= StringLiteral ;
 PairExpr   . Expression ::= PairLiteral ;
 IdentExpr  . Expression ::= Identifier ;
-ArrayExpr  . Expression ::= Identifier ArrayAccess;
+ArrayExpr  . Expression ::= ArrayElem ;
 UExpr      . Expression ::= UnaryOperator Expression ;
 BExp       . Expression ::= Expression BinaryOperator Expression ;
 BracketExp . Expression ::= "(" Expression ")" ;
@@ -103,11 +107,6 @@ IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
 IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
 
-
--- | Array Element structure ()
-ArrayAccess . ArrayAccess   ::= "[" Expression "]" ;
-(:[])       . [ArrayAccess] ::= ArrayAccess ;
-(:)					. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ; 
 
 
 -- | Operators
@@ -127,7 +126,7 @@ BLess     . BinaryOperator ::= "<" ;
 BMoreEqual. BinaryOperator ::= ">=" ;
 BLessEqual. BinaryOperator ::= "<=" ;
 BEqual    . BinaryOperator ::= "==" ;
-BNotEqual . BinaryOperator ::= "!-" ;
+BNotEqual . BinaryOperator ::= "!=" ;
 BAnd      . BinaryOperator ::= "&&" ;
 BOr       . BinaryOperator ::= "||" ;
 

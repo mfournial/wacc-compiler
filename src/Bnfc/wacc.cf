@@ -20,7 +20,7 @@ separator Parameter "," ;
 StatSkip     . Statement ::= "skip" ;
 StatDecAss   . Statement ::= Type Identifier "=" AssignRhs ;
 StatAss      . Statement ::= AssignLhs "=" AssignRhs ;
-StatRead     . Statement ::= "read" Expression ;
+StatRead     . Statement ::= "read" AssignLhs ;
 StatFree     . Statement ::= "free" Expression ;
 StatReturn   . Statement ::= "return" Expression;
 StatExit     . Statement ::= "exit" Expression ;

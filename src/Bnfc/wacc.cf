@@ -108,7 +108,6 @@ IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
 
 
-
 -- | Operators
 UBang   . UnaryOperator ::= "!" ;
 UMinus  . UnaryOperator ::= "-" ;

@@ -115,7 +115,7 @@ UBang   . UnaryOperator ::= "!" ;
 UMinus  . UnaryOperator ::= "-" ;
 ULenght . UnaryOperator ::= "len" ;
 UOrd    . UnaryOperator ::= "ord" ;
-UChr    . UnaryOperator ::= "char" ;
+UChr    . UnaryOperator ::= "chr" ;
 
 BTimes    . BinaryOperator ::= "*" ;
 BDivide   . BinaryOperator ::= "/" ;
@@ -127,7 +127,7 @@ BLess     . BinaryOperator ::= "<" ;
 BMoreEqual. BinaryOperator ::= ">=" ;
 BLessEqual. BinaryOperator ::= "<=" ;
 BEqual    . BinaryOperator ::= "==" ;
-BNotEqual . BinaryOperator ::= "!-" ;
+BNotEqual . BinaryOperator ::= "!=" ;
 BAnd      . BinaryOperator ::= "&&" ;
 BOr       . BinaryOperator ::= "||" ;
 

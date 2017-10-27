@@ -2,7 +2,9 @@ module Data.Waskell.Error (
   Level,
   Stage,
   ErrorData,
-  ErrorList
+  ErrorList,
+  throwError,
+  throwFatal
 ) where
 
 import Control.Monad (liftM)
@@ -65,5 +67,8 @@ instance Monad ErrorList where
 instance Functor ErrorList where
   fmap = liftM
 
-throwError :: ErrorData -> ErrorList a
-throwError ed = ErrorList Nothing [ed]
+throwError :: a -> ErrorData -> ErrorList a
+throwError a e = ErrorList (Just a) [e]
+
+throwFatal :: Stage -> (Int, Int) -> String -> ErrorList a
+throwFatal s p m = ErrorList Nothing [(ErrorData FatalLevel s p m)]

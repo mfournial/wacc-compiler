@@ -105,7 +105,7 @@ BracketExp . Expression ::= "(" Expression ")" ;
 -- | Operators
 UBang   . UnaryOperator ::= "!" ;
 UMinus  . UnaryOperator ::= MinusLiteral ;
-ULenght . UnaryOperator ::= "len" ;
+ULength . UnaryOperator ::= "len" ;
 UOrd    . UnaryOperator ::= "ord" ;
 UChr    . UnaryOperator ::= "chr" ;
 

@@ -2,7 +2,9 @@ module Data.Waskell.Error (
   Level,
   Stage,
   ErrorData,
-  ErrorList
+  ErrorList,
+  throwError,
+  throwFatal
 ) where
 
 import Control.Monad (liftM)
@@ -31,7 +33,8 @@ data ErrorData = ErrorData {
   level :: Level,
   stage :: Stage,
   position :: (Int, Int),
-  message :: String
+  message :: String,
+  exitCode :: Int
 } deriving (Eq)
 
 instance Ord ErrorData where
@@ -55,7 +58,7 @@ instance Applicative ErrorList where
 
 instance Monad ErrorList where
   return = pure  
-  fail s = ErrorList Nothing [(ErrorData FatalLevel UnknownStage (0,0) ("Internal Compiler Error: " ++ s))]
+  fail s = ErrorList Nothing [(ErrorData FatalLevel UnknownStage (0,0) ("Internal Compiler Error: " ++ s) 255)]
   ErrorList (Just a) es >>= f = case f a of
     ErrorList (Just b) es' -> ErrorList (Just b) (es ++ es')
     ErrorList Nothing es'  -> ErrorList Nothing (es ++ es')
@@ -65,5 +68,8 @@ instance Monad ErrorList where
 instance Functor ErrorList where
   fmap = liftM
 
-throwError :: ErrorData -> ErrorList a
-throwError ed = ErrorList Nothing [ed]
+throwError :: a -> ErrorData -> ErrorList a
+throwError a e = ErrorList (Just a) [e]
+
+throwFatal :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
+throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]

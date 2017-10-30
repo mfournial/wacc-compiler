@@ -21,5 +21,5 @@ import qualified Data.ByteString.Lazy as B
 
 newtype Token = Token Int
 
-generateAST :: [Token] -> W.WaccTree
+generateAST :: [Token] -> W.Exp
 generateAST = undefined

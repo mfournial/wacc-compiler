@@ -7,6 +7,9 @@ my $dir = cwd;
 
 my @files = split("\n", `find ../../src-test/wacc-samples/valid/ -type f`);
 
+my $cnt = 0;
 for my $file (@files) {
 	print `./testWacc $file`;
+  $cnt++;
 }
+say "You have tested $cnt files";

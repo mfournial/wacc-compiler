@@ -28,7 +28,7 @@ $u = [\0-\255]          -- universal: any character
 
 $white+ ;
 @rsyms { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
-e n d { tok (\p s -> PT p (eitherResIdent (T_EndT . share) s)) }
+e n d { ignoreStrToken (\p s -> PT p (eitherResIdent (T_EndT . share) s)) }
 b e g i n { tok (\p s -> PT p (eitherResIdent (T_BeginT . share) s)) }
 s k i p { tok (\p s -> PT p (eitherResIdent (T_SkipT . share) s)) }
 r e a d { tok (\p s -> PT p (eitherResIdent (T_ReadT . share) s)) }
@@ -93,6 +93,9 @@ $l $i*   { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
 
 tok :: (Posn -> String -> Token) -> (Posn -> String -> Token)
 tok f p s = f p s
+
+ignoreStrToken :: (Posn -> String -> Token) -> (Posn -> Token)
+ignoreStrToken f p s = f s
 
 share :: String -> String
 share = id

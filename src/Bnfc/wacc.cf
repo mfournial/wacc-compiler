@@ -61,7 +61,7 @@ PairSnd . PairElem ::= SndT Expression ;
 -- | Global types
 BaseType  . Type ::= BaseType ;
 ArrayType . Type ::= ArrayDeclarationLiteral ;
-PairType  . Type ::= PairT LBracketT PairElemType "," PairElemType RParenT ;
+PairType  . Type ::= PairT LParenT PairElemType "," PairElemType RParenT ;
 
 
 -- | Base type
@@ -119,7 +119,7 @@ BGreater      . BinaryOperator ::= GreaterT;
 BLess         . BinaryOperator ::= LessT ;
 BGreaterEqual . BinaryOperator ::= GreaterEqT ;
 BLessEqual    . BinaryOperator ::= LessEqT ;
-BEqual        . BinaryOperator ::= EqualT ;
+BEqual        . BinaryOperator ::= EqT ;
 BNotEqual     . BinaryOperator ::= NotEqT ;
 BAnd          . BinaryOperator ::= AndT ;
 BOr           . BinaryOperator ::= OrT ;

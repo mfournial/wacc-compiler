@@ -3,11 +3,11 @@ WaccTree . Exp ::= Program ;
 
 
 -- | Program Root
-Program . Program ::= "begin" [Function] [Statement] "end" ;
+Program . Program ::= BeginT [Function] [Statement] EndT ;
 
 
 -- | Function
-Function . Function ::= Type Identifier "(" [Parameter] ")" "is" [Statement] "end" ;
+Function . Function ::= Type Identifier LParenT [Parameter] RParenT IsT [Statement] EndT ;
 terminator Function "" ; 
 
 
@@ -17,18 +17,18 @@ separator Parameter "," ;
 
 
 -- | Statements
-StatSkip     . Statement ::= "skip" ;
-StatDecAss   . Statement ::= Type Identifier "=" AssignRhs ;
-StatAss      . Statement ::= AssignLhs "=" AssignRhs ;
-StatRead     . Statement ::= "read" AssignLhs ;
-StatFree     . Statement ::= "free" Expression ;
-StatReturn   . Statement ::= "return" Expression;
-StatExit     . Statement ::= "exit" Expression ;
-StatPrint    . Statement ::= "print" Expression ;
-StatPrintLn  . Statement ::= "println" Expression ;
-StatIf       . Statement ::= "if" Expression "then" [Statement] "else" [Statement] "fi" ;
-StatWhile    . Statement ::= "while" Expression "do" [Statement] "done" ;
-StatScope    . Statement ::= "begin" [Statement] "end" ;
+StatSkip     . Statement ::= SkipT ;
+StatDecAss   . Statement ::= Type Identifier EqualT AssignRhs ;
+StatAss      . Statement ::= AssignLhs EqualT  AssignRhs ;
+StatRead     . Statement ::= ReadT AssignLhs ;
+StatFree     . Statement ::= FreeT Expression ;
+StatReturn   . Statement ::= ReturnT Expression;
+StatExit     . Statement ::= ExitT Expression ;
+StatPrint    . Statement ::= PrintT Expression ;
+StatPrintLn  . Statement ::= PrintLnT Expression ;
+StatIf       . Statement ::= IfT Expression ThenT [Statement] ElseT [Statement] FiT ;
+StatWhile    . Statement ::= WhileT Expression DoT [Statement] DoneT ;
+StatScope    . Statement ::= BeginT [Statement] EndT;
 
 (:[]). [Statement] ::= Statement ;
 (:)  . [Statement] ::= Statement ";" [Statement] ;
@@ -43,9 +43,9 @@ AssignToPair     . AssignLhs ::= PairElem ;
 -- | Assign Right hand side (RHS)
 AssignExp          . AssignRhs ::= Expression ;
 AssignArrayLit     . AssignRhs ::= ArrayLiteral ;
-AssignPair         . AssignRhs ::= "newpair" "(" Expression "," Expression ")" ;
+AssignPair         . AssignRhs ::= NewpairT LParenT Expression "," Expression RParenT ;
 AssignPairElem     . AssignRhs ::= PairElem ;
-AssignFunctionCall . AssignRhs ::= "call" Identifier "(" [ArgumentList] ")" ;
+AssignFunctionCall . AssignRhs ::= CallT Identifier LParenT [ArgumentList] RParenT ;
 
 
 -- | Argument list for calling function
@@ -54,31 +54,31 @@ separator ArgumentList "," ;
 
 
 -- | Pair Element return
-PairFst . PairElem ::= "fst" Expression ;
-PairSnd . PairElem ::= "snd" Expression ;
+PairFst . PairElem ::= FstT Expression ;
+PairSnd . PairElem ::= SndT Expression ;
 
 
 -- | Global types
 BaseType  . Type ::= BaseType ;
 ArrayType . Type ::= ArrayDeclarationLiteral ;
-PairType  . Type ::= "pair" "(" PairElemType "," PairElemType ")" ;
+PairType  . Type ::= PairT LBracketT PairElemType "," PairElemType RParenT ;
 
 
 -- | Base type
-IntType    . BaseType ::= "int" ;
-BoolType   . BaseType ::= "bool" ;
-CharType   . BaseType ::= "char" ;
-StringType . BaseType ::= "string" ;
+IntType    . BaseType ::= IntT ;
+BoolType   . BaseType ::= BoolT ;
+CharType   . BaseType ::= CharT ;
+StringType . BaseType ::= StringT ;
 
 -- | Array Type Declaration literal
-ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type "[" "]" ;
+ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type LBracketT RBracketT ;
 
 ArrayElem   .  ArrayElem    ::= Identifier [ArrayAccess] ;
-ArrayAccess .  ArrayAccess  ::= "[" Expression "]" ;
+ArrayAccess .  ArrayAccess  ::= LBracketT Expression RBracketT ;
 (:[])       . [ArrayAccess] ::= ArrayAccess ;
 (:)   		  . [ArrayAccess] ::= ArrayAccess [ArrayAccess] ;
 
-ArrayLiteral     . ArrayLiteral     ::= "[" [ArrayLiteralElem] "]" ;
+ArrayLiteral     . ArrayLiteral     ::= LBracketT [ArrayLiteralElem] RBracketT ;
 ArrayLiteralElem . ArrayLiteralElem ::= Expression ;
 separator ArrayLiteralElem "," ;
 
@@ -86,7 +86,7 @@ separator ArrayLiteralElem "," ;
 -- | Pair Element type
 PairElemTypeBase  . PairElemType ::= BaseType ;
 PairElemTypeArray . PairElemType ::= ArrayDeclarationLiteral ;
-PairElemTypePair  . PairElemType ::= "pair" ;
+PairElemTypePair  . PairElemType ::= PairT ;
 
 
 -- | Expression
@@ -99,34 +99,34 @@ IdentExpr  . Expression ::= Identifier ;
 ArrayExpr  . Expression ::= ArrayElem ;
 UExpr      . Expression ::= UnaryOperator Expression ;
 BExp       . Expression ::= Expression BinaryOperator Expression ;
-BracketExp . Expression ::= "(" Expression ")" ;
+BracketExp . Expression ::= LParenT Expression RParenT ;
 
 
 -- | Operators
-UBang   . UnaryOperator ::= "!" ;
-UMinus  . UnaryOperator ::= MinusLiteral ;
-ULength . UnaryOperator ::= "len" ;
-UOrd    . UnaryOperator ::= "ord" ;
-UChr    . UnaryOperator ::= "chr" ;
+UBang   . UnaryOperator ::= NotT ;
+UMinus  . UnaryOperator ::= MinusToken ;
+ULength . UnaryOperator ::= LenT ;
+UOrd    . UnaryOperator ::= OrdT ;
+UChr    . UnaryOperator ::= ChrT ;
 
 
-BTimes     . BinaryOperator ::= "*" ;
-BDivide    . BinaryOperator ::= "/" ;
-BModulus   . BinaryOperator ::= "%" ;
-BPlus      . BinaryOperator ::= PlusLiteral;
-BMinus     . BinaryOperator ::= MinusLiteral;
-BMore      . BinaryOperator ::= ">" ;
-BLess      . BinaryOperator ::= "<" ;
-BMoreEqual . BinaryOperator ::= ">=" ;
-BLessEqual . BinaryOperator ::= "<=" ;
-BEqual     . BinaryOperator ::= "==" ;
-BNotEqual  . BinaryOperator ::= "!=" ;
-BAnd       . BinaryOperator ::= "&&" ;
-BOr        . BinaryOperator ::= "||" ;
+BTimes        . BinaryOperator ::= TimesT ;
+BDivide       . BinaryOperator ::= DivideT ;
+BModulus      . BinaryOperator ::= ModuloT ;
+BPlus         . BinaryOperator ::= PlusToken;
+BMinus     	  . BinaryOperator ::= MinusToken;
+BGreater      . BinaryOperator ::= GreaterT;
+BLess         . BinaryOperator ::= LessT ;
+BGreaterEqual . BinaryOperator ::= GreaterEqT ;
+BLessEqual    . BinaryOperator ::= LessEqT ;
+BEqual        . BinaryOperator ::= EqualT ;
+BNotEqual     . BinaryOperator ::= NotEqT ;
+BAnd          . BinaryOperator ::= AndT ;
+BOr           . BinaryOperator ::= OrT ;
 
 -- | Int literal declaration data
-IntPlus    . IntLiteral ::= PlusLiteral IntDigit ;
-IntMinus   . IntLiteral ::= MinusLiteral IntDigit ;
+IntPlus    . IntLiteral ::= PlusToken IntDigit ;
+IntMinus   . IntLiteral ::= MinusToken IntDigit ;
 IntLiteral . IntLiteral ::= IntDigit ;
 
 
@@ -135,9 +135,55 @@ IntLiteral . IntLiteral ::= IntDigit ;
 -- semantic analysis error messages. The pseudo regex language used after
 -- TODO see which should be kept as tokens and which should be leftout
 position token IntDigit (digit+) ;
-position token PlusLiteral ('+') ;
-position token MinusLiteral ('-') ;
+position token PlusToken ('+') ;
+position token MinusToken ('-') ;
 position token BoolLiteral ({"true"} | {"false"}) ;
+position token IntT ({"int"}) ;
+position token BoolT ({"bool"}) ;
+position token CharT ({"char"}) ;
+position token StringT ({"string"}) ;
+position token TimesT ({"*"}) ;
+position token DivideT ({"/"}) ;
+position token ModuloT ({"%"}) ;
+position token GreaterT ({">"}) ;
+position token LessT ({"<"}) ;
+position token GreaterEqT ({">="}) ;
+position token LessEqT ({"<="}) ;
+position token EqT ({"=="}) ;
+position token NotEqT ({"!="}) ;
+position token AndT ({"&&"}) ;
+position token OrT ({"||"}) ;
+position token SkipT ({"skip"}) ;
+position token ReadT ({"read"}) ;
+position token PrintT ({"print"}) ;
+position token PrintLnT ({"println"}) ;
+position token FreeT ({"free"}) ;
+position token ExitT ({"exit"}) ;
+position token LParenT ('(') ;
+position token RParenT (')') ;
+position token LBracketT ('[') ;
+position token RBracketT (']') ;
+position token IsT ({"is"}) ;
+position token WhileT ({"while"}) ;
+position token DoT ({"do"}) ;
+position token DoneT ({"done"}) ;
+position token IfT ({"if"}) ;
+position token FiT ({"fi"}) ;
+position token ThenT ({"then"}) ;
+position token ElseT ({"else"}) ;
+position token EndT ({"end"}) ;
+position token BeginT ({"begin"}) ;
+position token PairT ({"pair"}) ;
+position token NewpairT ({"newpair"}) ;
+position token CallT ({"call"}) ;
+position token FstT ({"fst"}) ;
+position token SndT ({"snd"}) ;
+position token EqualT ('=') ;
+position token LenT ({"len"}) ;
+position token OrdT ({"ord"}) ;
+position token ChrT ({"chr"}) ;
+position token ReturnT ({"return"}) ;
+position token NotT ('!') ;
 position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token PairLiteral ({"null"}) ;
 position token Identifier (('_' | lower) (letter | digit | '_')*) ;

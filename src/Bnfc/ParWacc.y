@@ -42,6 +42,14 @@ import ErrM
   ',' { PT _ (TS _ 1) }
   ';' { PT _ (TS _ 2) }
 
+L_EndT { PT _ (T_EndT _) }
+L_BeginT { PT _ (T_BeginT _) }
+L_SkipT { PT _ (T_SkipT _) }
+L_ReadT { PT _ (T_ReadT _) }
+L_PrintT { PT _ (T_PrintT _) }
+L_PrintLnT { PT _ (T_PrintLnT _) }
+L_FreeT { PT _ (T_FreeT _) }
+L_ExitT { PT _ (T_ExitT _) }
 L_IntDigit { PT _ (T_IntDigit _) }
 L_PlusToken { PT _ (T_PlusToken _) }
 L_MinusToken { PT _ (T_MinusToken _) }
@@ -61,12 +69,6 @@ L_EqT { PT _ (T_EqT _) }
 L_NotEqT { PT _ (T_NotEqT _) }
 L_AndT { PT _ (T_AndT _) }
 L_OrT { PT _ (T_OrT _) }
-L_SkipT { PT _ (T_SkipT _) }
-L_ReadT { PT _ (T_ReadT _) }
-L_PrintT { PT _ (T_PrintT _) }
-L_PrintLnT { PT _ (T_PrintLnT _) }
-L_FreeT { PT _ (T_FreeT _) }
-L_ExitT { PT _ (T_ExitT _) }
 L_LParenT { PT _ (T_LParenT _) }
 L_RParenT { PT _ (T_RParenT _) }
 L_LBracketT { PT _ (T_LBracketT _) }
@@ -79,8 +81,6 @@ L_IfT { PT _ (T_IfT _) }
 L_FiT { PT _ (T_FiT _) }
 L_ThenT { PT _ (T_ThenT _) }
 L_ElseT { PT _ (T_ElseT _) }
-L_EndT { PT _ (T_EndT _) }
-L_BeginT { PT _ (T_BeginT _) }
 L_PairT { PT _ (T_PairT _) }
 L_NewpairT { PT _ (T_NewpairT _) }
 L_CallT { PT _ (T_CallT _) }
@@ -92,14 +92,22 @@ L_OrdT { PT _ (T_OrdT _) }
 L_ChrT { PT _ (T_ChrT _) }
 L_ReturnT { PT _ (T_ReturnT _) }
 L_NotT { PT _ (T_NotT _) }
-L_CharLiteral { PT _ (T_CharLiteral _) }
 L_PairLiteral { PT _ (T_PairLiteral _) }
-L_Identifier { PT _ (T_Identifier _) }
+L_CharLiteral { PT _ (T_CharLiteral _) }
 L_StringLiteral { PT _ (T_StringLiteral _) }
+L_Identifier { PT _ (T_Identifier _) }
 
 
 %%
 
+EndT    :: { EndT} : L_EndT { EndT (mkPosToken $1)}
+BeginT    :: { BeginT} : L_BeginT { BeginT (mkPosToken $1)}
+SkipT    :: { SkipT} : L_SkipT { SkipT (mkPosToken $1)}
+ReadT    :: { ReadT} : L_ReadT { ReadT (mkPosToken $1)}
+PrintT    :: { PrintT} : L_PrintT { PrintT (mkPosToken $1)}
+PrintLnT    :: { PrintLnT} : L_PrintLnT { PrintLnT (mkPosToken $1)}
+FreeT    :: { FreeT} : L_FreeT { FreeT (mkPosToken $1)}
+ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
 IntDigit    :: { IntDigit} : L_IntDigit { IntDigit (mkPosToken $1)}
 PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken $1)}
 MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken $1)}
@@ -119,12 +127,6 @@ EqT    :: { EqT} : L_EqT { EqT (mkPosToken $1)}
 NotEqT    :: { NotEqT} : L_NotEqT { NotEqT (mkPosToken $1)}
 AndT    :: { AndT} : L_AndT { AndT (mkPosToken $1)}
 OrT    :: { OrT} : L_OrT { OrT (mkPosToken $1)}
-SkipT    :: { SkipT} : L_SkipT { SkipT (mkPosToken $1)}
-ReadT    :: { ReadT} : L_ReadT { ReadT (mkPosToken $1)}
-PrintT    :: { PrintT} : L_PrintT { PrintT (mkPosToken $1)}
-PrintLnT    :: { PrintLnT} : L_PrintLnT { PrintLnT (mkPosToken $1)}
-FreeT    :: { FreeT} : L_FreeT { FreeT (mkPosToken $1)}
-ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
 LParenT    :: { LParenT} : L_LParenT { LParenT (mkPosToken $1)}
 RParenT    :: { RParenT} : L_RParenT { RParenT (mkPosToken $1)}
 LBracketT    :: { LBracketT} : L_LBracketT { LBracketT (mkPosToken $1)}
@@ -137,8 +139,6 @@ IfT    :: { IfT} : L_IfT { IfT (mkPosToken $1)}
 FiT    :: { FiT} : L_FiT { FiT (mkPosToken $1)}
 ThenT    :: { ThenT} : L_ThenT { ThenT (mkPosToken $1)}
 ElseT    :: { ElseT} : L_ElseT { ElseT (mkPosToken $1)}
-EndT    :: { EndT} : L_EndT { EndT (mkPosToken $1)}
-BeginT    :: { BeginT} : L_BeginT { BeginT (mkPosToken $1)}
 PairT    :: { PairT} : L_PairT { PairT (mkPosToken $1)}
 NewpairT    :: { NewpairT} : L_NewpairT { NewpairT (mkPosToken $1)}
 CallT    :: { CallT} : L_CallT { CallT (mkPosToken $1)}
@@ -150,10 +150,10 @@ OrdT    :: { OrdT} : L_OrdT { OrdT (mkPosToken $1)}
 ChrT    :: { ChrT} : L_ChrT { ChrT (mkPosToken $1)}
 ReturnT    :: { ReturnT} : L_ReturnT { ReturnT (mkPosToken $1)}
 NotT    :: { NotT} : L_NotT { NotT (mkPosToken $1)}
-CharLiteral    :: { CharLiteral} : L_CharLiteral { CharLiteral (mkPosToken $1)}
 PairLiteral    :: { PairLiteral} : L_PairLiteral { PairLiteral (mkPosToken $1)}
-Identifier    :: { Identifier} : L_Identifier { Identifier (mkPosToken $1)}
+CharLiteral    :: { CharLiteral} : L_CharLiteral { CharLiteral (mkPosToken $1)}
 StringLiteral    :: { StringLiteral} : L_StringLiteral { StringLiteral (mkPosToken $1)}
+Identifier    :: { Identifier} : L_Identifier { Identifier (mkPosToken $1)}
 
 Exp :: { Exp }
 Exp : Program { AbsWacc.WaccTree $1 }

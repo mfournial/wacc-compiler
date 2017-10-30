@@ -79,6 +79,38 @@ instance Print Double where
 
 
 
+instance Print EndT where
+  prt _ (EndT (_,i)) = doc (showString ( i))
+
+
+instance Print BeginT where
+  prt _ (BeginT (_,i)) = doc (showString ( i))
+
+
+instance Print SkipT where
+  prt _ (SkipT (_,i)) = doc (showString ( i))
+
+
+instance Print ReadT where
+  prt _ (ReadT (_,i)) = doc (showString ( i))
+
+
+instance Print PrintT where
+  prt _ (PrintT (_,i)) = doc (showString ( i))
+
+
+instance Print PrintLnT where
+  prt _ (PrintLnT (_,i)) = doc (showString ( i))
+
+
+instance Print FreeT where
+  prt _ (FreeT (_,i)) = doc (showString ( i))
+
+
+instance Print ExitT where
+  prt _ (ExitT (_,i)) = doc (showString ( i))
+
+
 instance Print IntDigit where
   prt _ (IntDigit (_,i)) = doc (showString ( i))
 
@@ -155,30 +187,6 @@ instance Print OrT where
   prt _ (OrT (_,i)) = doc (showString ( i))
 
 
-instance Print SkipT where
-  prt _ (SkipT (_,i)) = doc (showString ( i))
-
-
-instance Print ReadT where
-  prt _ (ReadT (_,i)) = doc (showString ( i))
-
-
-instance Print PrintT where
-  prt _ (PrintT (_,i)) = doc (showString ( i))
-
-
-instance Print PrintLnT where
-  prt _ (PrintLnT (_,i)) = doc (showString ( i))
-
-
-instance Print FreeT where
-  prt _ (FreeT (_,i)) = doc (showString ( i))
-
-
-instance Print ExitT where
-  prt _ (ExitT (_,i)) = doc (showString ( i))
-
-
 instance Print LParenT where
   prt _ (LParenT (_,i)) = doc (showString ( i))
 
@@ -227,14 +235,6 @@ instance Print ElseT where
   prt _ (ElseT (_,i)) = doc (showString ( i))
 
 
-instance Print EndT where
-  prt _ (EndT (_,i)) = doc (showString ( i))
-
-
-instance Print BeginT where
-  prt _ (BeginT (_,i)) = doc (showString ( i))
-
-
 instance Print PairT where
   prt _ (PairT (_,i)) = doc (showString ( i))
 
@@ -279,20 +279,20 @@ instance Print NotT where
   prt _ (NotT (_,i)) = doc (showString ( i))
 
 
-instance Print CharLiteral where
-  prt _ (CharLiteral (_,i)) = doc (showString ( i))
-
-
 instance Print PairLiteral where
   prt _ (PairLiteral (_,i)) = doc (showString ( i))
 
 
-instance Print Identifier where
-  prt _ (Identifier (_,i)) = doc (showString ( i))
+instance Print CharLiteral where
+  prt _ (CharLiteral (_,i)) = doc (showString ( i))
 
 
 instance Print StringLiteral where
   prt _ (StringLiteral (_,i)) = doc (showString ( i))
+
+
+instance Print Identifier where
+  prt _ (Identifier (_,i)) = doc (showString ( i))
 
 
 

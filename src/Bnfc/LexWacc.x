@@ -28,6 +28,14 @@ $u = [\0-\255]          -- universal: any character
 
 $white+ ;
 @rsyms { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
+e n d { tok (\p s -> PT p (eitherResIdent (T_EndT . share) s)) }
+b e g i n { tok (\p s -> PT p (eitherResIdent (T_BeginT . share) s)) }
+s k i p { tok (\p s -> PT p (eitherResIdent (T_SkipT . share) s)) }
+r e a d { tok (\p s -> PT p (eitherResIdent (T_ReadT . share) s)) }
+p r i n t { tok (\p s -> PT p (eitherResIdent (T_PrintT . share) s)) }
+p r i n t l n { tok (\p s -> PT p (eitherResIdent (T_PrintLnT . share) s)) }
+f r e e { tok (\p s -> PT p (eitherResIdent (T_FreeT . share) s)) }
+e x i t { tok (\p s -> PT p (eitherResIdent (T_ExitT . share) s)) }
 $d + { tok (\p s -> PT p (eitherResIdent (T_IntDigit . share) s)) }
 \+ { tok (\p s -> PT p (eitherResIdent (T_PlusToken . share) s)) }
 \- { tok (\p s -> PT p (eitherResIdent (T_MinusToken . share) s)) }
@@ -47,12 +55,6 @@ s t r i n g { tok (\p s -> PT p (eitherResIdent (T_StringT . share) s)) }
 \! \= { tok (\p s -> PT p (eitherResIdent (T_NotEqT . share) s)) }
 \& \& { tok (\p s -> PT p (eitherResIdent (T_AndT . share) s)) }
 \| \| { tok (\p s -> PT p (eitherResIdent (T_OrT . share) s)) }
-s k i p { tok (\p s -> PT p (eitherResIdent (T_SkipT . share) s)) }
-r e a d { tok (\p s -> PT p (eitherResIdent (T_ReadT . share) s)) }
-p r i n t { tok (\p s -> PT p (eitherResIdent (T_PrintT . share) s)) }
-p r i n t l n { tok (\p s -> PT p (eitherResIdent (T_PrintLnT . share) s)) }
-f r e e { tok (\p s -> PT p (eitherResIdent (T_FreeT . share) s)) }
-e x i t { tok (\p s -> PT p (eitherResIdent (T_ExitT . share) s)) }
 \( { tok (\p s -> PT p (eitherResIdent (T_LParenT . share) s)) }
 \) { tok (\p s -> PT p (eitherResIdent (T_RParenT . share) s)) }
 \[ { tok (\p s -> PT p (eitherResIdent (T_LBracketT . share) s)) }
@@ -65,8 +67,6 @@ i f { tok (\p s -> PT p (eitherResIdent (T_IfT . share) s)) }
 f i { tok (\p s -> PT p (eitherResIdent (T_FiT . share) s)) }
 t h e n { tok (\p s -> PT p (eitherResIdent (T_ThenT . share) s)) }
 e l s e { tok (\p s -> PT p (eitherResIdent (T_ElseT . share) s)) }
-e n d { tok (\p s -> PT p (eitherResIdent (T_EndT . share) s)) }
-b e g i n { tok (\p s -> PT p (eitherResIdent (T_BeginT . share) s)) }
 p a i r { tok (\p s -> PT p (eitherResIdent (T_PairT . share) s)) }
 n e w p a i r { tok (\p s -> PT p (eitherResIdent (T_NewpairT . share) s)) }
 c a l l { tok (\p s -> PT p (eitherResIdent (T_CallT . share) s)) }
@@ -78,10 +78,10 @@ o r d { tok (\p s -> PT p (eitherResIdent (T_OrdT . share) s)) }
 c h r { tok (\p s -> PT p (eitherResIdent (T_ChrT . share) s)) }
 r e t u r n { tok (\p s -> PT p (eitherResIdent (T_ReturnT . share) s)) }
 \! { tok (\p s -> PT p (eitherResIdent (T_NotT . share) s)) }
-\' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \' { tok (\p s -> PT p (eitherResIdent (T_CharLiteral . share) s)) }
 n u l l { tok (\p s -> PT p (eitherResIdent (T_PairLiteral . share) s)) }
-(\_ | $s)($l | $d | \_)* { tok (\p s -> PT p (eitherResIdent (T_Identifier . share) s)) }
+\' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \' { tok (\p s -> PT p (eitherResIdent (T_CharLiteral . share) s)) }
 \" ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \" { tok (\p s -> PT p (eitherResIdent (T_StringLiteral . share) s)) }
+(\_ | $s)($l | $d | \_)* { tok (\p s -> PT p (eitherResIdent (T_Identifier . share) s)) }
 
 $l $i*   { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
 
@@ -104,6 +104,14 @@ data Tok =
  | TV !String         -- identifiers
  | TD !String         -- double precision float literals
  | TC !String         -- character literals
+ | T_EndT !String
+ | T_BeginT !String
+ | T_SkipT !String
+ | T_ReadT !String
+ | T_PrintT !String
+ | T_PrintLnT !String
+ | T_FreeT !String
+ | T_ExitT !String
  | T_IntDigit !String
  | T_PlusToken !String
  | T_MinusToken !String
@@ -123,12 +131,6 @@ data Tok =
  | T_NotEqT !String
  | T_AndT !String
  | T_OrT !String
- | T_SkipT !String
- | T_ReadT !String
- | T_PrintT !String
- | T_PrintLnT !String
- | T_FreeT !String
- | T_ExitT !String
  | T_LParenT !String
  | T_RParenT !String
  | T_LBracketT !String
@@ -141,8 +143,6 @@ data Tok =
  | T_FiT !String
  | T_ThenT !String
  | T_ElseT !String
- | T_EndT !String
- | T_BeginT !String
  | T_PairT !String
  | T_NewpairT !String
  | T_CallT !String
@@ -154,10 +154,10 @@ data Tok =
  | T_ChrT !String
  | T_ReturnT !String
  | T_NotT !String
- | T_CharLiteral !String
  | T_PairLiteral !String
- | T_Identifier !String
+ | T_CharLiteral !String
  | T_StringLiteral !String
+ | T_Identifier !String
 
  deriving (Eq,Show,Ord)
 
@@ -192,6 +192,14 @@ prToken t = case t of
   PT _ (TV s)   -> s
   PT _ (TD s)   -> s
   PT _ (TC s)   -> s
+  PT _ (T_EndT s) -> s
+  PT _ (T_BeginT s) -> s
+  PT _ (T_SkipT s) -> s
+  PT _ (T_ReadT s) -> s
+  PT _ (T_PrintT s) -> s
+  PT _ (T_PrintLnT s) -> s
+  PT _ (T_FreeT s) -> s
+  PT _ (T_ExitT s) -> s
   PT _ (T_IntDigit s) -> s
   PT _ (T_PlusToken s) -> s
   PT _ (T_MinusToken s) -> s
@@ -211,12 +219,6 @@ prToken t = case t of
   PT _ (T_NotEqT s) -> s
   PT _ (T_AndT s) -> s
   PT _ (T_OrT s) -> s
-  PT _ (T_SkipT s) -> s
-  PT _ (T_ReadT s) -> s
-  PT _ (T_PrintT s) -> s
-  PT _ (T_PrintLnT s) -> s
-  PT _ (T_FreeT s) -> s
-  PT _ (T_ExitT s) -> s
   PT _ (T_LParenT s) -> s
   PT _ (T_RParenT s) -> s
   PT _ (T_LBracketT s) -> s
@@ -229,8 +231,6 @@ prToken t = case t of
   PT _ (T_FiT s) -> s
   PT _ (T_ThenT s) -> s
   PT _ (T_ElseT s) -> s
-  PT _ (T_EndT s) -> s
-  PT _ (T_BeginT s) -> s
   PT _ (T_PairT s) -> s
   PT _ (T_NewpairT s) -> s
   PT _ (T_CallT s) -> s
@@ -242,10 +242,10 @@ prToken t = case t of
   PT _ (T_ChrT s) -> s
   PT _ (T_ReturnT s) -> s
   PT _ (T_NotT s) -> s
-  PT _ (T_CharLiteral s) -> s
   PT _ (T_PairLiteral s) -> s
-  PT _ (T_Identifier s) -> s
+  PT _ (T_CharLiteral s) -> s
   PT _ (T_StringLiteral s) -> s
+  PT _ (T_Identifier s) -> s
 
 
 data BTree = N | B String Tok BTree BTree deriving (Show)

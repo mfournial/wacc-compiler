@@ -9,6 +9,30 @@ type Result = Err String
 failure :: Show a => a -> Result
 failure x = Bad $ "Undefined case: " ++ show x
 
+transEndT :: EndT -> Result
+transEndT x = case x of
+  EndT string -> failure x
+transBeginT :: BeginT -> Result
+transBeginT x = case x of
+  BeginT string -> failure x
+transSkipT :: SkipT -> Result
+transSkipT x = case x of
+  SkipT string -> failure x
+transReadT :: ReadT -> Result
+transReadT x = case x of
+  ReadT string -> failure x
+transPrintT :: PrintT -> Result
+transPrintT x = case x of
+  PrintT string -> failure x
+transPrintLnT :: PrintLnT -> Result
+transPrintLnT x = case x of
+  PrintLnT string -> failure x
+transFreeT :: FreeT -> Result
+transFreeT x = case x of
+  FreeT string -> failure x
+transExitT :: ExitT -> Result
+transExitT x = case x of
+  ExitT string -> failure x
 transIntDigit :: IntDigit -> Result
 transIntDigit x = case x of
   IntDigit string -> failure x
@@ -66,24 +90,6 @@ transAndT x = case x of
 transOrT :: OrT -> Result
 transOrT x = case x of
   OrT string -> failure x
-transSkipT :: SkipT -> Result
-transSkipT x = case x of
-  SkipT string -> failure x
-transReadT :: ReadT -> Result
-transReadT x = case x of
-  ReadT string -> failure x
-transPrintT :: PrintT -> Result
-transPrintT x = case x of
-  PrintT string -> failure x
-transPrintLnT :: PrintLnT -> Result
-transPrintLnT x = case x of
-  PrintLnT string -> failure x
-transFreeT :: FreeT -> Result
-transFreeT x = case x of
-  FreeT string -> failure x
-transExitT :: ExitT -> Result
-transExitT x = case x of
-  ExitT string -> failure x
 transLParenT :: LParenT -> Result
 transLParenT x = case x of
   LParenT string -> failure x
@@ -120,12 +126,6 @@ transThenT x = case x of
 transElseT :: ElseT -> Result
 transElseT x = case x of
   ElseT string -> failure x
-transEndT :: EndT -> Result
-transEndT x = case x of
-  EndT string -> failure x
-transBeginT :: BeginT -> Result
-transBeginT x = case x of
-  BeginT string -> failure x
 transPairT :: PairT -> Result
 transPairT x = case x of
   PairT string -> failure x
@@ -159,18 +159,18 @@ transReturnT x = case x of
 transNotT :: NotT -> Result
 transNotT x = case x of
   NotT string -> failure x
-transCharLiteral :: CharLiteral -> Result
-transCharLiteral x = case x of
-  CharLiteral string -> failure x
 transPairLiteral :: PairLiteral -> Result
 transPairLiteral x = case x of
   PairLiteral string -> failure x
-transIdentifier :: Identifier -> Result
-transIdentifier x = case x of
-  Identifier string -> failure x
+transCharLiteral :: CharLiteral -> Result
+transCharLiteral x = case x of
+  CharLiteral string -> failure x
 transStringLiteral :: StringLiteral -> Result
 transStringLiteral x = case x of
   StringLiteral string -> failure x
+transIdentifier :: Identifier -> Result
+transIdentifier x = case x of
+  Identifier string -> failure x
 transExp :: Exp -> Result
 transExp x = case x of
   WaccTree program -> failure x

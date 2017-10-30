@@ -134,6 +134,14 @@ IntLiteral . IntLiteral ::= IntDigit ;
 -- Note the @position@ keyword enables us to keep the position in the ADT tree for clearer 
 -- semantic analysis error messages. The pseudo regex language used after
 -- TODO see which should be kept as tokens and which should be leftout
+position token EndT ({"end"}) ;
+position token BeginT ({"begin"}) ;
+position token SkipT ({"skip"}) ;
+position token ReadT ({"read"}) ;
+position token PrintT ({"print"}) ;
+position token PrintLnT ({"println"}) ;
+position token FreeT ({"free"}) ;
+position token ExitT ({"exit"}) ;
 position token IntDigit (digit+) ;
 position token PlusToken ('+') ;
 position token MinusToken ('-') ;
@@ -153,12 +161,6 @@ position token EqT ({"=="}) ;
 position token NotEqT ({"!="}) ;
 position token AndT ({"&&"}) ;
 position token OrT ({"||"}) ;
-position token SkipT ({"skip"}) ;
-position token ReadT ({"read"}) ;
-position token PrintT ({"print"}) ;
-position token PrintLnT ({"println"}) ;
-position token FreeT ({"free"}) ;
-position token ExitT ({"exit"}) ;
 position token LParenT ('(') ;
 position token RParenT (')') ;
 position token LBracketT ('[') ;
@@ -171,8 +173,6 @@ position token IfT ({"if"}) ;
 position token FiT ({"fi"}) ;
 position token ThenT ({"then"}) ;
 position token ElseT ({"else"}) ;
-position token EndT ({"end"}) ;
-position token BeginT ({"begin"}) ;
 position token PairT ({"pair"}) ;
 position token NewpairT ({"newpair"}) ;
 position token CallT ({"call"}) ;
@@ -184,10 +184,10 @@ position token OrdT ({"ord"}) ;
 position token ChrT ({"chr"}) ;
 position token ReturnT ({"return"}) ;
 position token NotT ('!') ;
-position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token PairLiteral ({"null"}) ;
-position token Identifier (('_' | lower) (letter | digit | '_')*) ;
+position token CharLiteral ('\'' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""])) '\'') ;
 position token StringLiteral ('"' ((char - ["'\\\""]) | ('\\' ["'\\nt0bf\""]))* '"') ;
+position token Identifier (('_' | lower) (letter | digit | '_')*) ;
 
 
 -- | Comment parser

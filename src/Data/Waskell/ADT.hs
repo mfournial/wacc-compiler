@@ -20,7 +20,7 @@ newtype Identifier = Identifier ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
 newtype StringLiteral = StringLiteral ((Int,Int),String)
   deriving (Eq, Ord, Show, Read)
-data Exp = WaccTree Program
+data WaccTree = WaccTree Program
   deriving (Eq, Ord, Show, Read)
 
 data Program = Program [Function] [Statement] NewScope

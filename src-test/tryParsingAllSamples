@@ -5,11 +5,11 @@ use v5.14;
 use Cwd qw(cwd);
 my $dir = cwd;
 
-my @files = split("\n", `find ../../src-test/wacc-samples/valid/ -type f`);
+my @files = split("\n", `find wacc-samples/valid/ -type f`);
 
 my $cnt = 0;
 for my $file (@files) {
-	print `./testWacc $file`;
+	print `../src/Bnfc/TestWacc $file`;
   $cnt++;
 }
 say "You have tested $cnt files";

@@ -9,97 +9,97 @@ data Position = Pos (Int, Int)
 
 newtype EndT = EndT Position
   deriving (Eq, Ord, Show, Read)
-newtype BeginT = BeginT (Position,String)
+newtype BeginT = BeginT Position
   deriving (Eq, Ord, Show, Read)
-newtype SkipT = SkipT (Position,String)
+newtype SkipT = SkipT Position
   deriving (Eq, Ord, Show, Read)
-newtype ReadT = ReadT (Position,String)
+newtype ReadT = ReadT Position
   deriving (Eq, Ord, Show, Read)
-newtype PrintT = PrintT (Position,String)
+newtype PrintT = PrintT Position
   deriving (Eq, Ord, Show, Read)
-newtype PrintLnT = PrintLnT (Position,String)
+newtype PrintLnT = PrintLnT Position
   deriving (Eq, Ord, Show, Read)
-newtype FreeT = FreeT (Position,String)
+newtype FreeT = FreeT Position
   deriving (Eq, Ord, Show, Read)
-newtype ExitT = ExitT (Position,String)
+newtype ExitT = ExitT Position
   deriving (Eq, Ord, Show, Read)
 newtype IntDigit = IntDigit (Position,String)
   deriving (Eq, Ord, Show, Read)
-newtype PlusToken = PlusToken (Position,String)
+newtype PlusToken = PlusToken Position
   deriving (Eq, Ord, Show, Read)
-newtype MinusToken = MinusToken (Position,String)
+newtype MinusToken = MinusToken Position
   deriving (Eq, Ord, Show, Read)
-newtype BoolLiteral = BoolLiteral (Position,String)
+newtype BoolLiteral = BoolLiteral Position
   deriving (Eq, Ord, Show, Read)
-newtype IntT = IntT (Position,String)
+newtype IntT = IntT Position
   deriving (Eq, Ord, Show, Read)
-newtype BoolT = BoolT (Position,String)
+newtype BoolT = BoolT Position
   deriving (Eq, Ord, Show, Read)
-newtype CharT = CharT (Position,String)
+newtype CharT = CharT Position
   deriving (Eq, Ord, Show, Read)
-newtype StringT = StringT (Position,String)
+newtype StringT = StringT Position
   deriving (Eq, Ord, Show, Read)
-newtype TimesT = TimesT (Position,String)
+newtype TimesT = TimesT Position
   deriving (Eq, Ord, Show, Read)
-newtype DivideT = DivideT (Position,String)
+newtype DivideT = DivideT Position
   deriving (Eq, Ord, Show, Read)
-newtype ModuloT = ModuloT (Position,String)
+newtype ModuloT = ModuloT Position
   deriving (Eq, Ord, Show, Read)
-newtype GreaterT = GreaterT (Position,String)
+newtype GreaterT = GreaterT Position
   deriving (Eq, Ord, Show, Read)
-newtype LessT = LessT (Position,String)
+newtype LessT = LessT Position
   deriving (Eq, Ord, Show, Read)
-newtype GreaterEqT = GreaterEqT (Position,String)
+newtype GreaterEqT = GreaterEqT Position
   deriving (Eq, Ord, Show, Read)
-newtype LessEqT = LessEqT (Position,String)
+newtype LessEqT = LessEqT Position
   deriving (Eq, Ord, Show, Read)
-newtype EqT = EqT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype NotEqT = NotEqT (Position,String)
+newtype EqT = EqT Position deriving (Eq, Ord, Show, Read)
+newtype NotEqT = NotEqT Position
   deriving (Eq, Ord, Show, Read)
-newtype AndT = AndT (Position,String)
+newtype AndT = AndT Position
   deriving (Eq, Ord, Show, Read)
-newtype OrT = OrT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype LParenT = LParenT (Position,String)
+newtype OrT = OrT Position,String) deriving (Eq, Ord, Show, Read)
+newtype LParenT = LParenT Position,String)
   deriving (Eq, Ord, Show, Read)
-newtype RParenT = RParenT (Position,String)
+newtype RParenT = RParenT Position,String)
   deriving (Eq, Ord, Show, Read)
-newtype LBracketT = LBracketT (Position,String)
+newtype LBracketT = LBracketT Position,String)
   deriving (Eq, Ord, Show, Read)
-newtype RBracketT = RBracketT (Position,String)
+newtype RBracketT = RBracketT Position
   deriving (Eq, Ord, Show, Read)
-newtype IsT = IsT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype WhileT = WhileT (Position,String)
+newtype IsT = IsT Position deriving (Eq, Ord, Show, Read)
+newtype WhileT = WhileT Position
   deriving (Eq, Ord, Show, Read)
-newtype DoT = DoT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype DoneT = DoneT (Position,String)
+newtype DoT = DoT Position deriving (Eq, Ord, Show, Read)
+newtype DoneT = DoneT Position
   deriving (Eq, Ord, Show, Read)
-newtype IfT = IfT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype FiT = FiT (Position,String) deriving (Eq, Ord, Show, Read)
-newtype ThenT = ThenT (Position,String)
+newtype IfT = IfT Position deriving (Eq, Ord, Show, Read)
+newtype FiT = FiT Position deriving (Eq, Ord, Show, Read)
+newtype ThenT = ThenT Position
   deriving (Eq, Ord, Show, Read)
-newtype ElseT = ElseT (Position,String)
+newtype ElseT = ElseT Position
   deriving (Eq, Ord, Show, Read)
-newtype PairT = PairT (Position,String)
+newtype PairT = PairT Position
   deriving (Eq, Ord, Show, Read)
-newtype NewpairT = NewpairT (Position,String)
+newtype NewpairT = NewpairT Position
   deriving (Eq, Ord, Show, Read)
-newtype CallT = CallT (Position,String)
+newtype CallT = CallT Position
   deriving (Eq, Ord, Show, Read)
-newtype FstT = FstT (Position,String)
+newtype FstT = FstT Position
   deriving (Eq, Ord, Show, Read)
-newtype SndT = SndT (Position,String)
+newtype SndT = SndT Position
   deriving (Eq, Ord, Show, Read)
-newtype EqualT = EqualT (Position,String)
+newtype EqualT = EqualT Position
   deriving (Eq, Ord, Show, Read)
-newtype LenT = LenT (Position,String)
+newtype LenT = LenT Position
   deriving (Eq, Ord, Show, Read)
-newtype OrdT = OrdT (Position,String)
+newtype OrdT = OrdT Position
   deriving (Eq, Ord, Show, Read)
-newtype ChrT = ChrT (Position,String)
+newtype ChrT = ChrT Position
   deriving (Eq, Ord, Show, Read)
-newtype ReturnT = ReturnT (Position,String)
+newtype ReturnT = ReturnT Position
   deriving (Eq, Ord, Show, Read)
-newtype NotT = NotT (Position,String)
+newtype NotT = NotT Position
   deriving (Eq, Ord, Show, Read)
 newtype PairLiteral = PairLiteral (Position,String)
   deriving (Eq, Ord, Show, Read)

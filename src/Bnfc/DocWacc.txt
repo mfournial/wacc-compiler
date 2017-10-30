@@ -288,7 +288,7 @@ All other symbols are terminals.
   |  |  **|**  | //SndT// //Expression// 
   | //Type// | -> | //BaseType// 
   |  |  **|**  | //ArrayDeclarationLiteral// 
-  |  |  **|**  | //PairT// //LBracketT// //PairElemType// ``,`` //PairElemType// //RParenT// 
+  |  |  **|**  | //PairT// //LParenT// //PairElemType// ``,`` //PairElemType// //RParenT// 
   | //BaseType// | -> | //IntT// 
   |  |  **|**  | //BoolT// 
   |  |  **|**  | //CharT// 
@@ -330,7 +330,7 @@ All other symbols are terminals.
   |  |  **|**  | //LessT// 
   |  |  **|**  | //GreaterEqT// 
   |  |  **|**  | //LessEqT// 
-  |  |  **|**  | //EqualT// 
+  |  |  **|**  | //EqT// 
   |  |  **|**  | //NotEqT// 
   |  |  **|**  | //AndT// 
   |  |  **|**  | //OrT// 

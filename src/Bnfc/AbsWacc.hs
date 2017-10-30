@@ -160,7 +160,7 @@ data PairElem = PairFst FstT Expression | PairSnd SndT Expression
 data Type
     = BaseType BaseType
     | ArrayType ArrayDeclarationLiteral
-    | PairType PairT LBracketT PairElemType PairElemType RParenT
+    | PairType PairT LParenT PairElemType PairElemType RParenT
   deriving (Eq, Ord, Show, Read)
 
 data BaseType
@@ -224,7 +224,7 @@ data BinaryOperator
     | BLess LessT
     | BGreaterEqual GreaterEqT
     | BLessEqual LessEqT
-    | BEqual EqualT
+    | BEqual EqT
     | BNotEqual NotEqT
     | BAnd AndT
     | BOr OrT

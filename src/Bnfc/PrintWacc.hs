@@ -360,7 +360,7 @@ instance Print Type where
   prt i e = case e of
     BaseType basetype -> prPrec i 0 (concatD [prt 0 basetype])
     ArrayType arraydeclarationliteral -> prPrec i 0 (concatD [prt 0 arraydeclarationliteral])
-    PairType pairt lbrackett pairelemtype1 pairelemtype2 rparent -> prPrec i 0 (concatD [prt 0 pairt, prt 0 lbrackett, prt 0 pairelemtype1, doc (showString ","), prt 0 pairelemtype2, prt 0 rparent])
+    PairType pairt lparent pairelemtype1 pairelemtype2 rparent -> prPrec i 0 (concatD [prt 0 pairt, prt 0 lparent, prt 0 pairelemtype1, doc (showString ","), prt 0 pairelemtype2, prt 0 rparent])
 
 instance Print BaseType where
   prt i e = case e of
@@ -430,7 +430,7 @@ instance Print BinaryOperator where
     BLess lesst -> prPrec i 0 (concatD [prt 0 lesst])
     BGreaterEqual greatereqt -> prPrec i 0 (concatD [prt 0 greatereqt])
     BLessEqual lesseqt -> prPrec i 0 (concatD [prt 0 lesseqt])
-    BEqual equalt -> prPrec i 0 (concatD [prt 0 equalt])
+    BEqual eqt -> prPrec i 0 (concatD [prt 0 eqt])
     BNotEqual noteqt -> prPrec i 0 (concatD [prt 0 noteqt])
     BAnd andt -> prPrec i 0 (concatD [prt 0 andt])
     BOr ort -> prPrec i 0 (concatD [prt 0 ort])

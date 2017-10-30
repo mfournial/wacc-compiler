@@ -220,7 +220,7 @@ transType :: Type -> Result
 transType x = case x of
   BaseType basetype -> failure x
   ArrayType arraydeclarationliteral -> failure x
-  PairType pairt lbrackett pairelemtype1 pairelemtype2 rparent -> failure x
+  PairType pairt lparent pairelemtype1 pairelemtype2 rparent -> failure x
 transBaseType :: BaseType -> Result
 transBaseType x = case x of
   IntType intt -> failure x
@@ -277,7 +277,7 @@ transBinaryOperator x = case x of
   BLess lesst -> failure x
   BGreaterEqual greatereqt -> failure x
   BLessEqual lesseqt -> failure x
-  BEqual equalt -> failure x
+  BEqual eqt -> failure x
   BNotEqual noteqt -> failure x
   BAnd andt -> failure x
   BOr ort -> failure x

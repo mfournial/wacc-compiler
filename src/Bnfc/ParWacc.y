@@ -208,7 +208,7 @@ PairElem : FstT Expression { AbsWacc.PairFst $1 $2 }
 Type :: { Type }
 Type : BaseType { AbsWacc.BaseType $1 }
      | ArrayDeclarationLiteral { AbsWacc.ArrayType $1 }
-     | PairT LBracketT PairElemType ',' PairElemType RParenT { AbsWacc.PairType $1 $2 $3 $5 $6 }
+     | PairT LParenT PairElemType ',' PairElemType RParenT { AbsWacc.PairType $1 $2 $3 $5 $6 }
 BaseType :: { BaseType }
 BaseType : IntT { AbsWacc.IntType $1 }
          | BoolT { AbsWacc.BoolType $1 }
@@ -262,7 +262,7 @@ BinaryOperator : TimesT { AbsWacc.BTimes $1 }
                | LessT { AbsWacc.BLess $1 }
                | GreaterEqT { AbsWacc.BGreaterEqual $1 }
                | LessEqT { AbsWacc.BLessEqual $1 }
-               | EqualT { AbsWacc.BEqual $1 }
+               | EqT { AbsWacc.BEqual $1 }
                | NotEqT { AbsWacc.BNotEqual $1 }
                | AndT { AbsWacc.BAnd $1 }
                | OrT { AbsWacc.BOr $1 }

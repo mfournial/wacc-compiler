@@ -27,64 +27,62 @@ $u = [\0-\255]          -- universal: any character
 "#" [.]* ; -- Toss single line comments
 
 $white+ ;
-\; {tok (\p s -> PT p (T_SepT))}
--- @rsyms { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
-e n d { tok (\p s -> PT p T_EndT) }
-b e g i n { tok (\p s -> PT p T_BeginT) }
-s k i p { tok (\p s -> PT p (T_SkipT)) }
-r e a d { tok (\p s -> PT p (T_ReadT ))}
-p r i n t { tok (\p s -> PT p ((T_PrintT ))) }
-p r i n t l n { tok (\p s -> PT p ((T_PrintLnT ))) }
-f r e e { tok (\p s -> PT p ((T_FreeT ))) }
-e x i t { tok (\p s -> PT p ((T_ExitT ))) }
-$d + { tok (\p s -> PT p ((T_IntDigit) s)) }
-\+ { tok (\p s -> PT p ((T_PlusToken ) )) }
-\- { tok (\p s -> PT p ((T_MinusToken ) )) }
-t r u e | f a l s e { tok (\p s -> PT p ((T_BoolLiteral) s)) }
-i n t { tok (\p s -> PT p ((T_IntT ) )) }
-b o o l { tok (\p s -> PT p ((T_BoolT ) )) }
-c h a r { tok (\p s -> PT p ((T_CharT ) )) }
-s t r i n g { tok (\p s -> PT p ((T_StringT ) )) }
-\* { tok (\p s -> PT p ((T_TimesT ) )) }
-\/ { tok (\p s -> PT p ((T_DivideT ) )) }
-\% { tok (\p s -> PT p ((T_ModuloT ) )) }
-\> { tok (\p s -> PT p ((T_GreaterT ) )) }
-\< { tok (\p s -> PT p ((T_LessT ) )) }
-\> \= { tok (\p s -> PT p ((T_GreaterEqT ) )) }
-\< \= { tok (\p s -> PT p ((T_LessEqT ) )) }
-\= \= { tok (\p s -> PT p ((T_EqT ) )) }
-\! \= { tok (\p s -> PT p ((T_NotEqT ) )) }
-\& \& { tok (\p s -> PT p ((T_AndT ) )) }
-\| \| { tok (\p s -> PT p ((T_OrT ) )) }
-\( { tok (\p s -> PT p ((T_LParenT ) )) }
-\) { tok (\p s -> PT p ((T_RParenT ) )) }
-\[ { tok (\p s -> PT p ((T_LBracketT ) )) }
-\] { tok (\p s -> PT p ((T_RBracketT ) )) }
-i s { tok (\p s -> PT p ((T_IsT ) )) }
-w h i l e { tok (\p s -> PT p ((T_WhileT ) )) }
-d o { tok (\p s -> PT p ((T_DoT ) )) }
-d o n e { tok (\p s -> PT p ((T_DoneT ) )) }
-i f { tok (\p s -> PT p ((T_IfT ) )) }
-f i { tok (\p s -> PT p ((T_FiT ) )) }
-t h e n { tok (\p s -> PT p ((T_ThenT ) )) }
-e l s e { tok (\p s -> PT p ((T_ElseT ) )) }
-p a i r { tok (\p s -> PT p ((T_PairT ) )) }
-n e w p a i r { tok (\p s -> PT p ((T_NewpairT ) )) }
-c a l l { tok (\p s -> PT p ((T_CallT ) )) }
-f s t { tok (\p s -> PT p ((T_FstT ) )) }
-s n d { tok (\p s -> PT p ((T_SndT ) )) }
-\= { tok (\p s -> PT p ((T_EqualT ) )) }
-l e n { tok (\p s -> PT p ((T_LenT ) )) }
-o r d { tok (\p s -> PT p ((T_OrdT ) )) }
-c h r { tok (\p s -> PT p ((T_ChrT ) )) }
-r e t u r n { tok (\p s -> PT p ((T_ReturnT ) )) }
-\! { tok (\p s -> PT p ((T_NotT ) )) }
-n u l l { tok (\p s -> PT p ((T_PairLiteral ) s)) }
-\' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \' { tok (\p s -> PT p ((T_CharLiteral ) s)) }
-\" ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \" { tok (\p s -> PT p ((T_StringLiteral ) s)) }
-(\_ | $s)($l | $d | \_)* { tok (\p s -> PT p ((T_Identifier ) s)) }
+\; 							{ tok (\p s -> PT p (T_SepT)) }
+e n d 							{ tok (\p s -> PT p T_EndT) }
+b e g i n 						{ tok (\p s -> PT p T_BeginT) }
+s k i p		        				{ tok (\p s -> PT p (T_SkipT)) }
+r e a d 						{ tok (\p s -> PT p (T_ReadT ))}
+p r i n t 						{ tok (\p s -> PT p ((T_PrintT ))) }
+p r i n t l n 						{ tok (\p s -> PT p ((T_PrintLnT ))) }
+f r e e 						{ tok (\p s -> PT p ((T_FreeT ))) }
+e x i t 						{ tok (\p s -> PT p ((T_ExitT ))) }
+$d + 							{ tok (\p s -> PT p ((T_IntDigit) s)) }
+\+ 							{ tok (\p s -> PT p ((T_PlusToken ) )) }
+\- 							{ tok (\p s -> PT p ((T_MinusToken ) )) }
+t r u e | f a l s e 					{ tok (\p s -> PT p ((T_BoolLiteral) s)) }
+i n t 							{ tok (\p s -> PT p ((T_IntT ) )) }
+b o o l 						{ tok (\p s -> PT p ((T_BoolT ) )) }
+c h a r 						{ tok (\p s -> PT p ((T_CharT ) )) }
+s t r i n g 						{ tok (\p s -> PT p ((T_StringT ) )) }
+\* 							{ tok (\p s -> PT p ((T_TimesT ) )) }
+\/ 							{ tok (\p s -> PT p ((T_DivideT ) )) }
+\% 							{ tok (\p s -> PT p ((T_ModuloT ) )) }
+\> 							{ tok (\p s -> PT p ((T_GreaterT ) )) }
+\< 							{ tok (\p s -> PT p ((T_LessT ) )) }
+\> \=							{ tok (\p s -> PT p ((T_GreaterEqT ) )) }
+\< \= 							{ tok (\p s -> PT p ((T_LessEqT ) )) }
+\= \= 							{ tok (\p s -> PT p ((T_EqT ) )) }
+\! \=		 					{ tok (\p s -> PT p ((T_NotEqT ) )) }
+\& \& 							{ tok (\p s -> PT p ((T_AndT ) )) }
+\| \| 							{ tok (\p s -> PT p ((T_OrT ) )) }
+\( 							{ tok (\p s -> PT p ((T_LParenT ) )) }
+\) 							{ tok (\p s -> PT p ((T_RParenT ) )) }
+\[ 							{ tok (\p s -> PT p ((T_LBracketT ) )) }
+\] 							{ tok (\p s -> PT p ((T_RBracketT ) )) }
+i s 							{ tok (\p s -> PT p ((T_IsT ) )) }
+w h i l e 						{ tok (\p s -> PT p ((T_WhileT ) )) }
+d o 							{ tok (\p s -> PT p ((T_DoT ) )) }
+d o n e 						{ tok (\p s -> PT p ((T_DoneT ) )) }
+i f 							{ tok (\p s -> PT p ((T_IfT ) )) }
+f i 							{ tok (\p s -> PT p ((T_FiT ) )) }
+t h e n 						{ tok (\p s -> PT p ((T_ThenT ) )) }
+e l s e 						{ tok (\p s -> PT p ((T_ElseT ) )) }
+p a i r 						{ tok (\p s -> PT p ((T_PairT ) )) }
+n e w p a i r 						{ tok (\p s -> PT p ((T_NewpairT ) )) }
+c a l l 						{ tok (\p s -> PT p ((T_CallT ) )) }
+f s t 							{ tok (\p s -> PT p ((T_FstT ) )) }
+s n d 							{ tok (\p s -> PT p ((T_SndT ) )) }
+\= 							{ tok (\p s -> PT p ((T_EqualT ) )) }
+l e n 							{ tok (\p s -> PT p ((T_LenT ) )) }
+o r d 							{ tok (\p s -> PT p ((T_OrdT ) )) }
+c h r 							{ tok (\p s -> PT p ((T_ChrT ) )) }
+r e t u r n 						{ tok (\p s -> PT p ((T_ReturnT ) )) }
+\! 							{ tok (\p s -> PT p ((T_NotT ) )) }
+n u l l 						{ tok (\p s -> PT p ((T_PairLiteral ) )) }
+\' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \' 	{ tok (\p s -> PT p ((T_CharLiteral ) s)) }
+\" ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \" 	{ tok (\p s -> PT p ((T_StringLiteral ) s)) }
+(\_ | $s)($l | $d | \_)* 				{ tok (\p s -> PT p ((T_Identifier ) s)) }
 
--- $l $i*   { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
 
 
 
@@ -94,9 +92,6 @@ n u l l { tok (\p s -> PT p ((T_PairLiteral ) s)) }
 
 tok :: (Posn -> String -> Token) -> (Posn -> String -> Token)
 tok f p s = f p s
-
--- ignoreStrToken :: (Posn -> String -> Token) -> (Posn -> Token)
--- ignoreStrToken f p s = f s
 
 share :: String -> String
 share = id
@@ -153,7 +148,7 @@ data Tok =
  | T_ChrT 
  | T_ReturnT 
  | T_NotT 
- | T_PairLiteral !String
+ | T_PairLiteral
  | T_CharLiteral !String
  | T_StringLiteral !String
  | T_Identifier !String
@@ -185,6 +180,7 @@ mkPosToken t@(PT p _) = (posLineCol p, prToken t)
 
 prToken :: Token -> String
 prToken t = case t of
+  PT _ (T_SepT) -> ";"
   PT _ (T_EndT) -> "end"
   PT _ (T_BeginT) -> "begin"
   PT _ (T_SkipT) -> "skip"
@@ -196,7 +192,8 @@ prToken t = case t of
   PT _ (T_IntDigit s) -> s
   PT _ (T_PlusToken) -> "+"
   PT _ (T_MinusToken) -> "-"
-  PT _ (T_BoolLiteral s) -> s
+  PT _ (T_BoolLiteral "true") -> "true"
+  PT _ (T_BoolLiteral "false") -> "false"
   PT _ (T_IntT) -> "int"
   PT _ (T_BoolT) -> "bool"
   PT _ (T_CharT) -> "char"
@@ -235,7 +232,7 @@ prToken t = case t of
   PT _ (T_ChrT) -> "chr"
   PT _ (T_ReturnT) -> "return"
   PT _ (T_NotT) -> "!"
-  PT _ (T_PairLiteral s) -> s
+  PT _ (T_PairLiteral) -> "null"
   PT _ (T_CharLiteral s) -> s
   PT _ (T_StringLiteral s) -> s
   PT _ (T_Identifier s) -> s

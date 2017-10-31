@@ -100,57 +100,57 @@ L_Identifier { PT _ (T_Identifier _) }
 
 %%
 
-EndT    :: { EndT} : L_EndT { EndT (mkPosToken $1)}
-BeginT    :: { BeginT} : L_BeginT { BeginT (mkPosToken $1)}
-SkipT    :: { SkipT} : L_SkipT { SkipT (mkPosToken $1)}
-ReadT    :: { ReadT} : L_ReadT { ReadT (mkPosToken $1)}
-PrintT    :: { PrintT} : L_PrintT { PrintT (mkPosToken $1)}
-PrintLnT    :: { PrintLnT} : L_PrintLnT { PrintLnT (mkPosToken $1)}
-FreeT    :: { FreeT} : L_FreeT { FreeT (mkPosToken $1)}
-ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
+EndT    :: { EndT} : L_EndT { EndT (mkPosToken)}
+BeginT    :: { BeginT} : L_BeginT { BeginT (mkPosToken)}
+SkipT    :: { SkipT} : L_SkipT { SkipT (mkPosToken)}
+ReadT    :: { ReadT} : L_ReadT { ReadT (mkPosToken)}
+PrintT    :: { PrintT} : L_PrintT { PrintT (mkPosToken)}
+PrintLnT    :: { PrintLnT} : L_PrintLnT { PrintLnT (mkPosToken)}
+FreeT    :: { FreeT} : L_FreeT { FreeT (mkPosToken)}
+ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken)}
 IntDigit    :: { IntDigit} : L_IntDigit { IntDigit (mkPosToken $1)}
-PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken $1)}
-MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken $1)}
+PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken)}
+MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken)}
 BoolLiteral    :: { BoolLiteral} : L_BoolLiteral { BoolLiteral (mkPosToken $1)}
-IntT    :: { IntT} : L_IntT { IntT (mkPosToken $1)}
-BoolT    :: { BoolT} : L_BoolT { BoolT (mkPosToken $1)}
-CharT    :: { CharT} : L_CharT { CharT (mkPosToken $1)}
-StringT    :: { StringT} : L_StringT { StringT (mkPosToken $1)}
-TimesT    :: { TimesT} : L_TimesT { TimesT (mkPosToken $1)}
-DivideT    :: { DivideT} : L_DivideT { DivideT (mkPosToken $1)}
-ModuloT    :: { ModuloT} : L_ModuloT { ModuloT (mkPosToken $1)}
-GreaterT    :: { GreaterT} : L_GreaterT { GreaterT (mkPosToken $1)}
-LessT    :: { LessT} : L_LessT { LessT (mkPosToken $1)}
-GreaterEqT    :: { GreaterEqT} : L_GreaterEqT { GreaterEqT (mkPosToken $1)}
-LessEqT    :: { LessEqT} : L_LessEqT { LessEqT (mkPosToken $1)}
-EqT    :: { EqT} : L_EqT { EqT (mkPosToken $1)}
-NotEqT    :: { NotEqT} : L_NotEqT { NotEqT (mkPosToken $1)}
-AndT    :: { AndT} : L_AndT { AndT (mkPosToken $1)}
-OrT    :: { OrT} : L_OrT { OrT (mkPosToken $1)}
-LParenT    :: { LParenT} : L_LParenT { LParenT (mkPosToken $1)}
-RParenT    :: { RParenT} : L_RParenT { RParenT (mkPosToken $1)}
-LBracketT    :: { LBracketT} : L_LBracketT { LBracketT (mkPosToken $1)}
-RBracketT    :: { RBracketT} : L_RBracketT { RBracketT (mkPosToken $1)}
-IsT    :: { IsT} : L_IsT { IsT (mkPosToken $1)}
-WhileT    :: { WhileT} : L_WhileT { WhileT (mkPosToken $1)}
-DoT    :: { DoT} : L_DoT { DoT (mkPosToken $1)}
-DoneT    :: { DoneT} : L_DoneT { DoneT (mkPosToken $1)}
-IfT    :: { IfT} : L_IfT { IfT (mkPosToken $1)}
-FiT    :: { FiT} : L_FiT { FiT (mkPosToken $1)}
-ThenT    :: { ThenT} : L_ThenT { ThenT (mkPosToken $1)}
-ElseT    :: { ElseT} : L_ElseT { ElseT (mkPosToken $1)}
-PairT    :: { PairT} : L_PairT { PairT (mkPosToken $1)}
-NewpairT    :: { NewpairT} : L_NewpairT { NewpairT (mkPosToken $1)}
-CallT    :: { CallT} : L_CallT { CallT (mkPosToken $1)}
-FstT    :: { FstT} : L_FstT { FstT (mkPosToken $1)}
-SndT    :: { SndT} : L_SndT { SndT (mkPosToken $1)}
-EqualT    :: { EqualT} : L_EqualT { EqualT (mkPosToken $1)}
-LenT    :: { LenT} : L_LenT { LenT (mkPosToken $1)}
-OrdT    :: { OrdT} : L_OrdT { OrdT (mkPosToken $1)}
-ChrT    :: { ChrT} : L_ChrT { ChrT (mkPosToken $1)}
-ReturnT    :: { ReturnT} : L_ReturnT { ReturnT (mkPosToken $1)}
-NotT    :: { NotT} : L_NotT { NotT (mkPosToken $1)}
-PairLiteral    :: { PairLiteral} : L_PairLiteral { PairLiteral (mkPosToken $1)}
+IntT    :: { IntT} : L_IntT { IntT (mkPosToken)}
+BoolT    :: { BoolT} : L_BoolT { BoolT (mkPosToken)}
+CharT    :: { CharT} : L_CharT { CharT (mkPosToken)}
+StringT    :: { StringT} : L_StringT { StringT (mkPosToken)}
+TimesT    :: { TimesT} : L_TimesT { TimesT (mkPosToken)}
+DivideT    :: { DivideT} : L_DivideT { DivideT (mkPosToken)}
+ModuloT    :: { ModuloT} : L_ModuloT { ModuloT (mkPosToken)}
+GreaterT    :: { GreaterT} : L_GreaterT { GreaterT (mkPosToken)}
+LessT    :: { LessT} : L_LessT { LessT (mkPosToken)}
+GreaterEqT    :: { GreaterEqT} : L_GreaterEqT { GreaterEqT (mkPosToken)}
+LessEqT    :: { LessEqT} : L_LessEqT { LessEqT (mkPosToken)}
+EqT    :: { EqT} : L_EqT { EqT (mkPosToken)}
+NotEqT    :: { NotEqT} : L_NotEqT { NotEqT (mkPosToken)}
+AndT    :: { AndT} : L_AndT { AndT (mkPosToken)}
+OrT    :: { OrT} : L_OrT { OrT (mkPosToken)}
+LParenT    :: { LParenT} : L_LParenT { LParenT (mkPosToken)}
+RParenT    :: { RParenT} : L_RParenT { RParenT (mkPosToken)}
+LBracketT    :: { LBracketT} : L_LBracketT { LBracketT (mkPosToken)}
+RBracketT    :: { RBracketT} : L_RBracketT { RBracketT (mkPosToken)}
+IsT    :: { IsT} : L_IsT { IsT (mkPosToken)}
+WhileT    :: { WhileT} : L_WhileT { WhileT (mkPosToken)}
+DoT    :: { DoT} : L_DoT { DoT (mkPosToken)}
+DoneT    :: { DoneT} : L_DoneT { DoneT (mkPosToken)}
+IfT    :: { IfT} : L_IfT { IfT (mkPosToken)}
+FiT    :: { FiT} : L_FiT { FiT (mkPosToken)}
+ThenT    :: { ThenT} : L_ThenT { ThenT (mkPosToken)}
+ElseT    :: { ElseT} : L_ElseT { ElseT (mkPosToken)}
+PairT    :: { PairT} : L_PairT { PairT (mkPosToken)}
+NewpairT    :: { NewpairT} : L_NewpairT { NewpairT (mkPosToken)}
+CallT    :: { CallT} : L_CallT { CallT (mkPosToken)}
+FstT    :: { FstT} : L_FstT { FstT (mkPosToken)}
+SndT    :: { SndT} : L_SndT { SndT (mkPosToken)}
+EqualT    :: { EqualT} : L_EqualT { EqualT (mkPosToken)}
+LenT    :: { LenT} : L_LenT { LenT (mkPosToken)}
+OrdT    :: { OrdT} : L_OrdT { OrdT (mkPosToken)}
+ChrT    :: { ChrT} : L_ChrT { ChrT (mkPosToken)}
+ReturnT    :: { ReturnT} : L_ReturnT { ReturnT (mkPosToken)}
+NotT    :: { NotT} : L_NotT { NotT (mkPosToken)}
+PairLiteral    :: { PairLiteral} : L_PairLiteral { PairLiteral (mkPosToken)}
 CharLiteral    :: { CharLiteral} : L_CharLiteral { CharLiteral (mkPosToken $1)}
 StringLiteral    :: { StringLiteral} : L_StringLiteral { StringLiteral (mkPosToken $1)}
 Identifier    :: { Identifier} : L_Identifier { Identifier (mkPosToken $1)}

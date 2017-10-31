@@ -27,6 +27,7 @@ $u = [\0-\255]          -- universal: any character
 "#" [.]* ; -- Toss single line comments
 
 $white+ ;
+\,                                                      { tok (\p s -> PT p (T_CoT)) }
 \; 							{ tok (\p s -> PT p (T_SepT)) }
 e n d 							{ tok (\p s -> PT p T_EndT) }
 b e g i n 						{ tok (\p s -> PT p T_BeginT) }
@@ -96,8 +97,9 @@ tok f p s = f p s
 share :: String -> String
 share = id
 
-data Tok =
-   T_SepT	
+data Tok
+ = T_CoT
+ | T_SepT	
  | T_EndT
  | T_BeginT 
  | T_SkipT 
@@ -175,11 +177,9 @@ tokenLineCol = posLineCol . tokenPosn
 posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
-mkPosToken :: Token -> ((Int, Int), String)
-mkPosToken t@(PT p _) = (posLineCol p, prToken t)
-
 prToken :: Token -> String
 prToken t = case t of
+  PT _ (T_CoT) -> ","
   PT _ (T_SepT) -> ";"
   PT _ (T_EndT) -> "end"
   PT _ (T_BeginT) -> "begin"

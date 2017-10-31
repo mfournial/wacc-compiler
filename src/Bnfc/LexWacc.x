@@ -27,7 +27,7 @@ $u = [\0-\255]          -- universal: any character
 "#" [.]* ; -- Toss single line comments
 
 $white+ ;
-\; {tok (\p s -> PT p (T_TS))}
+\; {tok (\p s -> PT p (T_SepT))}
 -- @rsyms { tok (\p s -> PT p (eitherResIdent (TV . share) s)) }
 e n d { tok (\p s -> PT p T_EndT) }
 b e g i n { tok (\p s -> PT p T_BeginT) }
@@ -102,7 +102,8 @@ share :: String -> String
 share = id
 
 data Tok =
-   T_EndT
+   T_SepT	
+ | T_EndT
  | T_BeginT 
  | T_SkipT 
  | T_ReadT 

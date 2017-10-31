@@ -296,7 +296,7 @@ instance Print Identifier where
 
 
 
-instance Print Exp where
+instance Print WaccTree where
   prt i e = case e of
     WaccTree program -> prPrec i 0 (concatD [prt 0 program])
 

@@ -171,7 +171,7 @@ transStringLiteral x = case x of
 transIdentifier :: Identifier -> Result
 transIdentifier x = case x of
   Identifier string -> failure x
-transExp :: Exp -> Result
+transExp :: WaccTree -> Result
 transExp x = case x of
   WaccTree program -> failure x
 transProgram :: Program -> Result

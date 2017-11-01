@@ -162,7 +162,10 @@ WaccTree : Program { AbsWacc.WaccTree $1 }
 Program :: { Program }
 Program : BeginT ListFunction ListStatement EndT { AbsWacc.Program $1 (reverse $2) $3 $4 }
 Function :: { Function }
-Function : Type Identifier LParenT ListParameter RParenT IsT ListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
+Function : Type Identifier LParenT ListParameter RParenT IsT FunListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
+FunListStatement :: { [Statement] }
+FunListStatement : ReturnT Expression { (:[]) $ AbsWacc.StatReturn $1 $2 }
+                 | Statement ';' ListStatement { (:) $1 $3 }
 ListFunction :: { [Function] }
 ListFunction : {- empty -} { [] }
              | ListFunction Function { flip (:) $1 $2 }

@@ -5,7 +5,7 @@ use v5.14;
 use Cwd qw(cwd);
 my $dir = cwd;
 
-my @files = split("\n", `find wacc-samples/valid/ -type f`);
+my @files = split("\n", `find wacc-samples/valid/**/*.wacc -type f`);
 
 my $cnt = 0;
 for my $file (@files) {

@@ -80,219 +80,219 @@ instance Print Double where
 
 
 instance Print EndT where
-  prt _ (EndT (_,i)) = doc (showString ( i))
+  prt _ (EndT (_)) = doc . showString $ "END"
 
 
 instance Print BeginT where
-  prt _ (BeginT (_,i)) = doc (showString ( i))
+  prt _ (BeginT (_)) = doc . showString $ "BEGIN"
 
 
 instance Print SkipT where
-  prt _ (SkipT (_,i)) = doc (showString ( i))
+  prt _ (SkipT (_)) = doc . showString $ "SKIP"
 
 
 instance Print ReadT where
-  prt _ (ReadT (_,i)) = doc (showString ( i))
+  prt _ (ReadT (_)) = doc . showString $ "READ"
 
 
 instance Print PrintT where
-  prt _ (PrintT (_,i)) = doc (showString ( i))
+  prt _ (PrintT (_)) = doc . showString $ "PRINT"
 
 
 instance Print PrintLnT where
-  prt _ (PrintLnT (_,i)) = doc (showString ( i))
+  prt _ (PrintLnT (_)) = doc . showString $ "PRINTLN"
 
 
 instance Print FreeT where
-  prt _ (FreeT (_,i)) = doc (showString ( i))
+  prt _ (FreeT (_)) = doc . showString $ "FREE"
 
 
 instance Print ExitT where
-  prt _ (ExitT (_,i)) = doc (showString ( i))
+  prt _ (ExitT (_)) = doc . showString $ "EXIT"
 
 
 instance Print IntDigit where
-  prt _ (IntDigit (_,i)) = doc (showString ( i))
+  prt _ (IntDigit (_, i)) = doc .showString $ i
 
 
 instance Print PlusToken where
-  prt _ (PlusToken (_,i)) = doc (showString ( i))
+  prt _ (PlusToken (_)) = doc . showString $ "+"
 
 
 instance Print MinusToken where
-  prt _ (MinusToken (_,i)) = doc (showString ( i))
+  prt _ (MinusToken (_)) = doc . showString $ "-"
 
 
 instance Print BoolLiteral where
-  prt _ (BoolLiteral (_,i)) = doc (showString ( i))
+  prt _ (BoolLiteral (_)) = doc . showString $ "PLEASE HAVE BOOL LITERALS TOKENS"
 
 
 instance Print IntT where
-  prt _ (IntT (_,i)) = doc (showString ( i))
+  prt _ (IntT (_)) = doc . showString $ "INT"
 
 
 instance Print BoolT where
-  prt _ (BoolT (_,i)) = doc (showString ( i))
+  prt _ (BoolT (_)) = doc . showString $ "BOOL"
 
 
 instance Print CharT where
-  prt _ (CharT (_,i)) = doc (showString ( i))
+  prt _ (CharT (_)) = doc . showString $ "CHAR"
 
 
 instance Print StringT where
-  prt _ (StringT (_,i)) = doc (showString ( i))
+  prt _ (StringT (_)) = doc . showString $ "STRING"
 
 
 instance Print TimesT where
-  prt _ (TimesT (_,i)) = doc (showString ( i))
+  prt _ (TimesT (_)) = doc . showString $ "*"
 
 
 instance Print DivideT where
-  prt _ (DivideT (_,i)) = doc (showString ( i))
+  prt _ (DivideT (_)) = doc . showString $ "/"
 
 
 instance Print ModuloT where
-  prt _ (ModuloT (_,i)) = doc (showString ( i))
+  prt _ (ModuloT (_)) = doc . showString $ "%"
 
 
 instance Print GreaterT where
-  prt _ (GreaterT (_,i)) = doc (showString ( i))
+  prt _ (GreaterT (_)) = doc . showString $ ">"
 
 
 instance Print LessT where
-  prt _ (LessT (_,i)) = doc (showString ( i))
+  prt _ (LessT (_)) = doc . showString $ "<"
 
 
 instance Print GreaterEqT where
-  prt _ (GreaterEqT (_,i)) = doc (showString ( i))
+  prt _ (GreaterEqT (_)) = doc . showString $ ">="
 
 
 instance Print LessEqT where
-  prt _ (LessEqT (_,i)) = doc (showString ( i))
+  prt _ (LessEqT (_)) = doc . showString $ "<="
 
 
 instance Print EqT where
-  prt _ (EqT (_,i)) = doc (showString ( i))
+  prt _ (EqT (_)) = doc . showString $ "=="
 
 
 instance Print NotEqT where
-  prt _ (NotEqT (_,i)) = doc (showString ( i))
+  prt _ (NotEqT (_)) = doc . showString $ "!="
 
 
 instance Print AndT where
-  prt _ (AndT (_,i)) = doc (showString ( i))
+  prt _ (AndT (_)) = doc . showString $ "&&"
 
 
 instance Print OrT where
-  prt _ (OrT (_,i)) = doc (showString ( i))
+  prt _ (OrT (_)) = doc . showString $ "||"
 
 
 instance Print LParenT where
-  prt _ (LParenT (_,i)) = doc (showString ( i))
+  prt _ (LParenT (_)) = doc . showString $ "("
 
 
 instance Print RParenT where
-  prt _ (RParenT (_,i)) = doc (showString ( i))
+  prt _ (RParenT (_)) = doc . showString $ ")"
 
 
 instance Print LBracketT where
-  prt _ (LBracketT (_,i)) = doc (showString ( i))
+  prt _ (LBracketT (_)) = doc . showString $ "["
 
 
 instance Print RBracketT where
-  prt _ (RBracketT (_,i)) = doc (showString ( i))
+  prt _ (RBracketT (_)) = doc . showString $ "]"
 
 
 instance Print IsT where
-  prt _ (IsT (_,i)) = doc (showString ( i))
+  prt _ (IsT (_)) = doc . showString $ "IS"
 
 
 instance Print WhileT where
-  prt _ (WhileT (_,i)) = doc (showString ( i))
+  prt _ (WhileT (_)) = doc . showString $ "WHILE"
 
 
 instance Print DoT where
-  prt _ (DoT (_,i)) = doc (showString ( i))
+  prt _ (DoT (_)) = doc . showString $ "DO"
 
 
 instance Print DoneT where
-  prt _ (DoneT (_,i)) = doc (showString ( i))
+  prt _ (DoneT (_)) = doc . showString $ "DONE"
 
 
 instance Print IfT where
-  prt _ (IfT (_,i)) = doc (showString ( i))
+  prt _ (IfT (_)) = doc . showString $ "IF"
 
 
 instance Print FiT where
-  prt _ (FiT (_,i)) = doc (showString ( i))
+  prt _ (FiT (_)) = doc . showString $ "FI"
 
 
 instance Print ThenT where
-  prt _ (ThenT (_,i)) = doc (showString ( i))
+  prt _ (ThenT (_)) = doc . showString $ "THEN"
 
 
 instance Print ElseT where
-  prt _ (ElseT (_,i)) = doc (showString ( i))
+  prt _ (ElseT (_)) = doc . showString $ "ELSE"
 
 
 instance Print PairT where
-  prt _ (PairT (_,i)) = doc (showString ( i))
+  prt _ (PairT (_)) = doc . showString $ "PAIR"
 
 
 instance Print NewpairT where
-  prt _ (NewpairT (_,i)) = doc (showString ( i))
+  prt _ (NewpairT (_)) = doc . showString $ "NEWPAIR"
 
 
 instance Print CallT where
-  prt _ (CallT (_,i)) = doc (showString ( i))
+  prt _ (CallT (_)) = doc . showString $ "CALL"
 
 
 instance Print FstT where
-  prt _ (FstT (_,i)) = doc (showString ( i))
+  prt _ (FstT (_)) = doc . showString $ "FST"
 
 
 instance Print SndT where
-  prt _ (SndT (_,i)) = doc (showString ( i))
+  prt _ (SndT (_)) = doc . showString $ "SND"
 
 
 instance Print EqualT where
-  prt _ (EqualT (_,i)) = doc (showString ( i))
+  prt _ (EqualT (_)) = doc . showString $ "="
 
 
 instance Print LenT where
-  prt _ (LenT (_,i)) = doc (showString ( i))
+  prt _ (LenT (_)) = doc . showString $ "LEN"
 
 
 instance Print OrdT where
-  prt _ (OrdT (_,i)) = doc (showString ( i))
+  prt _ (OrdT (_)) = doc . showString $ "ORD"
 
 
 instance Print ChrT where
-  prt _ (ChrT (_,i)) = doc (showString ( i))
+  prt _ (ChrT (_)) = doc . showString $ "CHR"
 
 
 instance Print ReturnT where
-  prt _ (ReturnT (_,i)) = doc (showString ( i))
+  prt _ (ReturnT (_)) = doc . showString $ "RETURN"
 
 
 instance Print NotT where
-  prt _ (NotT (_,i)) = doc (showString ( i))
+  prt _ (NotT (_)) = doc . showString $ "!"
 
 
 instance Print PairLiteral where
-  prt _ (PairLiteral (_,i)) = doc (showString ( i))
+  prt _ (PairLiteral (_)) = doc . showString $ "NULL"
 
 
 instance Print CharLiteral where
-  prt _ (CharLiteral (_,i)) = doc (showString ( i))
+  prt _ (CharLiteral (_, i)) = doc . showString $ i
 
 
 instance Print StringLiteral where
-  prt _ (StringLiteral (_,i)) = doc (showString ( i))
+  prt _ (StringLiteral (_, i)) = doc . showString $ i
 
 
 instance Print Identifier where
-  prt _ (Identifier (_,i)) = doc (showString ( i))
+  prt _ (Identifier (_, i)) = doc . showString $ i
 
 
 

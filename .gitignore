@@ -23,3 +23,5 @@ cabal.project.local
 .ghc.environment.*
 /tutorial.md
 /.stack-work/
+*.bak
+src/Bnfc/TestWacc

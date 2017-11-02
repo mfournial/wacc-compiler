@@ -47,7 +47,7 @@ addStmtToScope s esb _ = do
 
 genSymbolsF :: Function -> ErrorList Function
 genSymbolsF (Function t i ps sb pos) = do
-  sb' <- fillScopeBlock sb []
+  sb' <- fillScopeBlock sb [genParamScope ps]
   return (Function t i ps sb' pos)
 
 emptyScope :: NewScope
@@ -55,6 +55,12 @@ emptyScope = NewScope M.empty
 
 extendScope :: Identifier -> Type -> NewScope -> NewScope
 extendScope (Identifier (_,s)) t (NewScope hmap) = NewScope (M.insert s t hmap)
+
+genParamScope :: [Parameter] -> NewScope
+genParamScope = foldr addParamToScope emptyScope
+
+addParamToScope :: Parameter -> NewScope -> NewScope
+addParamToScope (Param t i _) = extendScope i t
 
 getRhsType :: AssignRhs -> [NewScope] -> ErrorList Type
 getRhsType = undefined
@@ -64,3 +70,4 @@ getFuncType = undefined
 
 getExprType :: Expression -> [NewScope] -> ErrorList Type
 getExprType = undefined
+

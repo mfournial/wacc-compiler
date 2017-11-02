@@ -13,10 +13,10 @@ qualified. E.g. @import qualified Tests as T@
 
 {-# LANGUAGE FlexibleInstances #-}
 
-import LexWacc
-import ParWacc
-import ErrM
-import AbsWacc
+import Bnfc.LexWacc
+import Bnfc.ParWacc
+import Bnfc.ErrM
+import Bnfc.AbsWacc
 import TestsEquality
 
 -- | (Name) Expected, Got
@@ -113,7 +113,7 @@ tests =
       (BExp (brac (BExp one plus two)) times three)
       (test "(1 + 2) * 3")
   ,Test "A + (B * C) with brackets" 
-      (BExp one plus (brac (BExp two times three)))
+      (BExp one plus (brac (BExp two times three)) )
       (test "1 + (2 * 3)")
   ,Test "(A * B) + C with brackets" 
       (BExp (brac (BExp one times two)) plus three)

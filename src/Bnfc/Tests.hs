@@ -11,32 +11,33 @@ This module should not conflict with libraries and is designed to be imported
 qualified. E.g. @import qualified Tests as T@
 -}
 
+{-# LANGUAGE FlexibleInstances #-}
+
 import LexWacc
 import ParWacc
 import ErrM
 import AbsWacc
+import TestsEquality
 
--- | Test Functions
-
--- | Test, Name, Expected, Got
+-- | (Name) Expected, Got
 data Test a 
   = Test Name a a
 type Name = String
 
--- | We dont care whether the position is the same
---   We re-declare Position here with modified concept of equality
-
 -- | evaluate test
-checkTest :: (Eq a) => Test a -> Bool
+checkTest :: (TestEq a) => Test a -> Bool
 checkTest (Test _ f s)
-  = f == s
+  = f =#= s
 
 -- | number of failed tests from a list
-checkTests :: (Eq a) => [Test a] -> Int
+checkTests :: (TestEq a) => [Test a] -> Int
 checkTests
   = foldr (\x acc -> (1 - fromEnum (checkTest x)) + acc) 0
 
-runTest :: (Eq a, Show a) => Test a -> IO ()
+--
+-- | Main test functions
+--
+runTest :: (TestEq a, Show a) => Test a -> IO ()
 runTest test@(Test n e g) = do
   let checked = checkTest test
   if checked
@@ -53,8 +54,10 @@ main = do
   putStrLn " test(s) failed!\n"
   mapM_ runTest tests
 
--- | Test data
 
+--
+-- | Test data helper functions
+--
 createQuickLiteral :: Int -> Expression
 createQuickLiteral int
   = IntExp (IntLiteral (IntDigit ((Pos dontCare), (show int))))
@@ -84,7 +87,10 @@ testParse s
     case pExp ts of
       Bad s -> error "bad lex/parse"
       Ok tree -> tree
-      
+
+--
+-- | Test data
+--
 one = createQuickLiteral 1
 two = createQuickLiteral 2
 three = createQuickLiteral 3

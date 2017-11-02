@@ -68,8 +68,13 @@ instance Monad ErrorList where
 instance Functor ErrorList where
   fmap = liftM
 
+checkForFatals :: ErrorList a -> ErrorList a
+checkForFatals e@(ErrorList _ es) = if any (\ed -> Level ed == FatalLevel)
+                                      then ErrorList Nothing es
+                                      else e
+
 throwError :: a -> ErrorData -> ErrorList a
 throwError a e = ErrorList (Just a) [e]
 
-throwFatal :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
+die :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
 throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]

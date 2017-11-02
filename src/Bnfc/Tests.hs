@@ -52,7 +52,9 @@ main :: IO ()
 main = do
   putStrLn "Running tests.."
   putStr . show . checkTests $ tests
-  putStrLn " test(s) failed!\n"
+  putStr " test(s) failed out of "
+  print . length $ tests
+  putStrLn ""
   mapM_ runTest tests
 
 

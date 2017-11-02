@@ -2,7 +2,7 @@
 
 module Print.Waskell where
 
-import AbsWacc
+import Bnfc.AbsWacc as AbsWacc
 import Data.Char
 
 -- | printTree return a list of strings corresponding to the lines that need to

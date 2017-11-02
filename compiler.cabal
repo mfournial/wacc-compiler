@@ -26,11 +26,19 @@ source-repository head
 
 library
   default-language:  Haskell2010
-  ghc-options:       -Wall -Werror -fno-warn-unused-top-binds -O2
+  ghc-options:       -Wall -Werror -fno-warn-unused-top-binds -fno-warn-unused-matches -O2
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
+                   , Bnfc.LexWacc
+                   , Bnfc.ParWacc
+                   , Bnfc.AbsWacc
+                   , Bnfc.ErrM
+                   , Bnfc.PrintWacc
+                   , Bnfc.SkelWacc
+  build-tools:       alex, happy
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11
+                   , array >= 0.5 && < 0.6
 
 executable compiler-exe
   default-language:  Haskell2010
@@ -77,16 +85,13 @@ test-suite alex
                    , tasty-smallcheck >= 0.8
                    , compiler
 
-test-suite compiler-doctest
+test-suite precedence
   type:              exitcode-stdio-1.0
   default-language:  Haskell2010
-  ghc-options:       -Wall -Werror -O2 -threaded -rtsopts -with-rtsopts=-N
-  hs-source-dirs:    src-doctest
-  main-is:           Main.hs
+  ghc-options:       -O2 -threaded -rtsopts -with-rtsopts=-N 
+  hs-source-dirs:    src-test
+  main-is:           Precedence.hs
   build-depends:     base >= 4.8 && < 5
-                   , doctest >=0.10
-                   , Glob >= 0.7
-                   , QuickCheck >= 2.5
                    , compiler
 
 benchmark compiler-benchmark

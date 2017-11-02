@@ -7,18 +7,18 @@ import System.Environment ( getArgs, getProgName )
 import System.Exit ( exitFailure, exitSuccess )
 import Control.Monad ( when )
 
-import LexWacc
-import ParWacc
-import SkelWacc
-import PrintWacc
-import AbsWacc
+import Bnfc.LexWacc
+import Bnfc.ParWacc
+import Bnfc.SkelWacc
+import Bnfc.PrintWacc
+import Bnfc.AbsWacc
 
 
 
 
-import ErrM
+import qualified Bnfc.ErrM as E
 
-type ParseFun a = [Token] -> Err a
+type ParseFun a = [Token] -> E.Err a
 
 myLLexer = myLexer
 
@@ -32,15 +32,15 @@ runFile v p f = putStrLn f >> readFile f >>= run v p
 
 run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
 run v p s = let ts = myLLexer s in case p ts of
-           Bad s    -> do putStrLn "\nParse              Failed...\n"
-                          putStrV v "Tokens:"
-                          putStrV v $ show ts
-                          putStrLn s
-                          exitFailure
-           Ok  tree -> do 
-                          showTree v tree
+           E.Bad s   -> do  putStrLn "\nParse              Failed...\n"
+                            putStrV v "Tokens:"
+                            putStrV v $ show ts
+                            putStrLn s
+                            exitFailure
+           E.Ok  tree -> do 
+                             showTree v tree
 
-                          exitSuccess
+                             exitSuccess
 
 
 showTree :: (Show a, Print a) => Int -> a -> IO ()

@@ -1,6 +1,6 @@
 module TestsEquality where
 
-import AbsWacc
+import Bnfc.AbsWacc
 
 class (Eq a) => TestEq a where
   (=#=) :: a -> a -> Bool

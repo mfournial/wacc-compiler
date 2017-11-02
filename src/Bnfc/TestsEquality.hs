@@ -199,11 +199,26 @@ instance TestEq Function where
       (ss =#= ss')
       
 instance TestEq Parameter where
-  Param t i
-    =#= Param t' i'
+  Param t i =#= Param t' i'
     = (t =#= t') && (i =#= i')
 
 instance TestEq Statement where
+  --StatSkip SkipT
+  StatDecAss t i _ a =#= StatDecAss t' i' _ a'
+    = (t =#= t') && 
+      (i =#= i') &&
+      (a =#= a')
+  -- StatAss AssignLhs EqualT AssignRhs
+  -- StatRead ReadT AssignLhs
+  -- StatFree FreeT Expression
+  -- StatReturn ReturnT Expression
+  -- StatExit ExitT Expression
+  -- StatPrint PrintT Expression
+  -- StatPrintLn PrintLnT Expression
+  -- StatIf IfT Expression ThenT [Statement] ElseT [Statement] FiT
+  -- StatWhile WhileT Expression DoT [Statement] DoneT
+  -- StatScope BeginT [Statement] EndT
+
 instance TestEq AssignLhs where
 instance TestEq AssignRhs where
 instance TestEq ArgumentList where
@@ -215,19 +230,49 @@ instance TestEq ArrayAccess where
 instance TestEq ArrayLiteral where
 instance TestEq ArrayLiteralElem where
 instance TestEq PairElemType where
+
 instance TestEq Expression where
-  -- UExpr 
-  -- BExp 
-  -- BracketExp
-  
-  -- IntExp a =#= IntExp b = a =#= b
-  -- BoolExp a =#= BoolExp b = a =#= b
-  -- CharExpr a =#= CharExpr b = a =#= b
-  -- StringExpr a =#= StringExpr b = a =#= b
-  -- PairExpr a =#= PairExpr b = a =#= b 
-  -- IdentExpr a =#= IdentExpr b = a =#= b
-  -- ArrayExpr a =#= ArrayExpr b = a =#= b
+  IntExp a     =#= IntExp b      =  a =#= b
+  BoolExp a    =#= BoolExp b     =  a =#= b
+  CharExpr a   =#= CharExpr b    =  a =#= b
+  StringExpr a =#= StringExpr b  =  a =#= b
+  PairExpr a   =#= PairExpr b    =  a =#= b
+  IdentExpr a  =#= IdentExpr b   =  a =#= b
+  ArrayExpr a  =#= ArrayExpr b   =  a =#= b
+  UExpr u e =#= UExpr u' e'
+    = (u =#= u') && (e =#= e')
+  BExp l b r =#= BExp l' b' r'
+    = (l =#= l') && (b =#= b') && (r =#= r')
+  BracketExp _ e _ =#= BracketExp _ e' _
+    = e =#= e' 
+  _ =#= _ = False
 
 instance TestEq UnaryOperator where
+  UBang a   =#= UBang b    =  a =#= b
+  UMinus a  =#= UMinus b   =  a =#= b
+  ULength a =#= ULength b  =  a =#= b
+  UOrd a    =#= UOrd b     =  a =#= b
+  UChr a    =#= UChr b     =  a =#= b
+  _ =#= _ = False
+
 instance TestEq BinaryOperator where
+  BTimes a        =#= BTimes b         =  a =#= b
+  BDivide a       =#= BDivide b        =  a =#= b
+  BModulus a      =#= BModulus b       =  a =#= b
+  BPlus a         =#= BPlus b          =  a =#= b
+  BMinus a        =#= BMinus b         =  a =#= b
+  BGreater a      =#= BGreater b       =  a =#= b
+  BLess a         =#= BLess b          =  a =#= b
+  BGreaterEqual a =#= BGreaterEqual b  =  a =#= b
+  BLessEqual a    =#= BLessEqual b     =  a =#= b
+  BEqual a        =#= BEqual b         =  a =#= b
+  BNotEqual a     =#= BNotEqual b      =  a =#= b
+  BAnd a          =#= BAnd b           =  a =#= b
+  BOr a           =#= BOr b            =  a =#= b
+  _ =#= _ = False
+
 instance TestEq IntLiteral where
+  IntPlus _ a  =#= IntPlus _ b  = a =#= b
+  IntMinus _ a =#= IntMinus _ b = a =#= b
+  IntLiteral a =#= IntLiteral b = a =#= b 
+  _ =#= _ = False

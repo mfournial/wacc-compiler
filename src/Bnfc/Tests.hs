@@ -41,7 +41,8 @@ runTest :: (TestEq a, Show a) => Test a -> IO ()
 runTest test@(Test n e g) = do
   let checked = checkTest test
   if checked
-    then putStrLn ("Test \"" ++ n ++ "\" passed!\n")
+    --then putStrLn ("Test \"" ++ n ++ "\" passed!\n")
+    then return () 
     else putStrLn ("Test \"" ++ n ++ "\" failed:")
       >> putStrLn ("  Expected: " ++ show e)
       >> putStrLn ("  Got: " ++ show g)

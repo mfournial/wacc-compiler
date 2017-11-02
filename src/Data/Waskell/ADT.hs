@@ -1,137 +1,144 @@
 module Data.Waskell.ADT where
 
-import Data.Waskell.Scope
+--import qualified Data.Waskell.ADTHappy as H
+import Data.HashMap.Lazy as M
 
 type ScopeBlock = ([Statement], NewScope)
+type Position = (Int, Int)
 
-newtype IntDigit = IntDigit ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype PlusLiteral = PlusLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype MinusLiteral = MinusLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype BoolLiteral = BoolLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype CharLiteral = CharLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype PairLiteral = PairLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype Identifier = Identifier ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
-newtype StringLiteral = StringLiteral ((Int,Int),String)
-  deriving (Eq, Ord, Show, Read)
+type Scope = M.HashMap String Type
+
+newtype NewScope = NewScope Scope
+  deriving (Eq, Show)
+
+newtype IntDigit = IntDigit (Position,String)
+  deriving (Eq, Show)
+newtype PlusLiteral = PlusLiteral (Position,String)
+  deriving (Eq, Show)
+newtype MinusLiteral = MinusLiteral (Position,String)
+  deriving (Eq, Show)
+newtype BoolLiteral = BoolLiteral (Position,String)
+  deriving (Eq, Show)
+newtype CharLiteral = CharLiteral (Position,String)
+  deriving (Eq, Show)
+newtype PairLiteral = PairLiteral (Position,String)
+  deriving (Eq, Show)
+newtype Identifier = Identifier (Position,String)
+  deriving (Eq, Show)
+newtype StringLiteral = StringLiteral (Position,String)
+  deriving (Eq, Show)
 data WaccTree = WaccTree Program
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Show)
 
-data Program = Program [Function] [Statement] NewScope
-  deriving (Eq, Ord, Show, Read)
+data Program = Program [Function] ScopeBlock Position
+  deriving (Eq, Show)
 
-data Function = Function Type Identifier [Parameter] ScopeBlock
-  deriving (Eq, Ord, Show, Read)
+data Function = Function Type Identifier [Parameter] ScopeBlock Position
+  deriving (Eq, Show)
 
-data Parameter = Param Type Identifier
-  deriving (Eq, Ord, Show, Read)
+data Parameter = Param Type Identifier Position
+  deriving (Eq, Show)
 
 data Statement
-    = StatSkip
-    | StatDecAss Type Identifier AssignRhs
-    | StatAss AssignLhs AssignRhs
-    | StatRead AssignLhs
-    | StatFree Expression
-    | StatReturn Expression
-    | StatExit Expression
-    | StatPrint Expression
-    | StatPrintLn Expression
-    | StatIf Expression ScopeBlock ScopeBlock
-    | StatWhile Expression ScopeBlock
-    | StatScope ScopeBlock
-  deriving (Eq, Ord, Show, Read)
+    = StatSkip Position
+    | StatDecAss Type Identifier AssignRhs Position
+    | StatAss AssignLhs AssignRhs Position
+    | StatRead AssignLhs Position
+    | StatFree Expression Position
+    | StatReturn Expression Position
+    | StatExit Expression Position
+    | StatPrint Expression Position
+    | StatPrintLn Expression Position
+    | StatIf Expression ScopeBlock ScopeBlock Position
+    | StatWhile Expression ScopeBlock Position
+    | StatScope ScopeBlock Position
+  deriving (Eq, Show)
 
 data AssignLhs
-    = AssignToIdent Identifier
-    | AssignToArrayElem ArrayElem
-    | AssignToPair PairElem
-  deriving (Eq, Ord, Show, Read)
+    = AssignToIdent Identifier Position
+    | AssignToArrayElem ArrayElem Position
+    | AssignToPair PairElem Position
+  deriving (Eq, Show)
 
 data AssignRhs
-    = AssignExp Expression
-    | AssignArrayLit ArrayLiteral
-    | AssignPair Expression Expression
-    | AssignPairElem PairElem
-    | AssignFunctionCall Identifier [ArgumentList]
-  deriving (Eq, Ord, Show, Read)
+    = AssignExp Expression Position
+    | AssignArrayLit ArrayLiteral Position
+    | AssignPair Expression Expression Position
+    | AssignPairElem PairElem Position
+    | AssignFunctionCall Identifier [ArgumentList] Position
+  deriving (Eq, Show)
 
-data ArgumentList = ArgumentList Expression
-  deriving (Eq, Ord, Show, Read)
+data ArgumentList = ArgumentList Expression Position
+  deriving (Eq, Show)
 
-data PairElem = PairFst Expression | PairSnd Expression
-  deriving (Eq, Ord, Show, Read)
+data PairElem = PairFst Expression Position | PairSnd Expression Position
+  deriving (Eq, Show)
 
 data Type
-    = BaseType BaseType
-    | ArrayType ArrayDeclarationLiteral
-    | PairType PairElemType PairElemType
-  deriving (Eq, Ord, Show, Read)
+    = BaseType BaseType Position
+    | ArrayType ArrayDeclarationLiteral Position
+    | PairType PairElemType PairElemType Position
+  deriving (Eq, Show)
 
 data BaseType = IntType | BoolType | CharType | StringType
-  deriving (Eq, Ord, Show, Read)
+  deriving (Eq, Show)
 
-data ArrayDeclarationLiteral = ArrayDeclarationLiteral Type
-  deriving (Eq, Ord, Show, Read)
+data ArrayDeclarationLiteral = ArrayDeclarationLiteral Type Position
+  deriving (Eq, Show)
 
-data ArrayElem = ArrayElem Identifier [ArrayAccess]
-  deriving (Eq, Ord, Show, Read)
+data ArrayElem = ArrayElem Identifier [ArrayAccess] Position
+  deriving (Eq, Show)
 
-data ArrayAccess = ArrayAccess Expression
-  deriving (Eq, Ord, Show, Read)
+data ArrayAccess = ArrayAccess Expression Position
+  deriving (Eq, Show)
 
-data ArrayLiteral = ArrayLiteral [ArrayLiteralElem]
-  deriving (Eq, Ord, Show, Read)
+data ArrayLiteral = ArrayLiteral [ArrayLiteralElem] Position
+  deriving (Eq, Show)
 
-data ArrayLiteralElem = ArrayLiteralElem Expression
-  deriving (Eq, Ord, Show, Read)
+data ArrayLiteralElem = ArrayLiteralElem Expression Position
+  deriving (Eq, Show)
 
 data PairElemType
-    = PairElemTypeBase BaseType
-    | PairElemTypeArray ArrayDeclarationLiteral
-    | PairElemTypePair
-  deriving (Eq, Ord, Show, Read)
+    = PairElemTypeBase BaseType Position
+    | PairElemTypeArray ArrayDeclarationLiteral Position
+    | PairElemTypePair Position
+  deriving (Eq, Show)
 
 data Expression
-    = IntExp IntLiteral
-    | BoolExp BoolLiteral
-    | CharExpr CharLiteral
-    | StringExpr StringLiteral
-    | PairExpr PairLiteral
-    | IdentExpr Identifier
-    | ArrayExpr ArrayElem
-    | UExpr UnaryOperator Expression
-    | BExp Expression BinaryOperator Expression
-    | BracketExp Expression
-  deriving (Eq, Ord, Show, Read)
+    = IntExp IntLiteral Position
+    | BoolExp BoolLiteral Position
+    | CharExpr CharLiteral Position
+    | StringExpr StringLiteral Position
+    | PairExpr PairLiteral Position
+    | IdentExpr Identifier Position
+    | ArrayExpr ArrayElem Position
+    | UExpr UnaryOperator Expression Position
+    | BExp Expression BinaryOperator Expression Position
+    | BracketExp Expression Position
+  deriving (Eq, Show)
 
 data UnaryOperator
-    = UBang | UMinus MinusLiteral | ULenght | UOrd | UChr
-  deriving (Eq, Ord, Show, Read)
+    = UBang Position | UMinus MinusLiteral Position | ULenght Position | UOrd Position | UChr Position
+  deriving (Eq, Show)
 
 data BinaryOperator
-    = BTimes
-    | BDivide
-    | BModulus
-    | BPlus PlusLiteral
-    | BMinus MinusLiteral
-    | BMore
-    | BLess
-    | BMoreEqual
-    | BLessEqual
-    | BEqual
-    | BNotEqual
-    | BAnd
-    | BOr
-  deriving (Eq, Ord, Show, Read)
+    = BTimes Position
+    | BDivide Position
+    | BModulus Position
+    | BPlus PlusLiteral Position
+    | BMinus MinusLiteral Position
+    | BMore Position
+    | BLess Position
+    | BMoreEqual Position
+    | BLessEqual Position
+    | BEqual Position
+    | BNotEqual Position
+    | BAnd Position
+    | BOr Position
+  deriving (Eq, Show)
 
 data IntLiteral
-    = IntPlus PlusLiteral IntDigit
-    | IntMinus MinusLiteral IntDigit
-    | IntLiteral IntDigit
-  deriving (Eq, Ord, Show, Read)
+    = IntPlus PlusLiteral IntDigit Position
+    | IntMinus MinusLiteral IntDigit Position
+    | IntLiteral IntDigit Position
+  deriving (Eq, Show)

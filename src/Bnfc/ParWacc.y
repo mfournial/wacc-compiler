@@ -97,6 +97,8 @@ L_CharLiteral { PT _ (T_CharLiteral _) }
 L_StringLiteral { PT _ (T_StringLiteral _) }
 L_Identifier { PT _ (T_Identifier _) }
 
+%left L_PlusToken L_MinusToken
+%left L_TimesT L_DivideT
 
 %%
 
@@ -160,7 +162,10 @@ WaccTree : Program { AbsWacc.WaccTree $1 }
 Program :: { Program }
 Program : BeginT ListFunction ListStatement EndT { AbsWacc.Program $1 (reverse $2) $3 $4 }
 Function :: { Function }
-Function : Type Identifier LParenT ListParameter RParenT IsT ListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
+Function : Type Identifier LParenT ListParameter RParenT IsT FunListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
+FunListStatement :: { [Statement] }
+FunListStatement : ReturnT Expression { (:[]) $ AbsWacc.StatReturn $1 $2 }
+                 | Statement ';' ListStatement { (:) $1 $3 }
 ListFunction :: { [Function] }
 ListFunction : {- empty -} { [] }
              | ListFunction Function { flip (:) $1 $2 }
@@ -236,16 +241,28 @@ PairElemType : BaseType { AbsWacc.PairElemTypeBase $1 }
              | ArrayDeclarationLiteral { AbsWacc.PairElemTypeArray $1 }
              | PairT { AbsWacc.PairElemTypePair $1 }
 Expression :: { Expression }
-Expression : IntLiteral { AbsWacc.IntExp $1 }
-           | BoolLiteral { AbsWacc.BoolExp $1 }
-           | CharLiteral { AbsWacc.CharExpr $1 }
-           | StringLiteral { AbsWacc.StringExpr $1 }
-           | PairLiteral { AbsWacc.PairExpr $1 }
-           | Identifier { AbsWacc.IdentExpr $1 }
-           | ArrayElem { AbsWacc.ArrayExpr $1 }
-           | UnaryOperator Expression { AbsWacc.UExpr $1 $2 }
-           | Expression BinaryOperator Expression { AbsWacc.BExp $1 $2 $3 }
-           | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
+Expression : Expression BinaryOperator Expression { AbsWacc.BExp $1 $2 $3 }
+           | Expression1 { $1 }
+Expression1 :: { Expression }
+Expression1 : Expression1 MinusToken Expression2 { AbsWacc.BExp $1 (AbsWacc.BMinus $2) $3 }
+            | Expression1 PlusToken Expression2 { AbsWacc.BExp $1 (AbsWacc.BPlus $2) $3 }
+            | Expression2 { $1 }
+Expression2 :: { Expression }
+Expression2 : Expression2 TimesT Expression3 { AbsWacc.BExp $1 (AbsWacc.BTimes $2) $3 }
+            | Expression2 DivideT Expression3 { AbsWacc.BExp $1 (AbsWacc.BDivide $2) $3 }
+            | Expression3 { $1 }
+Expression3 :: { Expression }
+Expression3 : Final { $1 }
+            | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
+Final :: { Expression }
+Final : IntLiteral { AbsWacc.IntExp $1 }
+      | BoolLiteral { AbsWacc.BoolExp $1 }
+      | CharLiteral { AbsWacc.CharExpr $1 }
+      | StringLiteral { AbsWacc.StringExpr $1 }
+      | PairLiteral { AbsWacc.PairExpr $1 }
+      | Identifier { AbsWacc.IdentExpr $1 }
+      | ArrayElem { AbsWacc.ArrayExpr $1 }
+      | UnaryOperator Expression { AbsWacc.UExpr $1 $2 }
 UnaryOperator :: { UnaryOperator }
 UnaryOperator : NotT { AbsWacc.UBang $1 }
               | MinusToken { AbsWacc.UMinus $1 }
@@ -253,11 +270,7 @@ UnaryOperator : NotT { AbsWacc.UBang $1 }
               | OrdT { AbsWacc.UOrd $1 }
               | ChrT { AbsWacc.UChr $1 }
 BinaryOperator :: { BinaryOperator }
-BinaryOperator : TimesT { AbsWacc.BTimes $1 }
-               | DivideT { AbsWacc.BDivide $1 }
-               | ModuloT { AbsWacc.BModulus $1 }
-               | PlusToken { AbsWacc.BPlus $1 }
-               | MinusToken { AbsWacc.BMinus $1 }
+BinaryOperator : ModuloT { AbsWacc.BModulus $1 }
                | GreaterT { AbsWacc.BGreater $1 }
                | LessT { AbsWacc.BLess $1 }
                | GreaterEqT { AbsWacc.BGreaterEqual $1 }

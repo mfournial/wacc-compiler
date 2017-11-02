@@ -5,6 +5,7 @@ module Main where
 import System.IO ( stdin, hGetContents )
 import System.Environment ( getArgs, getProgName )
 import System.Exit ( exitFailure, exitSuccess )
+import Control.Monad ( when )
 
 import LexWacc
 import ParWacc
@@ -24,7 +25,7 @@ myLLexer = myLexer
 type Verbosity = Int
 
 putStrV :: Verbosity -> String -> IO ()
-putStrV v s = if v > 1 then putStrLn s else return ()
+putStrV v s = when (v > 1) $ putStrLn s
 
 runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
 runFile v p f = putStrLn f >> readFile f >>= run v p
@@ -55,7 +56,7 @@ usage = do
     , "  --help          Display this help message."
     , "  (no arguments)  Parse stdin verbosely."
     , "  (files)         Parse content of files verbosely."
-    , "  -s (files)      Silent mode. Parse content of files silently."
+    , "  -s (files)      Silent mode. Parse content otherwisef files silently."
     ]
   exitFailure
 

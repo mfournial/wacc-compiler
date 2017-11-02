@@ -164,8 +164,30 @@ Program : BeginT ListFunction ListStatement EndT { AbsWacc.Program $1 (reverse $
 Function :: { Function }
 Function : Type Identifier LParenT ListParameter RParenT IsT FunListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
 FunListStatement :: { [Statement] }
-FunListStatement : ReturnT Expression { (:[]) $ AbsWacc.StatReturn $1 $2 }
-                 | Statement ';' ListStatement { (:) $1 $3 }
+FunListStatement : EndFunListStatement { (:[]) $1 }
+                 | LimitedStatement ';' FunListStatement { (:) $1 $3 }
+EndFunListStatement :: { Statement }
+EndFunListStatement : ReturnT Expression { AbsWacc.StatReturn $1 $2 }
+                    | IfT Expression ThenT FunListStatement ElseT FunListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                    | WhileT Expression DoT FunListStatement DoneT { AbsWacc.StatWhile $1 $2 $3 $4 $5 }
+                    | BeginT FunListStatement EndT { AbsWacc.StatScope $1 $2 $3 }
+                    | ExitT Expression { AbsWacc.StatExit $1 $2 }
+LimitedStatement :: { Statement }
+LimitedStatement : SkipT { AbsWacc.StatSkip $1 }
+                 | Type Identifier EqualT AssignRhs { AbsWacc.StatDecAss $1 $2 $3 $4 }
+                 | AssignLhs EqualT AssignRhs { AbsWacc.StatAss $1 $2 $3 }
+                 | ReadT AssignLhs { AbsWacc.StatRead $1 $2 }
+                 | FreeT Expression { AbsWacc.StatFree $1 $2 }
+                 | PrintT Expression { AbsWacc.StatPrint $1 $2 }
+                 | PrintLnT Expression { AbsWacc.StatPrintLn $1 $2 }
+                 | IfT Expression ThenT FunListStatement ElseT LimitedListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | IfT Expression ThenT LimitedListStatement ElseT FunListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | IfT Expression ThenT LimitedListStatement ElseT LimitedListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | WhileT Expression DoT LimitedListStatement DoneT { AbsWacc.StatWhile $1 $2 $3 $4 $5 }
+                 | BeginT LimitedListStatement EndT { AbsWacc.StatScope $1 $2 $3 }
+LimitedListStatement :: { [Statement] }
+LimitedListStatement : LimitedStatement { (:[]) $1 }
+                     | LimitedStatement ';' LimitedListStatement {(:) $1 $3}
 ListFunction :: { [Function] }
 ListFunction : {- empty -} { [] }
              | ListFunction Function { flip (:) $1 $2 }
@@ -173,8 +195,10 @@ Parameter :: { Parameter }
 Parameter : Type Identifier { AbsWacc.Param $1 $2 }
 ListParameter :: { [Parameter] }
 ListParameter : {- empty -} { [] }
-              | Parameter { (:[]) $1 }
-              | Parameter ',' ListParameter { (:) $1 $3 }
+              | NonEmptyListParameter { $1 }
+NonEmptyListParameter :: { [Parameter] }
+NonEmptyListParameter : Parameter { (:[]) $1 }
+                      | Parameter ',' NonEmptyListParameter { (:) $1 $3 }
 Statement :: { Statement }
 Statement : SkipT { AbsWacc.StatSkip $1 }
           | Type Identifier EqualT AssignRhs { AbsWacc.StatDecAss $1 $2 $3 $4 }

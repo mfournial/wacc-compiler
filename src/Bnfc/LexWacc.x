@@ -10,6 +10,7 @@ module Bnfc.LexWacc where
 import qualified Data.Bits
 import Data.Word (Word8)
 import Data.Char (ord)
+import Data.List (reverse)
 }
 
 
@@ -37,7 +38,7 @@ p r i n t 						{ tok (\p s -> PT p ((T_PrintT ))) }
 p r i n t l n 						{ tok (\p s -> PT p ((T_PrintLnT ))) }
 f r e e 						{ tok (\p s -> PT p ((T_FreeT ))) }
 e x i t 						{ tok (\p s -> PT p ((T_ExitT ))) }
-$d + 							{ tok (\p s -> PT p ((T_IntDigit) s)) }
+$d + 							{ tok (\p s -> if checkOverflow s then Err p else PT p ((T_IntDigit) s)) }
 \+ 							{ tok (\p s -> PT p ((T_PlusToken ) )) }
 \- 							{ tok (\p s -> PT p ((T_MinusToken ) )) }
 t r u e | f a l s e 					{ tok (\p s -> PT p ((T_BoolLiteral) s)) }
@@ -178,6 +179,8 @@ posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
 prToken :: Token -> String
+prToken (Err (Pn _ _ col)) 
+  = " the col " ++ show col ++ ", probably due to an int overflow"
 prToken t = case t of
   PT _ (T_CoT) -> ","
   PT _ (T_SepT) -> ";"
@@ -237,6 +240,11 @@ prToken t = case t of
   PT _ (T_StringLiteral s) -> s
   PT _ (T_Identifier s) -> s
 
+maxInteger :: String
+maxInteger = "2147483647" -- ^ 2^31 - 1 32 bit signed int
+
+checkOverflow :: String -> Bool
+checkOverflow s = (read s :: Integer) > (read maxInteger :: Integer)
 
 data BTree = N | B String Tok BTree BTree deriving (Show)
 

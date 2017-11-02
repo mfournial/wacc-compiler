@@ -39,7 +39,6 @@ run v p s = let ts = myLLexer s in case p ts of
                             exitFailure
            E.Ok  tree -> do 
                              showTree v tree
-
                              exitSuccess
 
 

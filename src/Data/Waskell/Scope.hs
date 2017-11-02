@@ -2,6 +2,7 @@ module Data.Waskell.Scope where
 
 import Data.Waskell.ADT
 import Data.Waskell.Error (ErrorList)
+import Waskell.TypeCheck
 
 import qualified Data.HashMap.Lazy as M
 
@@ -61,13 +62,3 @@ genParamScope = foldr addParamToScope emptyScope
 
 addParamToScope :: Parameter -> NewScope -> NewScope
 addParamToScope (Param t i _) = extendScope i t
-
-getRhsType :: AssignRhs -> [NewScope] -> ErrorList Type
-getRhsType = undefined
-
-getFuncType :: Function -> ErrorList Type
-getFuncType = undefined
-
-getExprType :: Expression -> [NewScope] -> ErrorList Type
-getExprType = undefined
-

@@ -5,14 +5,19 @@ module Data.Waskell.Types where
 import Data.Waskell.ADT
 import Data.Waskell.Error
 
-data WaccType = WaccType :=> WaccType | RetWT Type
+data WaccType = Type :-> WaccType | ForAllType :=> WaccType | RetWT Type | RetFA ForAllType
+  deriving (Eq)
+
+newtype ForAllType = ForAllType ()
   deriving (Eq)
 
 data Scop a = Scop (a, [NewScope])
 
 instance Show WaccType where
-  show (a :=> b) = show a ++ (" -> ") ++ show b
+  show (a :-> b) = show a ++ (" -> ") ++ show b
+  show (a :=> b) = "Any -> " ++ show b
   show (RetWT a) = show a 
+  show (RetFA (ForAllType ())) = "Any"
 
 class Typeable a where
   getType :: a -> ErrorList Type
@@ -56,8 +61,8 @@ instance Typeable (Scop Expression) where
   getType (Scop ((BExp e bop e' _), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
   getType (Scop ((BracketExp e _), scp)) = getType (Scop (e, scp))
 
-handleOperator :: WaccTypeable a => a -> [Scop Expression] -> ErrorList Type
-handleOperator op sexprs = mapM getType sexprs >>= subType (getWType op)
+handleOperator :: (WaccTypeable a, Positionable a, Show a) => a -> [Scop Expression] -> ErrorList Type
+handleOperator op sexprs = mapM getType sexprs >>= subType op
 
 handleArray :: Identifier -> ArrayAccess -> [NewScope] -> ErrorList ()
 handleArray i (ArrayAccess e _) scp = checkTypes (Scop (e, scp)) IntType
@@ -70,8 +75,21 @@ checkTypes given@(Scop (e, _)) required = do
     then return ()
     else expError b a e >> return ()
 
-subType :: WaccType -> [Type] -> ErrorList Type
-subType = undefined
+subType :: (WaccTypeable a, Positionable a, Show a) => a -> [Type] -> ErrorList Type
+subType op ts = subType' (getWType op) ts op (getWType op) 0 (getPos op)
+
+subType' :: Show a => WaccType -> [Type] -> a -> WaccType -> Int -> Position -> ErrorList Type
+subType' (ForAllType () :=> ws) (t' : ts) op opW track pos = subType' ws ts op opW (succ track) pos
+subType' (RetFA (ForAllType ())) (t' : []) _ _ _ _ = return t'
+subType' (t :-> ws) (t' : ts) op opW track pos = if t == t' then subType' ws ts op opW (succ track) pos else subError t' t op opW track pos
+subType' (RetWT t) (t' : []) op opW track pos = if t == t' then return t else subError t' t op opW track pos
+subType' _ [] _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
+subType' (RetWT _) _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
+subType' (RetFA (ForAllType ())) _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
+
+subError :: Show a => Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList Type
+subError target given op waccT track pos = throwTypeError target pos ("Operator: " ++ show op ++ " has type " ++ show waccT ++ " but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 
+
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
 lookupType = undefined

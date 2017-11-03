@@ -136,6 +136,13 @@ data UnaryOperator
     = UBang Position | UMinus MinusLiteral Position | ULenght Position | UOrd Position | UChr Position
   deriving (Eq, Show)
 
+instance Positionable UnaryOperator where
+  getPos (UBang p) = p
+  getPos (UMinus _ p) = p
+  getPos (ULenght p) = p
+  getPos (UOrd p) = p
+  getPos (UChr p) = p
+
 data BinaryOperator
     = BTimes Position
     | BDivide Position

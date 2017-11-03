@@ -46,8 +46,6 @@ class Typeable a where
 class WaccTypeable a where
   getWType :: a -> WaccType
 
-
-
 instance WaccTypeable BinaryOperator where
   getWType (BTimes _)     = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
   getWType (BDivide _)    = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT

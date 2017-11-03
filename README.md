@@ -3,10 +3,15 @@
 [![coverage report](https://gitlab.doc.ic.ac.uk/waskell/compiler/badges/master/coverage.svg)](https://gitlab.doc.ic.ac.uk/waskell/compiler/commits/master)
 
 ## Testing
-Automatic Pipeline CI using gitlab's built in pipeline package.
-Slack + Gitlab hooks + GItlab slackbot
+Automatic Pipeline CI using gitlab's built in pipeline manager for building
+and testing.  
+
+## Communication
+Slack + Gitlab hooks (Pipeline issues, pushes to master etc.) + Gitlab slackbot 
+(creates issues right into slack).
 
 ## Miscelaneous
+
 ### Style guide
 You can find the style guide used for the project in [`STYLE.md`](https://gitlab.doc.ic.ac.uk/waskell/compiler/blob/master/STYLE.md ).
 

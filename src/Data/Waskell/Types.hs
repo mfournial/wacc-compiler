@@ -5,6 +5,8 @@ module Data.Waskell.Types where
 import Data.Waskell.ADT
 import Data.Waskell.Error
 
+import qualified Data.HashMap.Lazy as M
+
 data WaccType = Type :-> WaccType | ForAllType :=> WaccType | RetWT Type | RetFA ForAllType
   deriving (Eq)
 
@@ -92,7 +94,8 @@ subError target given op waccT track pos = throwTypeError target pos ("Operator:
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
-lookupType = undefined
+lookupType i@(Identifier (_, name)) ((NewScope hmap) : scps) = maybe (lookupType i scps) return (M.lookup name hmap)
+lookupType (Identifier (p, name)) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
 
 throwTypeError :: Type -> Position -> String -> ErrorList Type
 throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)

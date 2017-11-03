@@ -28,6 +28,7 @@ newtype PairLiteral = PairLiteral (Position,String)
   deriving (Eq, Show)
 newtype Identifier = Identifier (Position,String)
   deriving (Eq, Show)
+
 newtype StringLiteral = StringLiteral (Position,String)
   deriving (Eq, Show)
 data WaccTree = WaccTree Program

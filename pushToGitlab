@@ -6,6 +6,7 @@ mv compiler.cabal compiler.cabal.local
 cp compiler.cabal.gitlab compiler.cabal
 mv stack.yaml stack.yaml.local
 cp stack.yaml.gitlab stack.yaml
+ls
 git push --force gitlab master
 rm compiler.cabal
 rm stack.yaml

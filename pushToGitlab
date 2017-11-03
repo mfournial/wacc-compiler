@@ -6,7 +6,7 @@ mv compiler.cabal compiler.cabal.local
 cp compiler.cabal.gitlab compiler.cabal
 mv stack.yaml stack.yaml.local
 cp stack.yaml.gitlab stack.yaml
-ls
+git commit compiler.cabal stack.yaml -m "Setup config files for labTS"
 git push --force gitlab master
 rm compiler.cabal
 rm stack.yaml
@@ -14,3 +14,4 @@ mv stack.yaml.local stack.yaml
 mv compiler.cabal.local compiler.cabal
 rm compiler.cabal.RESTORE
 rm stack.yaml.RESTORE
+git commit compiler.cabal stack.yaml -m "Setup config files for origin"

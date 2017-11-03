@@ -3,6 +3,9 @@ module Data.Waskell.ADT where
 --import qualified Data.Waskell.ADTHappy as H
 import qualified Data.HashMap.Lazy as M
 
+class Positionable a where
+  getPos :: a -> Position
+
 type ScopeBlock = ([Statement], NewScope)
 type Position = (Int, Int)
 
@@ -117,6 +120,18 @@ data Expression
     | BracketExp Expression Position
   deriving (Eq, Show)
 
+instance Positionable Expression where
+  getPos (IntExp _ p) = p
+  getPos (BoolExp _ p) = p
+  getPos (CharExpr _ p) = p
+  getPos (StringExpr _ p) = p
+  getPos (PairExpr _ p) = p
+  getPos (IdentExpr _ p) = p
+  getPos (ArrayExpr _ p) = p
+  getPos (UExpr _ _ p) = p
+  getPos (BExp _ _ _ p) = p
+  getPos (BracketExp _ p) = p
+
 data UnaryOperator
     = UBang Position | UMinus MinusLiteral Position | ULenght Position | UOrd Position | UChr Position
   deriving (Eq, Show)
@@ -136,6 +151,21 @@ data BinaryOperator
     | BAnd Position
     | BOr Position
   deriving (Eq, Show)
+
+instance Positionable BinaryOperator where
+  getPos (BTimes p) = p
+  getPos (BDivide p) = p
+  getPos (BModulus p) = p
+  getPos (BPlus _ p) = p
+  getPos (BMinus _ p) = p
+  getPos (BMore p) = p
+  getPos (BLess p) = p
+  getPos (BMoreEqual p) = p
+  getPos (BLessEqual p) = p
+  getPos (BEqual p) = p
+  getPos (BNotEqual p) = p
+  getPos (BAnd p) = p
+  getPos (BOr p) = p
 
 data IntLiteral
     = IntPlus PlusLiteral IntDigit Position

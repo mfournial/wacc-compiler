@@ -27,7 +27,7 @@ $u = [\0-\255]          -- universal: any character
 "#" [.]* ; -- Toss single line comments
 
 $white+ ;
-\,                                                      { tok (\p s -> PT p (T_CoT)) }
+\,              { tok (\p s -> PT p (T_CoT)) }
 \; 							{ tok (\p s -> PT p (T_SepT)) }
 e n d 							{ tok (\p s -> PT p T_EndT) }
 b e g i n 						{ tok (\p s -> PT p T_BeginT) }
@@ -40,7 +40,8 @@ e x i t 						{ tok (\p s -> PT p ((T_ExitT ))) }
 $d + 							{ tok (\p s -> PT p ((T_IntDigit) s)) }
 \+ 							{ tok (\p s -> PT p ((T_PlusToken ) )) }
 \- 							{ tok (\p s -> PT p ((T_MinusToken ) )) }
-t r u e | f a l s e 					{ tok (\p s -> PT p ((T_BoolLiteral) s)) }
+t r u e  					{ tok (\p s -> PT p T_TrueToken) }
+f a l s e         { tok (\p s -> PT p T_FalseToken)}
 i n t 							{ tok (\p s -> PT p ((T_IntT ) )) }
 b o o l 						{ tok (\p s -> PT p ((T_BoolT ) )) }
 c h a r 						{ tok (\p s -> PT p ((T_CharT ) )) }
@@ -111,7 +112,8 @@ data Tok
  | T_IntDigit !String 
  | T_PlusToken 
  | T_MinusToken 
- | T_BoolLiteral !String 
+ | T_TrueToken
+ | T_FalseToken 
  | T_IntT 
  | T_BoolT 
  | T_CharT 
@@ -192,8 +194,8 @@ prToken t = case t of
   PT _ (T_IntDigit s) -> s
   PT _ (T_PlusToken) -> "+"
   PT _ (T_MinusToken) -> "-"
-  PT _ (T_BoolLiteral "true") -> "true"
-  PT _ (T_BoolLiteral "false") -> "false"
+  PT _ (T_TrueToken) -> "true"
+  PT _ (T_FalseToken) -> "false"
   PT _ (T_IntT) -> "int"
   PT _ (T_BoolT) -> "bool"
   PT _ (T_CharT) -> "char"

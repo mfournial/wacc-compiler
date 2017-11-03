@@ -124,8 +124,9 @@ instance Print MinusToken where
 
 
 instance Print BoolLiteral where
-  prt _ (BoolLiteral (_)) = doc . showString $ "PLEASE HAVE BOOL LITERALS TOKENS"
-
+  prt _ e = case e of
+    (TrueToken _)  -> doc . showString $ "TRUE"
+    (FalseToken _) -> doc . showString $ "FALSE"
 
 instance Print IntT where
   prt _ (IntT (_)) = doc . showString $ "INT"

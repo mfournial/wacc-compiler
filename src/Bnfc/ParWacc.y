@@ -53,7 +53,8 @@ L_ExitT { PT _ (T_ExitT) }
 L_IntDigit { PT _ (T_IntDigit _) }
 L_PlusToken { PT _ (T_PlusToken) }
 L_MinusToken { PT _ (T_MinusToken) }
-L_BoolLiteral { PT _ (T_BoolLiteral _) }
+L_TrueToken { PT _ T_TrueToken }
+L_FalseToken { PT _ T_FalseToken }
 L_IntT { PT _ (T_IntT) }
 L_BoolT { PT _ (T_BoolT) }
 L_CharT { PT _ (T_CharT) }
@@ -113,7 +114,8 @@ ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
 IntDigit    :: { IntDigit} : L_IntDigit { IntDigit (mkPosStrToken $1)}
 PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken $1)}
 MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken $1)}
-BoolLiteral    :: { BoolLiteral} : L_BoolLiteral { BoolLiteral (mkPosToken $1)}
+TrueToken :: { Position } : L_TrueToken { (mkPosToken $1)}
+FalseToken :: { Position } : L_FalseToken { (mkPosToken $1)}
 IntT    :: { IntT} : L_IntT { IntT (mkPosToken $1)}
 BoolT    :: { BoolT} : L_BoolT { BoolT (mkPosToken $1)}
 CharT    :: { CharT} : L_CharT { CharT (mkPosToken $1)}
@@ -256,7 +258,8 @@ Expression3 : Final { $1 }
             | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
 Final :: { Expression }
 Final : IntLiteral { AbsWacc.IntExp $1 }
-      | BoolLiteral { AbsWacc.BoolExp $1 }
+      | TrueToken { AbsWacc.BoolExp (AbsWacc.TrueToken $1) }
+      | FalseToken { AbsWacc.BoolExp (AbsWacc.FalseToken $1) }
       | CharLiteral { AbsWacc.CharExpr $1 }
       | StringLiteral { AbsWacc.StringExpr $1 }
       | PairLiteral { AbsWacc.PairExpr $1 }

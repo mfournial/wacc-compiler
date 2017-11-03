@@ -60,15 +60,15 @@ handleOperator :: WaccTypeable a => a -> [Scop Expression] -> ErrorList Type
 handleOperator op sexprs = mapM getType sexprs >>= subType (getWType op)
 
 handleArray :: Identifier -> ArrayAccess -> [NewScope] -> ErrorList ()
-handleArray i (ArrayAccess e _) scp = checkTypes (Scop (e, scp)) IntType >> return ()
+handleArray i (ArrayAccess e _) scp = checkTypes (Scop (e, scp)) IntType
 
-checkTypes :: (Typeable r) => Scop Expression -> r -> ErrorList Type
+checkTypes :: (Typeable r) => Scop Expression -> r -> ErrorList ()
 checkTypes given@(Scop (e, _)) required = do
   a <- getType given
   b <- getType required
   if (a == b)
-    then return b
-    else expError b a e
+    then return ()
+    else expError b a e >> return ()
 
 subType :: WaccType -> [Type] -> ErrorList Type
 subType = undefined

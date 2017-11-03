@@ -31,7 +31,7 @@ library
   exposed-modules:   Data.Waskell.Error
                    , Data.Waskell.Scope
                    , Data.Waskell.ADT
-                   , Waskell.TypeCheck
+                   , Data.Waskell.Types
                    , Bnfc.LexWacc
                    , Bnfc.ParWacc
                    , Bnfc.AbsWacc

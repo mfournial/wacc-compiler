@@ -1,11 +1,4 @@
-module Data.Waskell.Error (
-  Level,
-  Stage,
-  ErrorData,
-  ErrorList,
-  throwError,
-  throwFatal
-) where
+module Data.Waskell.Error where
 
 import Control.Monad (liftM)
 
@@ -69,7 +62,7 @@ instance Functor ErrorList where
   fmap = liftM
 
 checkForFatals :: ErrorList a -> ErrorList a
-checkForFatals e@(ErrorList _ es) = if any (\ed -> Level ed == FatalLevel)
+checkForFatals e@(ErrorList _ es) = if any (\ed -> level ed == FatalLevel) es
                                       then ErrorList Nothing es
                                       else e
 
@@ -77,4 +70,4 @@ throwError :: a -> ErrorData -> ErrorList a
 throwError a e = ErrorList (Just a) [e]
 
 die :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
-throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
+die s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]

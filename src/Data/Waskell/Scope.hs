@@ -2,7 +2,7 @@ module Data.Waskell.Scope where
 
 import Data.Waskell.ADT
 import Data.Waskell.Error (ErrorList)
-import Waskell.TypeCheck
+import Data.Waskell.Types
 
 import qualified Data.HashMap.Lazy as M
 
@@ -14,7 +14,7 @@ genSymbols (WaccTree (Program fs sb pos)) = do
   return (WaccTree (Program fs' (sts, scp') pos))
 
 addFuncToScope :: Function -> ErrorList NewScope -> ErrorList NewScope
-addFuncToScope f@(Function _ i _ _ _) escp = extendScope i <$> getFuncType f <*> escp
+addFuncToScope f@(Function _ i _ _ _) escp = extendScope i <$> getType f <*> escp
 
 fillScopeBlock :: ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
 fillScopeBlock (sts, scp) parents = foldr (\x y -> addStmtToScope x y parents) (pure ([], scp)) sts 
@@ -23,7 +23,7 @@ addStmtToScope :: Statement -> ErrorList ScopeBlock -> [NewScope] -> ErrorList S
 
 addStmtToScope s@(StatAss (AssignToIdent i _) r _) esb parents = do
   (sts, scp) <- esb
-  typ <- getRhsType r (scp : parents)
+  typ <- getType (Scop (r, (scp : parents)))
   return (s : sts, extendScope i typ scp)
 
 addStmtToScope (StatIf c sb sb' p) esb parents = do

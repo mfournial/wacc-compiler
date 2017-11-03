@@ -1,7 +1,7 @@
 module Data.Waskell.ADT where
 
 --import qualified Data.Waskell.ADTHappy as H
-import Data.HashMap.Lazy as M
+import qualified Data.HashMap.Lazy as M
 
 type ScopeBlock = ([Statement], NewScope)
 type Position = (Int, Int)
@@ -75,9 +75,9 @@ data PairElem = PairFst Expression Position | PairSnd Expression Position
   deriving (Eq, Show)
 
 data Type
-    = BaseType BaseType Position
-    | ArrayType ArrayDeclarationLiteral Position
-    | PairType PairElemType PairElemType Position
+    = BaseType BaseType
+    | ArrayType ArrayDeclarationLiteral
+    | PairType
   deriving (Eq, Show)
 
 data BaseType = IntType | BoolType | CharType | StringType

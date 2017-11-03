@@ -44,7 +44,8 @@ transMinusToken x = case x of
   MinusToken string -> failure x
 transBoolLiteral :: BoolLiteral -> Result
 transBoolLiteral x = case x of
-  BoolLiteral string -> failure x
+  (TrueToken y) -> failure y
+  (FalseToken y) -> failure y
 transIntT :: IntT -> Result
 transIntT x = case x of
   IntT string -> failure x

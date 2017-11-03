@@ -101,8 +101,8 @@ createDigit p s =
     else PT p (T_IntDigit s)
 
 -- | Value of max supported integer
-maxInteger :: String
-maxInteger = "2147483647" -- ^ 2^31 - 1 32 bit signed int
+maxInteger :: String -- ^ @ 2^31 - 1 @ 32 bit signed int
+maxInteger = "2147483647"
 
 -- | Checks overflow and underflow assignments
 checkBound :: String -> Bool
@@ -282,10 +282,10 @@ alexMove (Pn a l c) _    = Pn (a+1)  l     (c+1)
 
 type Byte = Word8
 
-type AlexInput = (Posn,     -- ^ current position,
-                  Char,     -- ^ previous char
-                  [Byte],   -- ^ pending bytes on the current char
-                  String)   -- ^ current input string
+type AlexInput = (Posn,     -- current position
+                  Char,     -- previous char
+                  [Byte],   -- pending bytes on the current char
+                  String)   -- current input string
 
 tokens :: String -> [Token]
 tokens str = go (alexStartPos, '\n', [], str)

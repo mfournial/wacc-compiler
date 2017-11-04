@@ -62,7 +62,7 @@ instance Functor ErrorList where
   fmap = liftM
 
 checkForFatals :: ErrorList a -> ErrorList a
-checkForFatals e@(ErrorList _ es) = if any isFatal es
+checkForFatals e@(ErrorList _ es) = if any (\ed -> level ed == FatalLevel) es
                                       then ErrorList Nothing es
                                       else e
 

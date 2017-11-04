@@ -23,8 +23,6 @@ test:
 
 pages:
   stage: test
-  dependencies:
-    - test
   script:
     - mv "/builds/waskell/compiler/.stack-work/install/**/**/**/hpc/index.html" public/
   artifacts:

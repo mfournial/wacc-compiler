@@ -100,13 +100,13 @@ createDigit p s =
     then Err p 
     else PT p (T_IntDigit s)
 
--- | Value of max supported integer
-maxInteger :: String -- ^ @ 2^31 - 1 @ 32 bit signed int
-maxInteger = "2147483647"
+-- | Value of min/max supported integer
+bound :: Integer -- ^ @ 2^31 @ 32 bit signed int
+bound = 2147483648
 
 -- | Checks overflow and underflow assignments
 checkBound :: String -> Bool
-checkBound s = (read s :: Integer) > (read maxInteger :: Integer)
+checkBound s = (read s :: Integer) > bound
 
 share :: String -> String
 share = id
@@ -202,8 +202,8 @@ posLineCol (Pn _ l c) = (l,c)
 -- their string representation in the program
 prToken :: Token -- ^ The token to convert
         -> String -- ^ original string representation
-prToken (Err (Pn _ _ col)) 
-  = "the col " ++ show col ++ ", probably due to an int overflow"
+prToken (Err _)
+  = " probably due to an int overflow"
 prToken t = case t of
   PT _ T_CoT -> ","
   PT _ T_SepT -> ";"

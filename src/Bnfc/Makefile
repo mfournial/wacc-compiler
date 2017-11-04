@@ -1,7 +1,7 @@
 all:
 	happy -gca ParWacc.y
 	alex -g LexWacc.x
-	ghc --make AbsWacc ParWacc LexWacc ErrM SkelWacc PrintWacc TestWacc.hs -o TestWacc
+	ghc --make ../Data/Waskell/Error.hs AbsWacc ParWacc LexWacc ErrM SkelWacc PrintWacc TestWacc.hs -o TestWacc
 
 clean:
 	-rm -f *.log *.aux *.hi *.o *.dvi

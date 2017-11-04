@@ -4,8 +4,8 @@
 module Bnfc.ParWacc where
 import Bnfc.AbsWacc as AbsWacc
 import Bnfc.LexWacc as LexWacc
-import Bnfc.ErrM as ErrM
 
+import Data.Waskell.Error
 }
 
 %name pExp WaccTree
@@ -35,9 +35,8 @@ import Bnfc.ErrM as ErrM
 %name pUnaryOperator UnaryOperator
 %name pBinaryOperator BinaryOperator
 %name pIntLiteral IntLiteral
--- no lexer declaration
-%monad { Err } { thenM } { returnM }
-%tokentype {Token}
+%monad { ErrorList } { (>>=) } { return }
+%tokentype { Token }
 %token
   ',' {PT _ T_CoT}
   ';' { PT _ T_SepT }
@@ -307,10 +306,26 @@ BinaryOperator : ModuloT { AbsWacc.BModulus $1 }
                | AndT { AbsWacc.BAnd $1 }
                | OrT { AbsWacc.BOr $1 }
 IntLiteral :: { IntLiteral }
-IntLiteral : PlusToken IntDigit { AbsWacc.IntPlus $1 $2 }
-           | MinusToken IntDigit { AbsWacc.IntMinus $1 $2 }
-           | IntDigit { AbsWacc.IntLiteral $1 }
+IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
+                                      then throwFlow (AbsWacc.IntPlus $1 $2) "Int Overflow in "
+                                      else return (AbsWacc.IntPlus $1 $2) 
+                                }
+           | MinusToken IntDigit { % if checkUnderflow $2 
+                                      then throwFlow (AbsWacc.IntMinus $1 $2) "Int Underflow in "
+                                      else return (AbsWacc.IntMinus $1 $2)
+                                 }
+           | IntDigit { % if checkOverflow $1
+                            then throwFlow (AbsWacc.IntLiteral $1) "Int Overflow in "
+                            else return (AbsWacc.IntLiteral $1) 
+                      }
 {
+
+throwFlow :: IntLiteral  -- ^ Token to throw
+          -> String -- ^ Error message to display to user
+          -> ErrorList IntLiteral -- ^ Returned error
+throwFlow t@(AbsWacc.IntPlus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
+throwFlow t@(AbsWacc.IntMinus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
+throwFlow t@(AbsWacc.IntLiteral (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
 
 mkPosToken :: Token -> Position
 mkPosToken t@(PT p _) = Pos $ posLineCol p
@@ -318,19 +333,31 @@ mkPosToken t@(PT p _) = Pos $ posLineCol p
 mkPosStrToken :: Token -> (Position, String)
 mkPosStrToken t@(PT p _) = (Pos $ posLineCol p, prToken t)
 
-returnM :: a -> Err a
-returnM = return
 
-thenM :: Err a -> (a -> Err b) -> Err b
-thenM = (>>=)
+happyError :: [Token] -> ErrorList a
+happyError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
+happyError ts@((PT (Pn _ l c) _) : ts') = die ParserStage (l, c) str 100
+  where
+    str = case ts of
+        [] -> []
+        _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))
 
-happyError :: [Token] -> Err a
-happyError ts =
-  Bad $ "syntax error at " ++ tokenPos ts ++ 
-  case ts of
-    [] -> []
-    [Err _] -> " due to lexer error"
-    _ -> " before " ++ unwords (map (id . prToken) (take 4 ts))
+-- | Create digit safely create a digit checking for overflow
+checkOverflow :: IntDigit -- ^ IntDigit token to be checked for overflow
+              -> Bool -- ^ Returns true if overflow is detected
+checkOverflow (IntDigit (_, s)) = (read s :: Integer) > upperBound
+
+-- | Create digit safely create a digit checking for underflow
+checkUnderflow :: IntDigit -- ^ IntDigit token to be checked for underflow
+               -> Bool -- ^ Returns truew if underflow is detected
+checkUnderflow (IntDigit (_, s)) = (read s :: Integer) > lowerBound
+
+-- | Value of min/max supported integer
+lowerBound :: Integer -- ^ @ 2^31 @ 32 bit signed int
+lowerBound = 2147483648
+
+upperBound :: Integer -- ^ @ 2^31 - 1 @ 32 bit signed int
+upperBound = 2147483647
 
 myLexer = tokens
 }

@@ -110,6 +110,7 @@ newtype StringLiteral = StringLiteral (Position,String)
   deriving (Eq, Ord, Show, Read)
 newtype Identifier = Identifier (Position,String)
   deriving (Eq, Ord, Show, Read)
+
 data WaccTree = WaccTree Program
   deriving (Eq, Ord, Show, Read)
 

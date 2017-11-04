@@ -9,6 +9,8 @@ import qualified Data.Bits
 import Data.Word (Word8)
 import Data.Char (ord)
 import Data.List (reverse)
+
+import Data.Waskell.Error
 }
 
 -- | Alex lexer file
@@ -42,10 +44,10 @@ p r i n t           { (\p s -> PT p T_PrintT) }
 p r i n t l n       { (\p s -> PT p T_PrintLnT) }
 f r e e             { (\p s -> PT p T_FreeT) }
 e x i t             { (\p s -> PT p T_ExitT) }
-$d +                { createDigit }
+$d +                { (\p s -> PT p (T_IntDigit s))}
 \+                  { (\p s -> PT p T_PlusToken) } 
 \-                  { (\p s -> PT p T_MinusToken) } 
-t r u e  			{ (\p s -> PT p T_TrueToken) }
+t r u e  			      { (\p s -> PT p T_TrueToken) }
 f a l s e           { (\p s -> PT p T_FalseToken)}
 i n t               { (\p s -> PT p T_IntT) }
 b o o l             { (\p s -> PT p T_BoolT) }
@@ -93,7 +95,7 @@ n u l l             { (\p s -> PT p T_PairLiteral) }
 (\_ | $s)($l | $d | \_)*                          { (\p s -> PT p ((T_Identifier ) s)) } -- ^ Identifier token
 
 {
--- | Create digit safely create a digit checking for overflow
+{- | Create digit safely create a digit checking for overflow
 createDigit :: Posn    -- ^ Position of the checked token
             -> String  -- ^ String 
             -> Token   -- ^ Token returned, might be an Err token
@@ -108,7 +110,7 @@ bound = 2147483648
 
 -- | Checks overflow and underflow assignments
 checkBound :: String -> Bool
-checkBound s = (read s :: Integer) > bound
+checkBound s = (read s :: Integer) > bound-}
 
 share :: String -> String
 share = id
@@ -177,20 +179,17 @@ data Tok
 
 -- | Token type declaration it can be made of:
 data Token
- = PT Posn Tok -- ^ Tok is raw identifier of the token wrapped in a PosiTion 
- | Err Posn    -- ^ Err if illegal token (like Int Overflow)
+ = PT Posn Tok -- ^ Tok is raw identifier of the token wrapped in a Position
   deriving (Eq,Show,Ord)
 
 -- | Pretty prints position
 tokenPos :: [Token] -> String
-tokenPos (PT (Pn _ l c) _ :_) = "at (" ++ show l ++ ", " ++ show c ++ ")"
-tokenPos (Err (Pn _ l c) :_) = "at (" ++ show l ++ ", " ++ show c ++ ")"
+tokenPos (PT (Pn _ l c) _ :_) = "(" ++ show l ++ ", " ++ show c ++ ")"
 tokenPos _ = "at end of file"
 
 -- | Starps Token to return position
 tokenPosn :: Token -> Posn
 tokenPosn (PT p _) = p
-tokenPosn (Err p) = p
 
 -- | Converts Token into a position pair
 tokenLineCol :: Token -> (Int, Int)
@@ -199,14 +198,11 @@ tokenLineCol = posLineCol . tokenPosn
 posLineCol :: Posn -> (Int, Int)
 posLineCol (Pn _ l c) = (l,c)
 
-
 -- | Print Token
 -- When parsing is not successfull it prints the token converting them back to
 -- their string representation in the program
 prToken :: Token -- ^ The token to convert
         -> String -- ^ original string representation
-prToken (Err _)
-  = " probably due to an int overflow"
 prToken t = case t of
   PT _ T_CoT -> ","
   PT _ T_SepT -> ";"
@@ -290,16 +286,17 @@ type AlexInput = (Posn,     -- current position
                   [Byte],   -- pending bytes on the current char
                   String)   -- current input string
 
-tokens :: String -> [Token]
-tokens str = go (alexStartPos, '\n', [], str)
+tokens :: String -> ErrorList [Token]
+tokens str = sequence $ go (alexStartPos, '\n', [], str)
     where
-      go :: AlexInput -> [Token]
+      go :: AlexInput -> [ErrorList Token]
       go inp@(pos, _, _, str) =
                case alexScan inp 0 of
                 AlexEOF                   -> []
-                AlexError (pos, _, _, _)  -> [Err pos]
+                AlexError ((Pn _ l c), chr, _, s)  -> [die LexorStage (l, c) ("after " ++ [chr]
+                                                      ++ " on " ++ s) 100]
                 AlexSkip  inp' len        -> go inp'
-                AlexToken inp' len act    -> act pos (take len str) : (go inp')
+                AlexToken inp' len act    -> (return (act pos (take len str))): (go inp')
 
 alexGetByte :: AlexInput -> Maybe (Byte,AlexInput)
 alexGetByte (p, c, (b:bs), s) = Just (b, (p, c, bs, s))

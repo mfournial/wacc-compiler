@@ -1,11 +1,4 @@
-module Data.Waskell.Error (
-  Level,
-  Stage,
-  ErrorData,
-  ErrorList,
-  throwError,
-  throwFatal
-) where
+module Data.Waskell.Error where
 
 import Control.Monad (liftM)
 import Data.List
@@ -80,7 +73,7 @@ throwError :: a -> ErrorData -> ErrorList a
 throwError a e = ErrorList (Just a) [e]
 
 die :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
-die = undefined
+die s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
 
 throwFatal :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
 throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]

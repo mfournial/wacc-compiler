@@ -24,7 +24,6 @@ import Bnfc.ErrM
 import Bnfc.LexWacc
 import Bnfc.ParWacc
 import Bnfc.PrintWacc
-import Bnfc.SkelWacc
 import Data.Waskell.Error
 
 -- | Definition for a parse function: takes a list of Tokens and produces an

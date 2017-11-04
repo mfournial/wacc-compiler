@@ -26,11 +26,29 @@ class Typeable a where
 class WaccTypeable a where
   getWType :: a -> WaccType
 
+
+
 instance WaccTypeable BinaryOperator where
-  getWType a = undefined
+  getWType (BTimes _)     = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
+  getWType (BDivide _)    = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
+  getWType (BModulus _)   = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
+  getWType (BPlus _)      = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
+  getWType (BMinus _)     = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
+  getWType (BMore _)      = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
+  getWType (BLess _)      = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
+  getWType (BMoreEqual _) = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
+  getWType (BLessEqual _) = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
+  getWType (BEqual _)     = (TypeID "a")       :=> (TypeId "a")       :=> getType (BoolType) :-> RetWT
+  getWType (BNotEqual _)  = (TypeID "a")       :=> (TypeID "a")       :=> getType (BoolType) :-> RetWT
+  getWType (BAnd _)       = getType (BoolType) :-> getType (BoolType) :-> getType (BoolType) :-> RetWT
+  getWType (BOr _)        = getType (BoolType) :-> getType (BoolType) :-> getType (BoolType) :-> RetWT
 
 instance WaccTypeable UnaryOperator where
-  getWType a = undefined
+  getWType (UBang _)   = getType(BoolType)  :-> getType(BoolType) :-> RetWT
+  getWType (UMinus _)  = getType(IntType)   :-> getType(IntType)  :-> RetWT
+  getWType (ULenght _) = getType(ArrayType) :-> getType(IntType)  :-> RetWT
+  getWType (UOrd _)    = getType(CharType)  :-> getType(IntType)  :-> RetWT
+  getWType (UChr _)    = getType(IntType)   :-> getType(CharType) :-> RetWT
 
 instance Typeable BaseType where
   getType a = getType (BaseType a)

@@ -20,7 +20,6 @@ import System.Environment (getArgs, getProgName)
 import System.IO (stdin, hGetContents)
 
 import Bnfc.AbsWacc
-import Bnfc.ErrM
 import Bnfc.LexWacc
 import Bnfc.ParWacc
 import Bnfc.PrintWacc

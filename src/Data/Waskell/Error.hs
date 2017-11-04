@@ -8,6 +8,8 @@ module Data.Waskell.Error (
 ) where
 
 import Control.Monad (liftM)
+import Data.List
+import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 
 
 data Level = InfoLevel | WarningLevel | FatalLevel
@@ -21,13 +23,11 @@ instance Show Level where
   show FatalLevel = "ERROR"
 
 instance Show Stage where
-  show l = "Stage: " ++ show' l
-    where
-      show' AnalStage = "Analysis"
-      show' LexorStage = "Lexor"
-      show' ParserStage = "Parser"
-      show' TypeStage = "Typecheck"
-      show' UnknownStage = "Internal"
+    show AnalStage = "Analysis"
+    show LexorStage = "Lexor"
+    show ParserStage = "Parser"
+    show TypeStage = "Typecheck"
+    show UnknownStage = "Internal"
 
 data ErrorData = ErrorData {
   level :: Level,
@@ -69,9 +69,12 @@ instance Functor ErrorList where
   fmap = liftM
 
 checkForFatals :: ErrorList a -> ErrorList a
-checkForFatals e@(ErrorList _ es) = if any (\ed -> level ed == FatalLevel) es
+checkForFatals e@(ErrorList _ es) = if any isFatal es
                                       then ErrorList Nothing es
                                       else e
+
+isFatal :: ErrorData -> Bool
+isFatal ed = level ed == FatalLevel
 
 throwError :: a -> ErrorData -> ErrorList a
 throwError a e = ErrorList (Just a) [e]
@@ -81,3 +84,17 @@ die = undefined
 
 throwFatal :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
 throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
+
+printError :: ErrorData -> IO ()
+printError = putStrLn . showError
+
+showError :: ErrorData -> String
+showError ed = show (level ed) ++ ": in stage " ++ show (stage ed) ++ " at position " ++ show (position ed) ++ " with error:\n" ++ message ed 
+
+safeHead :: [a] -> Maybe a
+safeHead [] = Nothing
+safeHead (x : xs) = Just x
+
+displayErrorsAndExit :: ErrorList a -> IO ()
+displayErrorsAndExit (ErrorList _ []) = exitWith ExitSuccess
+displayErrorsAndExit (ErrorList _ eds) = mapM printError (sort eds) >> maybe (exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))

@@ -124,8 +124,9 @@ instance Print MinusToken where
 
 
 instance Print BoolLiteral where
-  prt _ (BoolLiteral (_)) = doc . showString $ "PLEASE HAVE BOOL LITERALS TOKENS"
-
+  prt _ e = case e of
+    (TrueToken _)  -> doc . showString $ "TRUE"
+    (FalseToken _) -> doc . showString $ "FALSE"
 
 instance Print IntT where
   prt _ (IntT (_)) = doc . showString $ "INT"
@@ -440,5 +441,3 @@ instance Print IntLiteral where
     IntPlus plustoken intdigit -> prPrec i 0 (concatD [prt 0 plustoken, prt 0 intdigit])
     IntMinus minustoken intdigit -> prPrec i 0 (concatD [prt 0 minustoken, prt 0 intdigit])
     IntLiteral intdigit -> prPrec i 0 (concatD [prt 0 intdigit])
-
-

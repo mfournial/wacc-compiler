@@ -31,6 +31,7 @@ $l = [a-zA-Z\192 - \255] # [\215 \247]  -- ^ letter
 
 -- | These are all the keywords token generation code, wrapped in a position
 $white+ ;
+
 \,                  { (\p s -> PT p T_CoT) }
 \;                  { (\p s -> PT p T_SepT) }
 e n d               { (\p s -> PT p T_EndT) }
@@ -44,7 +45,8 @@ e x i t             { (\p s -> PT p T_ExitT) }
 $d +                { createDigit }
 \+                  { (\p s -> PT p T_PlusToken) } 
 \-                  { (\p s -> PT p T_MinusToken) } 
-t r u e | f a l s e { (\p s -> PT p (T_BoolLiteral s)) }
+t r u e  			{ (\p s -> PT p T_TrueToken) }
+f a l s e           { (\p s -> PT p T_FalseToken)}
 i n t               { (\p s -> PT p T_IntT) }
 b o o l             { (\p s -> PT p T_BoolT) }
 c h a r             { (\p s -> PT p T_CharT) }
@@ -126,7 +128,8 @@ data Tok
  | T_IntDigit !String 
  | T_PlusToken 
  | T_MinusToken 
- | T_BoolLiteral !String 
+ | T_TrueToken
+ | T_FalseToken 
  | T_IntT 
  | T_BoolT 
  | T_CharT 
@@ -218,8 +221,8 @@ prToken t = case t of
   PT _ (T_IntDigit s) -> s
   PT _ T_PlusToken -> "+"
   PT _ T_MinusToken -> "-"
-  PT _ (T_BoolLiteral "true") -> "true"
-  PT _ (T_BoolLiteral "false") -> "false"
+  PT _ (T_TrueToken) -> "true"
+  PT _ (T_FalseToken) -> "false"
   PT _ T_IntT -> "int"
   PT _ T_BoolT -> "bool"
   PT _ T_CharT -> "char"

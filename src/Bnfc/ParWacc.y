@@ -35,8 +35,7 @@ import Bnfc.ErrM as ErrM
 %name pUnaryOperator UnaryOperator
 %name pBinaryOperator BinaryOperator
 %name pIntLiteral IntLiteral
--- no lexer declaration
-%monad { Err } { thenM } { returnM }
+%monad { Err } { (>>=) } { return }
 %tokentype {Token}
 %token
   ',' {PT _ T_CoT}
@@ -318,12 +317,6 @@ mkPosToken t@(PT p _) = Pos $ posLineCol p
 mkPosStrToken :: Token -> (Position, String)
 mkPosStrToken t@(PT p _) = (Pos $ posLineCol p, prToken t)
 
-returnM :: a -> Err a
-returnM = return
-
-thenM :: Err a -> (a -> Err b) -> Err b
-thenM = (>>=)
-
 happyError :: [Token] -> Err a
 happyError ts =
   Bad $ "syntax error at " ++ tokenPos ts ++ 
@@ -331,6 +324,8 @@ happyError ts =
     [] -> []
     [Err _] -> " due to lexer error"
     _ -> " before " ++ unwords (map (id . prToken) (take 4 ts))
+
+
 
 myLexer = tokens
 }

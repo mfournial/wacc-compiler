@@ -34,65 +34,64 @@ import Data.Waskell.Error
 %name pExpression Expression
 %name pUnaryOperator UnaryOperator
 %name pBinaryOperator BinaryOperator
-%name pIntLiteral IntLiteral
 %monad { ErrorList } { (>>=) } { return }
 %tokentype { Token }
 %token
   ',' {PT _ T_CoT}
   ';' { PT _ T_SepT }
+  'null' { PT _ T_NullT }
+  'end' { PT _ T_EndT }
 
-L_EndT { PT _ T_EndT }
-L_BeginT { PT _ (T_BeginT) }
-L_SkipT { PT _ (T_SkipT) }
-L_ReadT { PT _ (T_ReadT) }
-L_PrintT { PT _ (T_PrintT) }
-L_PrintLnT { PT _ (T_PrintLnT) }
-L_FreeT { PT _ (T_FreeT) }
-L_ExitT { PT _ (T_ExitT) }
+'begin' { PT _ (T_BeginT) }
+'skip' { PT _ (T_SkipT) }
+'read' { PT _ (T_ReadT) }
+'print' { PT _ (T_PrintT) }
+'printLn' { PT _ (T_PrintLnT) }
+'free' { PT _ (T_FreeT) }
+'exit' { PT _ (T_ExitT) }
 L_IntDigit { PT _ (T_IntDigit _) }
 L_PlusToken { PT _ (T_PlusToken) }
 L_MinusToken { PT _ (T_MinusToken) }
-L_TrueToken { PT _ T_TrueToken }
-L_FalseToken { PT _ T_FalseToken }
-L_IntT { PT _ (T_IntT) }
-L_BoolT { PT _ (T_BoolT) }
-L_CharT { PT _ (T_CharT) }
-L_StringT { PT _ (T_StringT) }
-L_TimesT { PT _ (T_TimesT) }
-L_DivideT { PT _ (T_DivideT) }
-L_ModuloT { PT _ (T_ModuloT) }
-L_GreaterT { PT _ (T_GreaterT) }
-L_LessT { PT _ (T_LessT) }
-L_GreaterEqT { PT _ (T_GreaterEqT) }
-L_LessEqT { PT _ (T_LessEqT) }
-L_EqT { PT _ (T_EqT) }
-L_NotEqT { PT _ (T_NotEqT) }
-L_AndT { PT _ (T_AndT) }
-L_OrT { PT _ (T_OrT) }
-L_LParenT { PT _ (T_LParenT) }
-L_RParenT { PT _ (T_RParenT) }
-L_LBracketT { PT _ (T_LBracketT) }
-L_RBracketT { PT _ (T_RBracketT) }
-L_IsT { PT _ (T_IsT) }
-L_WhileT { PT _ (T_WhileT) }
-L_DoT { PT _ (T_DoT) }
-L_DoneT { PT _ (T_DoneT) }
-L_IfT { PT _ (T_IfT) }
-L_FiT { PT _ (T_FiT) }
-L_ThenT { PT _ (T_ThenT) }
-L_ElseT { PT _ (T_ElseT) }
-L_PairT { PT _ (T_PairT) }
-L_NewpairT { PT _ (T_NewpairT) }
-L_CallT { PT _ (T_CallT) }
-L_FstT { PT _ (T_FstT) }
-L_SndT { PT _ (T_SndT) }
+'true' { PT _ T_TrueToken }
+'false' { PT _ T_FalseToken }
+'int' { PT _ (T_IntT) }
+'bool' { PT _ (T_BoolT) }
+'char' { PT _ (T_CharT) }
+'string' { PT _ (T_StringT) }
+'timesT { PT _ (T_TimesT) }
+'divideT { PT _ (T_DivideT) }
+'moduloT { PT _ (T_ModuloT) }
+'greaterT { PT _ (T_GreaterT) }
+'lessT { PT _ (T_LessT) }
+'greaterEqT { PT _ (T_GreaterEqT) }
+'lessEqT { PT _ (T_LessEqT) }
+'eqT { PT _ (T_EqT) }
+'notEqT { PT _ (T_NotEqT) }
+'andT { PT _ (T_AndT) }
+'orT { PT _ (T_OrT) }
+'(' { PT _ (T_LParenT) }
+')' { PT _ (T_RParenT) }
+'[' { PT _ (T_LBracketT) }
+']' { PT _ (T_RBracketT) }
+'is' { PT _ (T_IsT) }
+'while' { PT _ (T_WhileT) }
+'do' { PT _ (T_DoT) }
+'done' { PT _ (T_DoneT) }
+'if' { PT _ (T_IfT) }
+'fi' { PT _ (T_FiT) }
+'then' { PT _ (T_ThenT) }
+'else' { PT _ (T_ElseT) }
+'pair' { PT _ (T_PairT) }
+'newpair' { PT _ (T_NewpairT) }
+'call' { PT _ (T_CallT) }
+'fst' { PT _ (T_FstT) }
+'snd' { PT _ (T_SndT) }
 L_EqualT { PT _ (T_EqualT) }
-L_LenT { PT _ (T_LenT) }
-L_OrdT { PT _ (T_OrdT) }
-L_ChrT { PT _ (T_ChrT) }
-L_ReturnT { PT _ (T_ReturnT) }
-L_NotT { PT _ (T_NotT) }
-L_PairLiteral { PT _ (T_PairLiteral) }
+'len' { PT _ (T_LenT) }
+'ord' { PT _ (T_OrdT) }
+'chr' { PT _ (T_ChrT) }
+'return' { PT _ (T_ReturnT) }
+L_notT { PT _ (T_NotT) }
 L_CharLiteral { PT _ (T_CharLiteral _) }
 L_StringLiteral { PT _ (T_StringLiteral _) }
 L_Identifier { PT _ (T_Identifier _) }
@@ -102,7 +101,6 @@ L_Identifier { PT _ (T_Identifier _) }
 
 %%
 
-EndT    :: { EndT} : L_EndT { EndT (mkPosToken $1)}
 BeginT    :: { BeginT} : L_BeginT { BeginT (mkPosToken $1)}
 SkipT    :: { SkipT} : L_SkipT { SkipT (mkPosToken $1)}
 ReadT    :: { ReadT} : L_ReadT { ReadT (mkPosToken $1)}
@@ -110,7 +108,7 @@ PrintT    :: { PrintT} : L_PrintT { PrintT (mkPosToken $1)}
 PrintLnT    :: { PrintLnT} : L_PrintLnT { PrintLnT (mkPosToken $1)}
 FreeT    :: { FreeT} : L_FreeT { FreeT (mkPosToken $1)}
 ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
-IntDigit    :: { IntDigit} : L_IntDigit { IntDigit (mkPosStrToken $1)}
+IntDigit    :: { (String, Position) } : L_IntDigit { mkPosStrToken $1 }
 PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken $1)}
 MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken $1)}
 TrueToken :: { Position } : L_TrueToken { (mkPosToken $1)}
@@ -153,7 +151,6 @@ OrdT    :: { OrdT} : L_OrdT { OrdT (mkPosToken $1)}
 ChrT    :: { ChrT} : L_ChrT { ChrT (mkPosToken $1)}
 ReturnT    :: { ReturnT} : L_ReturnT { ReturnT (mkPosToken $1)}
 NotT    :: { NotT} : L_NotT { NotT (mkPosToken $1)}
-PairLiteral    :: { PairLiteral} : L_PairLiteral { PairLiteral (mkPosStrToken $1)}
 CharLiteral    :: { CharLiteral} : L_CharLiteral { CharLiteral (mkPosStrToken $1)}
 StringLiteral    :: { StringLiteral} : L_StringLiteral { StringLiteral (mkPosStrToken $1)}
 Identifier    :: { Identifier} : L_Identifier { Identifier (mkPosStrToken $1)}
@@ -240,7 +237,7 @@ Type : BaseType { AbsWacc.BaseType $1 }
      | ArrayDeclarationLiteral { AbsWacc.ArrayType $1 }
      | PairT LParenT PairElemType ',' PairElemType RParenT { AbsWacc.PairType $1 $2 $3 $5 $6 }
 BaseType :: { BaseType }
-BaseType : IntT { AbsWacc.IntType $1 }
+BaseType : 'int' { AbsWacc.IntType }
          | BoolT { AbsWacc.BoolType $1 }
          | CharT { AbsWacc.CharType $1 }
          | StringT { AbsWacc.StringType $1 }
@@ -285,7 +282,7 @@ Final : IntLiteral { AbsWacc.IntExp $1 }
       | FalseToken { AbsWacc.BoolExp (AbsWacc.FalseToken $1) }
       | CharLiteral { AbsWacc.CharExpr $1 }
       | StringLiteral { AbsWacc.StringExpr $1 }
-      | PairLiteral { AbsWacc.PairExpr $1 }
+      | 'null' { AbsWacc.PairExpr }
       | Identifier { AbsWacc.IdentExpr $1 }
       | ArrayElem { AbsWacc.ArrayExpr $1 }
       | UnaryOperator Expression { AbsWacc.UExpr $1 $2 }
@@ -305,33 +302,34 @@ BinaryOperator : ModuloT { AbsWacc.BModulus $1 }
                | NotEqT { AbsWacc.BNotEqual $1 }
                | AndT { AbsWacc.BAnd $1 }
                | OrT { AbsWacc.BOr $1 }
-IntLiteral :: { IntLiteral }
+IntLiteral :: { Int }
 IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
-                                      then throwFlow (AbsWacc.IntPlus $1 $2) "Int Overflow in "
-                                      else return (AbsWacc.IntPlus $1 $2) 
+                                      then throwFlow $2 "Int Overflow in "
+                                      else return (read' $2) 
                                 }
            | MinusToken IntDigit { % if checkUnderflow $2 
-                                      then throwFlow (AbsWacc.IntMinus $1 $2) "Int Underflow in "
-                                      else return (AbsWacc.IntMinus $1 $2)
+                                      then throwFlow $2 "Int Underflow in "
+                                      else return ( - read' $2)
                                  }
            | IntDigit { % if checkOverflow $1
-                            then throwFlow (AbsWacc.IntLiteral $1) "Int Overflow in "
-                            else return (AbsWacc.IntLiteral $1) 
+                            then throwFlow $1 "Int Overflow in "
+                            else return (read' $1) 
                       }
 {
 
-throwFlow :: IntLiteral  -- ^ Token to throw
+read' :: (String, Position) -> Int
+read' = read . fst
+
+throwFlow :: (String, Position)  -- ^ Token to throw
           -> String -- ^ Error message to display to user
-          -> ErrorList IntLiteral -- ^ Returned error
-throwFlow t@(AbsWacc.IntPlus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
-throwFlow t@(AbsWacc.IntMinus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
-throwFlow t@(AbsWacc.IntLiteral (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
+          -> ErrorList Int -- ^ Returned error
+throwFlow (s, p) msg = throwError 0 (ErrorData FatalLevel ParserStage p (msg ++ s) 100)
 
 mkPosToken :: Token -> Position
-mkPosToken t@(PT p _) = Pos $ posLineCol p
+mkPosToken t@(PT p _) = posLineCol p
 
-mkPosStrToken :: Token -> (Position, String)
-mkPosStrToken t@(PT p _) = (Pos $ posLineCol p, prToken t)
+mkPosStrToken :: Token -> (String, Position)
+mkPosStrToken t@(PT p _) = (prToken t, posLineCol p)
 
 
 happyError :: [Token] -> ErrorList a
@@ -343,14 +341,14 @@ happyError ts@((PT (Pn _ l c) _) : ts') = die ParserStage (l, c) str 100
         _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))
 
 -- | Create digit safely create a digit checking for overflow
-checkOverflow :: IntDigit -- ^ IntDigit token to be checked for overflow
+checkOverflow :: (String, Position) -- ^ IntDigit token to be checked for overflow
               -> Bool -- ^ Returns true if overflow is detected
-checkOverflow (IntDigit (_, s)) = (read s :: Integer) > upperBound
+checkOverflow (s, _) = (read s :: Integer) > upperBound
 
 -- | Create digit safely create a digit checking for underflow
-checkUnderflow :: IntDigit -- ^ IntDigit token to be checked for underflow
+checkUnderflow :: (String, Position) -- ^ IntDigit token to be checked for underflow
                -> Bool -- ^ Returns truew if underflow is detected
-checkUnderflow (IntDigit (_, s)) = (read s :: Integer) > lowerBound
+checkUnderflow (s, _) = (read s :: Integer) > lowerBound
 
 -- | Value of min/max supported integer
 lowerBound :: Integer -- ^ @ 2^31 @ 32 bit signed int

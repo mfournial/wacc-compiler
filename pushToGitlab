@@ -4,6 +4,8 @@ mv compiler.cabal compiler.cabal.local
 cp compiler.cabal.gitlab compiler.cabal
 mv stack.yaml stack.yaml.local
 cp stack.yaml.gitlab stack.yaml
+mv .gitlab-ci.yml .gitlab-ci.yml.local
+git rm gitlab-ci.yml
 git commit compiler.cabal stack.yaml -m "Setup config files for labTS"
 git push --force gitlab master
 git reset --hard HEAD~1

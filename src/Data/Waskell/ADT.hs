@@ -1,10 +1,7 @@
 module Data.Waskell.ADT where
 
 --import qualified Data.Waskell.ADTHappy as H
-import qualified Data.HashMap.Lazy as M
-
-class Positionable a where
-  getPos :: a -> Position
+import Data.HashMap.Lazy as M
 
 type ScopeBlock = ([Statement], NewScope)
 type Position = (Int, Int)
@@ -28,7 +25,6 @@ newtype PairLiteral = PairLiteral (Position,String)
   deriving (Eq, Show)
 newtype Identifier = Identifier (Position,String)
   deriving (Eq, Show)
-
 newtype StringLiteral = StringLiteral (Position,String)
   deriving (Eq, Show)
 data WaccTree = WaccTree Program
@@ -79,9 +75,9 @@ data PairElem = PairFst Expression Position | PairSnd Expression Position
   deriving (Eq, Show)
 
 data Type
-    = BaseType BaseType
-    | ArrayType ArrayDeclarationLiteral
-    | PairType
+    = BaseType BaseType Position
+    | ArrayType ArrayDeclarationLiteral Position
+    | PairType PairElemType PairElemType Position
   deriving (Eq, Show)
 
 data BaseType = IntType | BoolType | CharType | StringType
@@ -102,9 +98,6 @@ data ArrayLiteral = ArrayLiteral [ArrayLiteralElem] Position
 data ArrayLiteralElem = ArrayLiteralElem Expression Position
   deriving (Eq, Show)
 
-instance Positionable ArrayLiteralElem where
-  getPos (ArrayLiteralElem _ p) = p
-
 data PairElemType
     = PairElemTypeBase BaseType Position
     | PairElemTypeArray ArrayDeclarationLiteral Position
@@ -124,28 +117,9 @@ data Expression
     | BracketExp Expression Position
   deriving (Eq, Show)
 
-instance Positionable Expression where
-  getPos (IntExp _ p) = p
-  getPos (BoolExp _ p) = p
-  getPos (CharExpr _ p) = p
-  getPos (StringExpr _ p) = p
-  getPos (PairExpr _ p) = p
-  getPos (IdentExpr _ p) = p
-  getPos (ArrayExpr _ p) = p
-  getPos (UExpr _ _ p) = p
-  getPos (BExp _ _ _ p) = p
-  getPos (BracketExp _ p) = p
-
 data UnaryOperator
     = UBang Position | UMinus MinusLiteral Position | ULenght Position | UOrd Position | UChr Position
   deriving (Eq, Show)
-
-instance Positionable UnaryOperator where
-  getPos (UBang p) = p
-  getPos (UMinus _ p) = p
-  getPos (ULenght p) = p
-  getPos (UOrd p) = p
-  getPos (UChr p) = p
 
 data BinaryOperator
     = BTimes Position
@@ -162,21 +136,6 @@ data BinaryOperator
     | BAnd Position
     | BOr Position
   deriving (Eq, Show)
-
-instance Positionable BinaryOperator where
-  getPos (BTimes p) = p
-  getPos (BDivide p) = p
-  getPos (BModulus p) = p
-  getPos (BPlus _ p) = p
-  getPos (BMinus _ p) = p
-  getPos (BMore p) = p
-  getPos (BLess p) = p
-  getPos (BMoreEqual p) = p
-  getPos (BLessEqual p) = p
-  getPos (BEqual p) = p
-  getPos (BNotEqual p) = p
-  getPos (BAnd p) = p
-  getPos (BOr p) = p
 
 data IntLiteral
     = IntPlus PlusLiteral IntDigit Position

@@ -2,9 +2,9 @@
 module Main where
 
 
-import System.IO ( stdin, hGetContents )
 import System.Environment ( getArgs, getProgName )
 import System.Exit ( exitFailure, exitSuccess )
+import System.IO ( stdin, hGetContents )
 import Control.Monad ( when )
 
 import Bnfc.LexWacc
@@ -12,41 +12,33 @@ import Bnfc.ParWacc
 import Bnfc.SkelWacc
 import Bnfc.PrintWacc
 import Bnfc.AbsWacc
+import Data.Waskell.Error
 
 
-
-
-import qualified Bnfc.ErrM as E
-
-type ParseFun a = [Token] -> E.Err a
-
-myLLexer = myLexer
+type ParseFunction a = [Token] -> ErrorList a
 
 type Verbosity = Int
 
 putStrV :: Verbosity -> String -> IO ()
 putStrV v s = when (v > 1) $ putStrLn s
 
-runFile :: (Print a, Show a) => Verbosity -> ParseFun a -> FilePath -> IO ()
+runFile :: Verbosity -> ParseFunction WaccTree -> FilePath -> IO ()
 runFile v p f = putStrLn f >> readFile f >>= run v p
 
-run :: (Print a, Show a) => Verbosity -> ParseFun a -> String -> IO ()
-run v p s = let ts = myLLexer s in case p ts of
-           E.Bad s   -> do  putStrLn "\nParse              Failed...\n"
-                            putStrV v "Tokens:"
-                            putStrV v $ show ts
-                            putStrLn s
-                            exitFailure
-           E.Ok  tree -> do 
-                             showTree v tree
-                             exitSuccess
 
 
-showTree :: (Show a, Print a) => Int -> a -> IO ()
-showTree v tree
+run :: Verbosity -> ParseFunction WaccTree -> String -> IO ()
+run v parser input = showTree v parseErr >> displayErrorsAndExit parseErr
+  where
+   parseErr :: ErrorList WaccTree
+   parseErr = myLexer input >>= parser
+
+showTree :: Int -> ErrorList WaccTree -> IO ()
+showTree v (ErrorList (Just tree) _)
  = do
       putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
       putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+showTree v (ErrorList Nothing _) = return ()
 
 usage :: IO ()
 usage = do

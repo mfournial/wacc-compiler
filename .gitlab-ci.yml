@@ -21,5 +21,5 @@ test:
     - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* public/
   artifacts:
     paths:
-      - "public/
+      - "public/"
     expire_in: 30 days

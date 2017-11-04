@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+use v5.14;
+
+use Cwd qw(cwd);
+my $dir = cwd;
+
+my @files = split("\n", `find wacc-samples/invalid/syntaxErr/**/*.wacc -type f`);
+push (@files, split("\n", `find wacc-samples/invalid/syntaxErr/**/**/*.wacc -type f`));
+
+my $cnt = 0;
+for my $file (@files) {
+	print `./../compile $file`;
+  $cnt++;
+}
+say "You have tested $cnt files";

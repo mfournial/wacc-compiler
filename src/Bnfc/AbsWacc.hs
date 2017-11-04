@@ -30,7 +30,7 @@ newtype PlusToken = PlusToken Position
   deriving (Eq, Ord, Show, Read)
 newtype MinusToken = MinusToken Position
   deriving (Eq, Ord, Show, Read)
-newtype BoolLiteral = BoolLiteral Position
+data BoolLiteral = TrueToken  Position | FalseToken Position
   deriving (Eq, Ord, Show, Read)
 newtype IntT = IntT Position
   deriving (Eq, Ord, Show, Read)
@@ -110,6 +110,7 @@ newtype StringLiteral = StringLiteral (Position,String)
   deriving (Eq, Ord, Show, Read)
 newtype Identifier = Identifier (Position,String)
   deriving (Eq, Ord, Show, Read)
+
 data WaccTree = WaccTree Program
   deriving (Eq, Ord, Show, Read)
 

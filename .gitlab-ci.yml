@@ -16,5 +16,10 @@ test:
   only:
     - master
   script:
-      - stack test --coverage
-
+    - stack test --coverage
+    - mkdir public
+    - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* public/
+  artifacts:
+    paths:
+      - "public/"
+    expire_in: 30 days

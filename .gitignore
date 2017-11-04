@@ -24,4 +24,7 @@ cabal.project.local
 /tutorial.md
 /.stack-work/
 *.bak
+*.auto
 src/Bnfc/TestWacc
+src/Bnfc/ParWacc.hs
+src/Bnfc/LexWacc.hs

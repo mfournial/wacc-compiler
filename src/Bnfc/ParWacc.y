@@ -4,8 +4,8 @@
 module Bnfc.ParWacc where
 import Bnfc.AbsWacc as AbsWacc
 import Bnfc.LexWacc as LexWacc
-import Bnfc.ErrM as ErrM
 
+import Data.Waskell.Error
 }
 
 %name pExp WaccTree
@@ -35,9 +35,8 @@ import Bnfc.ErrM as ErrM
 %name pUnaryOperator UnaryOperator
 %name pBinaryOperator BinaryOperator
 %name pIntLiteral IntLiteral
--- no lexer declaration
-%monad { Err } { thenM } { returnM }
-%tokentype {Token}
+%monad { ErrorList } { (>>=) } { return }
+%tokentype { Token }
 %token
   ',' {PT _ T_CoT}
   ';' { PT _ T_SepT }
@@ -53,7 +52,8 @@ L_ExitT { PT _ (T_ExitT) }
 L_IntDigit { PT _ (T_IntDigit _) }
 L_PlusToken { PT _ (T_PlusToken) }
 L_MinusToken { PT _ (T_MinusToken) }
-L_BoolLiteral { PT _ (T_BoolLiteral _) }
+L_TrueToken { PT _ T_TrueToken }
+L_FalseToken { PT _ T_FalseToken }
 L_IntT { PT _ (T_IntT) }
 L_BoolT { PT _ (T_BoolT) }
 L_CharT { PT _ (T_CharT) }
@@ -113,7 +113,8 @@ ExitT    :: { ExitT} : L_ExitT { ExitT (mkPosToken $1)}
 IntDigit    :: { IntDigit} : L_IntDigit { IntDigit (mkPosStrToken $1)}
 PlusToken    :: { PlusToken} : L_PlusToken { PlusToken (mkPosToken $1)}
 MinusToken    :: { MinusToken} : L_MinusToken { MinusToken (mkPosToken $1)}
-BoolLiteral    :: { BoolLiteral} : L_BoolLiteral { BoolLiteral (mkPosToken $1)}
+TrueToken :: { Position } : L_TrueToken { (mkPosToken $1)}
+FalseToken :: { Position } : L_FalseToken { (mkPosToken $1)}
 IntT    :: { IntT} : L_IntT { IntT (mkPosToken $1)}
 BoolT    :: { BoolT} : L_BoolT { BoolT (mkPosToken $1)}
 CharT    :: { CharT} : L_CharT { CharT (mkPosToken $1)}
@@ -164,8 +165,30 @@ Program : BeginT ListFunction ListStatement EndT { AbsWacc.Program $1 (reverse $
 Function :: { Function }
 Function : Type Identifier LParenT ListParameter RParenT IsT FunListStatement EndT { AbsWacc.Function $1 $2 $3 $4 $5 $6 $7 $8 }
 FunListStatement :: { [Statement] }
-FunListStatement : ReturnT Expression { (:[]) $ AbsWacc.StatReturn $1 $2 }
-                 | Statement ';' ListStatement { (:) $1 $3 }
+FunListStatement : EndFunListStatement { (:[]) $1 }
+                 | LimitedStatement ';' FunListStatement { (:) $1 $3 }
+EndFunListStatement :: { Statement }
+EndFunListStatement : ReturnT Expression { AbsWacc.StatReturn $1 $2 }
+                    | IfT Expression ThenT FunListStatement ElseT FunListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                    | WhileT Expression DoT FunListStatement DoneT { AbsWacc.StatWhile $1 $2 $3 $4 $5 }
+                    | BeginT FunListStatement EndT { AbsWacc.StatScope $1 $2 $3 }
+                    | ExitT Expression { AbsWacc.StatExit $1 $2 }
+LimitedStatement :: { Statement }
+LimitedStatement : SkipT { AbsWacc.StatSkip $1 }
+                 | Type Identifier EqualT AssignRhs { AbsWacc.StatDecAss $1 $2 $3 $4 }
+                 | AssignLhs EqualT AssignRhs { AbsWacc.StatAss $1 $2 $3 }
+                 | ReadT AssignLhs { AbsWacc.StatRead $1 $2 }
+                 | FreeT Expression { AbsWacc.StatFree $1 $2 }
+                 | PrintT Expression { AbsWacc.StatPrint $1 $2 }
+                 | PrintLnT Expression { AbsWacc.StatPrintLn $1 $2 }
+                 | IfT Expression ThenT FunListStatement ElseT LimitedListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | IfT Expression ThenT LimitedListStatement ElseT FunListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | IfT Expression ThenT LimitedListStatement ElseT LimitedListStatement FiT { AbsWacc.StatIf $1 $2 $3 $4 $5 $6 $7 }
+                 | WhileT Expression DoT LimitedListStatement DoneT { AbsWacc.StatWhile $1 $2 $3 $4 $5 }
+                 | BeginT LimitedListStatement EndT { AbsWacc.StatScope $1 $2 $3 }
+LimitedListStatement :: { [Statement] }
+LimitedListStatement : LimitedStatement { (:[]) $1 }
+                     | LimitedStatement ';' LimitedListStatement {(:) $1 $3}
 ListFunction :: { [Function] }
 ListFunction : {- empty -} { [] }
              | ListFunction Function { flip (:) $1 $2 }
@@ -173,8 +196,10 @@ Parameter :: { Parameter }
 Parameter : Type Identifier { AbsWacc.Param $1 $2 }
 ListParameter :: { [Parameter] }
 ListParameter : {- empty -} { [] }
-              | Parameter { (:[]) $1 }
-              | Parameter ',' ListParameter { (:) $1 $3 }
+              | NonEmptyListParameter { $1 }
+NonEmptyListParameter :: { [Parameter] }
+NonEmptyListParameter : Parameter { (:[]) $1 }
+                      | Parameter ',' NonEmptyListParameter { (:) $1 $3 }
 Statement :: { Statement }
 Statement : SkipT { AbsWacc.StatSkip $1 }
           | Type Identifier EqualT AssignRhs { AbsWacc.StatDecAss $1 $2 $3 $4 }
@@ -256,7 +281,8 @@ Expression3 : Final { $1 }
             | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
 Final :: { Expression }
 Final : IntLiteral { AbsWacc.IntExp $1 }
-      | BoolLiteral { AbsWacc.BoolExp $1 }
+      | TrueToken { AbsWacc.BoolExp (AbsWacc.TrueToken $1) }
+      | FalseToken { AbsWacc.BoolExp (AbsWacc.FalseToken $1) }
       | CharLiteral { AbsWacc.CharExpr $1 }
       | StringLiteral { AbsWacc.StringExpr $1 }
       | PairLiteral { AbsWacc.PairExpr $1 }
@@ -280,10 +306,26 @@ BinaryOperator : ModuloT { AbsWacc.BModulus $1 }
                | AndT { AbsWacc.BAnd $1 }
                | OrT { AbsWacc.BOr $1 }
 IntLiteral :: { IntLiteral }
-IntLiteral : PlusToken IntDigit { AbsWacc.IntPlus $1 $2 }
-           | MinusToken IntDigit { AbsWacc.IntMinus $1 $2 }
-           | IntDigit { AbsWacc.IntLiteral $1 }
+IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
+                                      then throwFlow (AbsWacc.IntPlus $1 $2) "Int Overflow in "
+                                      else return (AbsWacc.IntPlus $1 $2) 
+                                }
+           | MinusToken IntDigit { % if checkUnderflow $2 
+                                      then throwFlow (AbsWacc.IntMinus $1 $2) "Int Underflow in "
+                                      else return (AbsWacc.IntMinus $1 $2)
+                                 }
+           | IntDigit { % if checkOverflow $1
+                            then throwFlow (AbsWacc.IntLiteral $1) "Int Overflow in "
+                            else return (AbsWacc.IntLiteral $1) 
+                      }
 {
+
+throwFlow :: IntLiteral  -- ^ Token to throw
+          -> String -- ^ Error message to display to user
+          -> ErrorList IntLiteral -- ^ Returned error
+throwFlow t@(AbsWacc.IntPlus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
+throwFlow t@(AbsWacc.IntMinus _ (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
+throwFlow t@(AbsWacc.IntLiteral (IntDigit (Pos (l, c), n))) s = throwError t (ErrorData FatalLevel ParserStage (l, c) (s ++ n) 100)
 
 mkPosToken :: Token -> Position
 mkPosToken t@(PT p _) = Pos $ posLineCol p
@@ -291,19 +333,31 @@ mkPosToken t@(PT p _) = Pos $ posLineCol p
 mkPosStrToken :: Token -> (Position, String)
 mkPosStrToken t@(PT p _) = (Pos $ posLineCol p, prToken t)
 
-returnM :: a -> Err a
-returnM = return
 
-thenM :: Err a -> (a -> Err b) -> Err b
-thenM = (>>=)
+happyError :: [Token] -> ErrorList a
+happyError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
+happyError ts@((PT (Pn _ l c) _) : ts') = die ParserStage (l, c) str 100
+  where
+    str = case ts of
+        [] -> []
+        _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))
 
-happyError :: [Token] -> Err a
-happyError ts =
-  Bad $ "syntax error at " ++ tokenPos ts ++ 
-  case ts of
-    [] -> []
-    [Err _] -> " due to lexer error"
-    _ -> " before " ++ unwords (map (id . prToken) (take 4 ts))
+-- | Create digit safely create a digit checking for overflow
+checkOverflow :: IntDigit -- ^ IntDigit token to be checked for overflow
+              -> Bool -- ^ Returns true if overflow is detected
+checkOverflow (IntDigit (_, s)) = (read s :: Integer) > upperBound
+
+-- | Create digit safely create a digit checking for underflow
+checkUnderflow :: IntDigit -- ^ IntDigit token to be checked for underflow
+               -> Bool -- ^ Returns truew if underflow is detected
+checkUnderflow (IntDigit (_, s)) = (read s :: Integer) > lowerBound
+
+-- | Value of min/max supported integer
+lowerBound :: Integer -- ^ @ 2^31 @ 32 bit signed int
+lowerBound = 2147483648
+
+upperBound :: Integer -- ^ @ 2^31 - 1 @ 32 bit signed int
+upperBound = 2147483647
 
 myLexer = tokens
 }

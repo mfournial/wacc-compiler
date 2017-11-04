@@ -7,17 +7,37 @@ import Data.Waskell.Error
 
 import qualified Data.HashMap.Lazy as M
 
-data WaccType = Type :-> WaccType | TypeID :=> WaccType | RetWT
+infixr :->
+infixr :=>
+infixr :+>
+infixr ::>
+
+data WaccType = Type :-> WaccType 
+                         | TypeID :=> WaccType 
+                         | ((Type, Type), TypeID) :+> WaccType 
+                         | ArrayWaccType ::> WaccType 
+                         | RetWT
   deriving (Eq)
+
+newtype ArrayWaccType = ArrayWaccType WaccType
+  deriving (Eq)
+
+wplus :: BaseType -> BaseType -> (Type, Type) 
+wplus a b = (BaseType a, BaseType b)
 
 newtype TypeID = TypeID String
   deriving (Eq)
+
+instance Show TypeID where
+  show (TypeID s) = s
 
 data Scop a = Scop (a, [NewScope])
 
 instance Show WaccType where
   show (a :-> b) = show a ++ (" -> ") ++ show b
-  show ((TypeID s) :=> b) = s ++ " -> " ++ show b
+  show (tid :=> b) = show tid ++ " -> " ++ show b
+  show ((p, tid) :+> b) = show tid ++ " elem of " ++ show p ++ " -> " ++ show b
+  show ((ArrayWaccType wt) ::> b) = "[" ++ show wt ++ "]" ++ " -> " ++ show b 
   show RetWT = ""
 
 class Typeable a where
@@ -29,26 +49,26 @@ class WaccTypeable a where
 
 
 instance WaccTypeable BinaryOperator where
-  getWType (BTimes _)     = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
-  getWType (BDivide _)    = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
-  getWType (BModulus _)   = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
-  getWType (BPlus _)      = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
-  getWType (BMinus _)     = getType (IntType)  :-> getType (IntType)  :-> getType (IntType)  :-> RetWT
-  getWType (BMore _)      = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
-  getWType (BLess _)      = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
-  getWType (BMoreEqual _) = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
-  getWType (BLessEqual _) = (TypeID "intchar") :=> (TypeID "intchar") :=> getType (BoolType) :-> RetWT
-  getWType (BEqual _)     = (TypeID "a")       :=> (TypeId "a")       :=> getType (BoolType) :-> RetWT
-  getWType (BNotEqual _)  = (TypeID "a")       :=> (TypeID "a")       :=> getType (BoolType) :-> RetWT
-  getWType (BAnd _)       = getType (BoolType) :-> getType (BoolType) :-> getType (BoolType) :-> RetWT
-  getWType (BOr _)        = getType (BoolType) :-> getType (BoolType) :-> getType (BoolType) :-> RetWT
+  getWType (BTimes _)     = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
+  getWType (BDivide _)    = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
+  getWType (BModulus _)   = BaseType IntType     :-> BaseType IntType     :-> BaseType IntType  :-> RetWT
+  getWType (BPlus _ _)    = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
+  getWType (BMinus _ _)   = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
+  getWType (BMore _)      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BLess _)      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BMoreEqual _) = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BLessEqual _) = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BEqual _)     = TypeID "a" :=> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BNotEqual _)  = TypeID "a" :=> TypeID "a" :=> BaseType BoolType :-> RetWT
+  getWType (BAnd _)       = BaseType BoolType     :-> BaseType BoolType     :-> BaseType BoolType :-> RetWT
+  getWType (BOr _)        = BaseType BoolType     :-> BaseType BoolType     :-> BaseType BoolType :-> RetWT
 
 instance WaccTypeable UnaryOperator where
-  getWType (UBang _)   = getType(BoolType)  :-> getType(BoolType) :-> RetWT
-  getWType (UMinus _)  = getType(IntType)   :-> getType(IntType)  :-> RetWT
-  getWType (ULenght _) = getType(ArrayType) :-> getType(IntType)  :-> RetWT
-  getWType (UOrd _)    = getType(CharType)  :-> getType(IntType)  :-> RetWT
-  getWType (UChr _)    = getType(IntType)   :-> getType(CharType) :-> RetWT
+  getWType (UBang _)    = BaseType BoolType                     :-> BaseType BoolType :-> RetWT
+  getWType (UMinus _ _) = BaseType IntType                      :-> BaseType IntType  :-> RetWT
+  getWType (ULenght _)  = ArrayWaccType (TypeID "a" :=> RetWT)  ::> BaseType IntType  :-> RetWT
+  getWType (UOrd _)     = BaseType CharType                     :-> BaseType IntType  :-> RetWT
+  getWType (UChr _)     = BaseType IntType                      :-> BaseType CharType :-> RetWT
 
 instance Typeable BaseType where
   getType a = getType (BaseType a)
@@ -60,7 +80,13 @@ instance WaccTypeable Type where
   getWType a = a :-> RetWT
 
 instance Typeable (Scop AssignRhs) where
-  getType a = undefined
+  getType (Scop ((AssignExp e _), scps)) = getType (Scop ((e, scps)))
+  --getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = ArrayType (ArrayDeclarationLiteral (checkSameTypes (map (\(ArrayLiteralElem e _) -> getType (Scop (e, scps)))))
+  getType (Scop ((AssignPair _ _ _), _)) = getType PairType
+  getType (Scop ((AssignFunctionCall _ _ _), _)) = undefined
+  getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = undefined
+  getType (Scop ((AssignPairElem (PairFst e _) _), scps)) = getType (Scop (e, scps))
+  getType (Scop ((AssignPairElem (PairSnd e _) _), scps)) = getType (Scop (e, scps))
 
 instance Typeable Function where
   getType (Function t _ _ (sts, scp) pos) 
@@ -98,12 +124,20 @@ subType :: (WaccTypeable a, Positionable a, Show a) => a -> [Type] -> ErrorList 
 subType op ts = subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
 
 subType' :: Show a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList Type
+subType' (((w, w'), (TypeID s)) :+> ws) (t' : ts) _ _ _ _ _= undefined
+subType' ((ArrayWaccType w) ::> ws) (t : ts) _ _ _ _ _ = undefined
 subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts tids op opW (succ track) pos) (\t -> if t == t' then subType' ws ts tids op opW (succ track) pos else subError t t' op opW track pos) (lookup s tids)
 subType' (t :-> ws) (t' : ts) tids op opW track pos = if t == t' then subType' ws ts tids op opW (succ track) pos else subError t' t op opW track pos
 subType' (t :-> RetWT) [] _ _ _ _ _ = return t
 subType' ((TypeID s) :=> ws) [] tids op opW _ _ = maybe (fail ("Operator  " ++ show op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) return (lookup s tids)
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 subType' RetWT _ _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
+
+grabPairElem :: (Eq a) => a -> (a, a) -> Maybe a
+grabPairElem a (b, c)
+  | a == b = Just a
+  | a == c = Just c
+  | otherwise = Nothing
 
 subError :: Show a => Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList Type
 subError target given op waccT track pos = throwTypeError target pos ("Operator: " ++ show op ++ " has type " ++ show waccT ++ " but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 

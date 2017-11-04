@@ -102,6 +102,9 @@ data ArrayLiteral = ArrayLiteral [ArrayLiteralElem] Position
 data ArrayLiteralElem = ArrayLiteralElem Expression Position
   deriving (Eq, Show)
 
+instance Positionable ArrayLiteralElem where
+  getPos (ArrayLiteralElem _ p) = p
+
 data PairElemType
     = PairElemTypeBase BaseType Position
     | PairElemTypeArray ArrayDeclarationLiteral Position

@@ -7,11 +7,10 @@ import Data.Waskell.Error
 
 import qualified Data.HashMap.Lazy as M
 
-data WaccType = Type :-> WaccType | ForAllType :=> WaccType | RetWT Type | RetFA ForAllType
+data WaccType = Type :-> WaccType | TypeID :=> WaccType | RetWT Type | RetID TypeID
   deriving (Eq)
 
-newtype ForAllType = ForAllType ()
-  deriving (Eq)
+newtype TypeID = TypeID String
 
 data Scop a = Scop (a, [NewScope])
 

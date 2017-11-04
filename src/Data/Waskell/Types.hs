@@ -7,18 +7,18 @@ import Data.Waskell.Error
 
 import qualified Data.HashMap.Lazy as M
 
-data WaccType = Type :-> WaccType | TypeID :=> WaccType | RetWT Type | RetID TypeID
+data WaccType = Type :-> WaccType | TypeID :=> WaccType | RetWT
   deriving (Eq)
 
 newtype TypeID = TypeID String
+  deriving (Eq)
 
 data Scop a = Scop (a, [NewScope])
 
 instance Show WaccType where
   show (a :-> b) = show a ++ (" -> ") ++ show b
-  show (a :=> b) = "Any -> " ++ show b
-  show (RetWT a) = show a 
-  show (RetFA (ForAllType ())) = "Any"
+  show ((TypeID s) :=> b) = s ++ " -> " ++ show b
+  show RetWT = ""
 
 class Typeable a where
   getType :: a -> ErrorList Type
@@ -39,7 +39,7 @@ instance Typeable Type where
   getType a = return a
 
 instance WaccTypeable Type where
-  getWType a = RetWT a
+  getWType a = a :-> RetWT
 
 instance Typeable (Scop AssignRhs) where
   getType a = undefined
@@ -77,16 +77,15 @@ checkTypes given@(Scop (e, _)) required = do
     else expError b a e >> return ()
 
 subType :: (WaccTypeable a, Positionable a, Show a) => a -> [Type] -> ErrorList Type
-subType op ts = subType' (getWType op) ts op (getWType op) 0 (getPos op)
+subType op ts = subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
 
-subType' :: Show a => WaccType -> [Type] -> a -> WaccType -> Int -> Position -> ErrorList Type
-subType' (ForAllType () :=> ws) (t' : ts) op opW track pos = subType' ws ts op opW (succ track) pos
-subType' (RetFA (ForAllType ())) (t' : []) _ _ _ _ = return t'
-subType' (t :-> ws) (t' : ts) op opW track pos = if t == t' then subType' ws ts op opW (succ track) pos else subError t' t op opW track pos
-subType' (RetWT t) (t' : []) op opW track pos = if t == t' then return t else subError t' t op opW track pos
-subType' _ [] _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
-subType' (RetWT _) _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
-subType' (RetFA (ForAllType ())) _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
+subType' :: Show a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList Type
+subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts tids op opW (succ track) pos) (\t -> if t == t' then subType' ws ts tids op opW (succ track) pos else subError t t' op opW track pos) (lookup s tids)
+subType' (t :-> ws) (t' : ts) tids op opW track pos = if t == t' then subType' ws ts tids op opW (succ track) pos else subError t' t op opW track pos
+subType' (t :-> RetWT) [] _ _ _ _ _ = return t
+subType' ((TypeID s) :=> ws) [] tids op opW _ _ = maybe (fail ("Operator  " ++ show op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) return (lookup s tids)
+subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
+subType' RetWT _ _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
 
 subError :: Show a => Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList Type
 subError target given op waccT track pos = throwTypeError target pos ("Operator: " ++ show op ++ " has type " ++ show waccT ++ " but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 

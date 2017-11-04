@@ -9,7 +9,6 @@ import Control.Monad ( when )
 
 import Bnfc.LexWacc
 import Bnfc.ParWacc
-import Bnfc.SkelWacc
 import Bnfc.PrintWacc
 import Bnfc.AbsWacc
 import Data.Waskell.Error

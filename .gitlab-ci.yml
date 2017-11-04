@@ -20,15 +20,4 @@ test:
   artifacts:
     paths:
       - "/builds/waskell/compiler/.stack-work/install/**/**/**/hpc/index.html"
-
-pages:
-  stage: test
-  script:
-    - mv "/builds/waskell/compiler/.stack-work/install/**/**/**/hpc/index.html" public/
-  artifacts:
-    paths:
-      - public
     expire_in: 30 days
-  only:
-    - master
-

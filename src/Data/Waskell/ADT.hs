@@ -2,7 +2,6 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Data.Waskell.ADT where
 
---import qualified Data.Waskell.ADTHappy as H
 import qualified Data.HashMap.Lazy as M
 
 type Position = (Int, Int)
@@ -24,7 +23,7 @@ newtype NewScope = NewScope Scope
 type Identifier = Pos String
 
 
-data WaccTree = WaccTree Program
+newtype WaccTree = WaccTree Program
   deriving (Eq, Show)
 
 data Program = Program [Pos Function] ScopeBlock 
@@ -37,9 +36,9 @@ data Parameter = Param Type Identifier
   deriving (Eq, Show)
 
 data StatementOperator
-    = StatDecAss Type Identifier (Pos AssignRhs)
-    | StatAss (Pos AssignLhs) (Pos AssignRhs)
-    | StatRead (Pos AssignLhs)
+    = StatDecAss Type Identifier AssignRhs
+    | StatAss AssignLhs AssignRhs
+    | StatRead AssignLhs
     | StatFree (Pos Expression)
     | StatReturn (Pos Expression)
     | StatExit (Pos Expression)
@@ -55,13 +54,11 @@ data Statement
     | StatementOperator (Pos StatementOperator)
   deriving (Eq, Show)
 
-
 data AssignLhs
     = AssignToIdent (Pos String)
     | AssignToArrayElem (Pos ArrayElem)
     | AssignToPair PairElem
   deriving (Eq, Show)
-
 
 data AssignRhs
     = AssignExp (Pos Expression)
@@ -86,7 +83,7 @@ data Pairable = BaseType BaseType | ArrayType Type | PairNull
 data ArrayElem = ArrayElem Identifier [Pos Expression]
   deriving (Eq, Show)
 
-data ArrayLiteral = ArrayLiteral [Pos Expression]
+newtype ArrayLiteral = ArrayLiteral [Pos Expression]
   deriving (Eq, Show)
 
 

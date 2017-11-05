@@ -196,11 +196,11 @@ FunListStatement :: { [Statement] } -- ^ non empty list of at least one return s
 FunListStatement : EndFunListStatement { (:[]) $1 }
                  | LimitedStatement ';' FunListStatement { (:) $1 $3 }
 EndFunListStatement :: { Statement } -- ^ Can be any structure that terminates with a return or an exit
-EndFunListStatement : ReturnT Expression { (statOp (StatReturn $2), ReturnT) }
+EndFunListStatement : ReturnT Expression { statOp (StatReturn $2, $1) }
                     | 'if' Expression 'then' FunListStatement 'else' FunListStatement 'fi' { StatIf $2 (mkSB $4) (mkSB $6) }
                     | 'while' Expression 'do' FunListStatement 'done' { StatWhile $2 (mkSB $4) }
                     | 'begin' FunListStatement 'end' { StatScope (mkSB $2) }
-                    | ExitT Expression { (statOp (StatExit $2), ExitT) }
+                    | ExitT Expression { statOp (StatExit $2, $1) }
 LimitedStatement :: { Statement } -- ^ Can be any statement except for exit or return but accepts them if in a single branch of a conditional
 LimitedStatement : 'skip' { StatSkip }
                  | AssignStatement { $1 }
@@ -215,17 +215,17 @@ LimitedStatement : 'skip' { StatSkip }
                  | 'while' Expression 'do' LimitedListStatement 'done' { StatWhile $2 (mkSB $4) }
                  | 'begin' LimitedListStatement 'end' { StatScope (mkSB $2) }
 ReadStatement :: { Statement }
-ReadStatement : ReadT AssignLhs { (statOp $ StatRead $2, $1) }
+ReadStatement : ReadT AssignLhs { statOp (StatRead $2, $1) }
 FreeStatement :: { Statement }
-FreeStatement : FreeT Expression { (statOp $ StatFree $2, $1) }
+FreeStatement : FreeT Expression { statOp (StatFree $2, $1) }
 PrintStatement :: { Statement }
-PrintStatement : PrintT Expression { (statOp $ StatPrint $2, $1) }
+PrintStatement : PrintT Expression { statOp (StatPrint $2, $1) }
 PrintlnStatement  :: { Statement }
-PrintlnStatement : PrintLnT Expression { (statOp $ StatPrintLn $2, $1) }
+PrintlnStatement : PrintLnT Expression { statOp (StatPrintLn $2, $1) }
 AssignStatement :: { Statement }
-AssignStatement : AssignLhs EqualT AssignRhs { (statOp $ StatAss $1 $2, $3) }
+AssignStatement : AssignLhs EqualT AssignRhs { statOp (StatAss $1 $3, $2) }
 DecAssignStatement :: { Statement }
-DecAssignStatement : Type Identifier EqualT AssignRhs { (statOp $ StatDecAss $1 $2 $4, $3) }
+DecAssignStatement : Type Identifier EqualT AssignRhs { statOp (StatDecAss $1 $2 $4, $3) }
 
 LimitedListStatement :: { [Statement] }
 LimitedListStatement : LimitedStatement { (:[]) $1 }
@@ -242,14 +242,14 @@ NonEmptyListParameter :: { [Parameter] }
 NonEmptyListParameter : Parameter { (:[]) $1 }
                       | Parameter ',' NonEmptyListParameter { (:) $1 $3 }
 Statement :: { Statement } -- ^ allow all statement except return for main
-Statement : 'skip' { StatSkip $1 }
+Statement : 'skip' { StatSkip }
           | DecAssignStatement { $1 }
           | AssignStatement { $1 }
           | ReadStatement { $1 }
           | FreeStatement { $1 }
           | PrintStatement { $1 }
           | PrintlnStatement { $1 }
-          | ExitT Expression { (statOp (StatExit $2), ExitT) }
+          | ExitT Expression { statOp (StatExit $2, $1) }
           | 'if' Expression 'then' ListStatement 'else' ListStatement 'fi' { StatIf $2 (mkSB $4) (mkSB $6) }
           | 'while' Expression 'do' ListStatement 'done' { StatWhile $2 (mkSB $4) }
           | 'begin' ListStatement 'end' { StatScope (mkSB $2) }
@@ -263,29 +263,29 @@ AssignLhs : Identifier { AssignToIdent $1 }
 AssignRhs :: { AssignRhs }
 AssignRhs : Expression { AssignExp $1 }
           | ArrayLiteral { AssignArrayLit $1 }
-          | 'newpair' '(' Expression ',' Expression ')' { AssignPair $2 $5 }
+          | 'newpair' '(' Expression ',' Expression ')' { AssignPair $3 $5 }
           | PairElem { AssignPairElem $1 }
-          | 'call' Identifier '(' ListArgumentList ')' { AssignFunctionCall $2 $4 $5 }
+          | 'call' Identifier '(' ListArgumentList ')' { AssignFunctionCall $2 $4 }
 ListArgumentList :: { [Pos Expression] }
 ListArgumentList : {- empty -} { [] }
                  | Expression { (:[]) $1 }
                  | Expression ',' ListArgumentList { (:) $1 $3 }
-PairElem :: { PairElem }
-PairElem : FstT Expression { (Either ($2) (), $1) }
-         | SndT Expression { (Either () ($2), $1) }
+PairElem :: { Pos PairElem }
+PairElem : FstT Expression { (Left  $2, $1) }
+         | SndT Expression { (Right $2, $1) }
 Type :: { Type }
 Type : BaseType { Pairable (BaseType $1) }
      | ArrayDeclarationLiteral { Pairable $1 }
-     | 'pair' '(' PairElemType ',' PairElemType ')' { PairType $3 $6 }
+     | 'pair' '(' PairElemType ',' PairElemType ')' { PairType $3 $5 }
 BaseType :: { BaseType }
 BaseType : 'int'  { IntType }
          | 'bool' { BoolType }
          | 'char' { CharType }
          | 'string' { StringType }
-ArrayDeclarationLiteral :: { ArrayType Type }
+ArrayDeclarationLiteral :: { Pairable }
 ArrayDeclarationLiteral : Type '[' ']' {  ArrayType $1 }
 ArrayElem :: { Pos ArrayElem }
-ArrayElem : Identifier ListArrayAccess { ArrayElem $1 $2 }
+ArrayElem : Identifier ListArrayAccess { (ArrayElem $1 $2, snd $1) }
 ArrayAccess :: { Pos Expression }
 ArrayAccess : '[' Expression ']' { $2 }
 ListArrayAccess :: { [Pos Expression] }
@@ -298,7 +298,7 @@ ListArrayLiteralElem : {- empty -} { [] }
                      | Expression { (:[]) $1 }
                      | Expression ',' ListArrayLiteralElem { (:) $1 $3 }
 PairElemType :: { Type }
-PairElemType : BaseType { Pairable ( BaseType $1) }
+PairElemType : BaseType { Pairable (BaseType $1) }
              | ArrayDeclarationLiteral { Pairable $1 }
              | 'pair' { Pairable PairNull }
 
@@ -317,9 +317,9 @@ ExpressionBool2 : ExpressionBool2 EqT ExpressionBool3 { (BExp $1 (BEqual, $2) $3
                 | ExpressionBool2 NotEqT ExpressionBool3 { (BExp $1 (BNotEqual, $2) $3, $2) }
                 | ExpressionBool3 { $1 }
 ExpressionBool3 :: { Pos Expression }
-ExpressionBool3 : ExpressionBool3 GreaterT  ExpressionValue { (BExp $1 (BGreater, $2) $3, $2) }
-                | ExpressionBool3 LessT  ExpressionValue { (BExp $1 (BLess $2) $3. $2) }
-                | ExpressionBool3 GreaterEqT ExpressionValue { (BExp $1 (BGreaterEqual $2) $3, $2) }
+ExpressionBool3 : ExpressionBool3 GreaterT  ExpressionValue { (BExp $1 (BMore, $2) $3, $2) }
+                | ExpressionBool3 LessT  ExpressionValue { (BExp $1 (BLess, $2) $3, $2) }
+                | ExpressionBool3 GreaterEqT ExpressionValue { (BExp $1 (BMoreEqual, $2) $3, $2) }
                 | ExpressionBool3 LessEqT ExpressionValue { (BExp $1 (BLessEqual, $2) $3, $2) }
                 | ExpressionTerm { $1 }
 ExpressionTerm :: { Pos Expression }
@@ -337,18 +337,18 @@ ExpressionValue : IntLiteral { $1 }
                 | FalseToken { (BoolExp (False), $1) }
                 | CharLiteral { (CharExpr (mkChar $1), snd $1) }
                 | StringLiteral { (StringExpr (mkString $1), snd $1) }
-                | NullT { PairExpr }
-                | Identifier { IdentExpr $1 }
-                | ArrayElem { ArrayExpr $1 }
-                | UnaryOperator Expression { UExpr $1 $2 }
-                | '(' Expression ')' { BracketExp $2 }
+                | NullT { (PairExpr, $1) }
+                | Identifier { (IdentExpr $1, snd $1) }
+                | ArrayElem { (ArrayExpr $1, snd $1) }
+                | UnaryOperator Expression { (UExpr $1 $2, snd $1) }
+                | '(' Expression ')' { (BracketExp $2, mkPosToken $1) }
 UnaryOperator :: { Pos UnaryOperator }
 UnaryOperator : NotT { (UBang, $1) }
               | MinusToken { (UMinus, $1) }
               | LenT { (ULength, $1) }
               | OrdT { (UOrd, $1) }
               | ChrT { (UChr, $1) }
-IntLiteral :: { (IntExp Int, Position) }
+IntLiteral :: { (Expression, Position) }
 IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
                                       then throwFlow $2 "Int Overflow in "
                                       else return (IntExp $ read' $2, $1) 
@@ -359,7 +359,7 @@ IntLiteral : PlusToken IntDigit { % if checkOverflow $2
                                  }
            | IntDigit { % if checkOverflow $1
                             then throwFlow $1 "Int Overflow in "
-                            else return (read' $1, snd $1) 
+                            else return (IntExp $ read' $1, snd $1) 
                       }
 {
 
@@ -371,17 +371,17 @@ mkSB :: [Statement] -> ScopeBlock
 mkSB sts = (sts, emptyScope)
 
 mkChar :: (String, Position) -> Char
-mkChar = (!!2)
+mkChar = (!!2) . fst
 
 mkString :: (String, Position) -> String
-mkString = head . init . fst
+mkString = tail . init . fst
 
 read' :: (String, Position) -> Int
 read' = read . fst
 
 throwFlow :: (String, Position)  -- ^ Token to throw
           -> String -- ^ Error message to display to user
-          -> ErrorList (IntExp Int, Position) -- ^ Returned error
+          -> ErrorList (Expression, Position) -- ^ Returned error
 throwFlow (s, p) msg = throwError (IntExp 0, p) (ErrorData FatalLevel ParserStage p (msg ++ s) 100)
 
 mkPosToken :: Token -> Position

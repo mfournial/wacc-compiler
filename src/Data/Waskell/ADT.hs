@@ -10,6 +10,10 @@ type Pos a = (a, Position)
 class Positionable a where
   getPos :: a -> Position
 
+class (Positionable a) => Referenceable a where
+  getName :: a -> String
+  getClass :: a -> String
+
 instance Positionable (Pos a) where
   getPos = snd
 
@@ -46,6 +50,17 @@ data StatementOperator
     | StatPrintLn (Pos Expression)
   deriving (Eq, Show)
 
+instance Referenceable (Pos StatementOperator) where
+  getClass _                      = "Statement"
+  getName ((StatDecAss _ _ _), _) = "="
+  getName ((StatAss _ _), _)      = "="
+  getName ((StatRead _), _)       = "read"
+  getName ((StatFree _), _)       = "free"
+  getName ((StatReturn _), _)     = "return"
+  getName ((StatExit _), _)       = "exit"
+  getName ((StatPrint _), _)      = "print"
+  getName ((StatPrintLn _), _)    = "printLn"
+
 data Statement
     = StatSkip
     | StatIf (Pos Expression) ScopeBlock ScopeBlock
@@ -70,7 +85,7 @@ data AssignRhs
 
 type PairElem = Either (Pos Expression) (Pos Expression)
 
-data Type = Pairable Pairable | PairType Type Type
+data Type = Pairable Pairable | PairType Type Type | IOUnit
   deriving (Eq, Show)
 
 data BaseType = IntType | BoolType | CharType | StringType
@@ -103,6 +118,14 @@ data UnaryOperator
     = UBang | UMinus | ULength | UOrd | UChr 
   deriving (Eq, Show)
 
+instance Referenceable (Pos UnaryOperator) where
+  getClass _                      = "Operator"
+  getName (UBang, _)              = "!"
+  getName (UMinus, _)             = "-"
+  getName (ULength, _)            = "len"
+  getName (UOrd, _)               = "ord"
+  getName (UChr, _)               = "return"
+
 data BinaryOperator
     = BTimes Position
     | BDivide
@@ -118,3 +141,19 @@ data BinaryOperator
     | BAnd
     | BOr
   deriving (Eq, Show)
+
+instance Referenceable (Pos BinaryOperator) where
+  getClass _              = "Operator"
+  getName (BTimes, _)     = "*"
+  getName (BDivide, _)    = "/"
+  getName (BModulus, _)   = "%"
+  getName (BPlus, _)      = "+"
+  getName (BMinus, _)     = "-"
+  getName (BMore, _)      = ">"
+  getName (BLess, _)      = "<"
+  getName (BMoreEqual, _) = ">="
+  getName (BLessEqual, _) = "<="
+  getName (BEqual, _)     = "=="
+  getName (BNotEqual, _)  = "!="
+  getName (BAnd, _)       = "&&"
+  getName (BOr, _)        = "||"

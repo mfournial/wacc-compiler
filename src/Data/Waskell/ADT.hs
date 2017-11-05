@@ -10,12 +10,16 @@ type Pos a = (a, Position)
 class Positionable a where
   getPos :: a -> Position
 
-class (Positionable a) => Referenceable a where
+class Referenceable a where
   getName :: a -> String
   getClass :: a -> String
 
 instance Positionable (Pos a) where
   getPos = snd
+
+instance Referenceable a => Referenceable (Pos a) where
+  getName (a, _) = getName a
+  getClass (a, _) = getClass a
 
 type ScopeBlock = ([Statement], NewScope)
 
@@ -50,16 +54,16 @@ data StatementOperator
     | StatPrintLn (Pos Expression)
   deriving (Eq, Show)
 
-instance Referenceable (Pos StatementOperator) where
-  getClass _                      = "Statement"
-  getName ((StatDecAss _ _ _), _) = "="
-  getName ((StatAss _ _), _)      = "="
-  getName ((StatRead _), _)       = "read"
-  getName ((StatFree _), _)       = "free"
-  getName ((StatReturn _), _)     = "return"
-  getName ((StatExit _), _)       = "exit"
-  getName ((StatPrint _), _)      = "print"
-  getName ((StatPrintLn _), _)    = "printLn"
+instance Referenceable StatementOperator where
+  getClass _                 = "Statement"
+  getName (StatDecAss _ _ _) = "="
+  getName (StatAss _ _)      = "="
+  getName (StatRead _)       = "read"
+  getName (StatFree _)       = "free"
+  getName (StatReturn _)     = "return"
+  getName (StatExit _)       = "exit"
+  getName (StatPrint _)      = "print"
+  getName (StatPrintLn _)    = "printLn"
 
 data Statement
     = StatSkip
@@ -118,13 +122,13 @@ data UnaryOperator
     = UBang | UMinus | ULength | UOrd | UChr 
   deriving (Eq, Show)
 
-instance Referenceable (Pos UnaryOperator) where
-  getClass _                      = "Operator"
-  getName (UBang, _)              = "!"
-  getName (UMinus, _)             = "-"
-  getName (ULength, _)            = "len"
-  getName (UOrd, _)               = "ord"
-  getName (UChr, _)               = "return"
+instance Referenceable UnaryOperator where
+  getClass _                 = "Operator"
+  getName UBang              = "!"
+  getName UMinus             = "-"
+  getName ULength            = "len"
+  getName UOrd               = "ord"
+  getName UChr               = "return"
 
 data BinaryOperator
     = BTimes Position
@@ -142,18 +146,18 @@ data BinaryOperator
     | BOr
   deriving (Eq, Show)
 
-instance Referenceable (Pos BinaryOperator) where
-  getClass _              = "Operator"
-  getName (BTimes, _)     = "*"
-  getName (BDivide, _)    = "/"
-  getName (BModulus, _)   = "%"
-  getName (BPlus, _)      = "+"
-  getName (BMinus, _)     = "-"
-  getName (BMore, _)      = ">"
-  getName (BLess, _)      = "<"
-  getName (BMoreEqual, _) = ">="
-  getName (BLessEqual, _) = "<="
-  getName (BEqual, _)     = "=="
-  getName (BNotEqual, _)  = "!="
-  getName (BAnd, _)       = "&&"
-  getName (BOr, _)        = "||"
+instance Referenceable BinaryOperator where
+  getClass _         = "Operator"
+  getName BTimes     = "*"
+  getName BDivide    = "/"
+  getName BModulus   = "%"
+  getName BPlus      = "+"
+  getName BMinus     = "-"
+  getName BMore      = ">"
+  getName BLess      = "<"
+  getName BMoreEqual = ">="
+  getName BLessEqual = "<="
+  getName BEqual     = "=="
+  getName BNotEqual  = "!="
+  getName BAnd       = "&&"
+  getName BOr        = "||"

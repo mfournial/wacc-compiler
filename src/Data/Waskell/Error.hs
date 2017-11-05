@@ -16,11 +16,11 @@ instance Show Level where
   show FatalLevel = "ERROR"
 
 instance Show Stage where
-    show AnalStage = "Analysis"
-    show LexorStage = "Lexor"
-    show ParserStage = "Parser"
-    show TypeStage = "Typecheck"
-    show UnknownStage = "Internal"
+  show AnalStage = "Analysis"
+  show LexorStage = "Lexor"
+  show ParserStage = "Parser"
+  show TypeStage = "Typecheck"
+  show UnknownStage = "Internal"
 
 data ErrorData = ErrorData {
   level :: Level,
@@ -74,9 +74,6 @@ throwError a e = ErrorList (Just a) [e]
 
 die :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
 die s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
-
-throwFatal :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
-throwFatal s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
 
 printError :: ErrorData -> IO ()
 printError = putStrLn . showError

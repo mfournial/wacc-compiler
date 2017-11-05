@@ -49,6 +49,8 @@ data Statement
     | StatScope ScopeBlock
   deriving (Eq, Show)
 
+type StatementP = (Statement, Position)
+
 type AssignLhsP = (AssignLhs, Position)
 
 data AssignLhs

@@ -36,6 +36,7 @@ $white+ ;
 
 \,                  { (\p s -> PT p T_CoT) }
 \;                  { (\p s -> PT p T_SepT) }
+n u l l             { (\p s -> PT p T_NullT) }
 e n d               { (\p s -> PT p T_EndT) }
 b e g i n           { (\p s -> PT p T_BeginT) }
 s k i p             { (\p s -> PT p T_SkipT) }
@@ -47,7 +48,7 @@ e x i t             { (\p s -> PT p T_ExitT) }
 $d +                { (\p s -> PT p (T_IntDigit s))}
 \+                  { (\p s -> PT p T_PlusToken) } 
 \-                  { (\p s -> PT p T_MinusToken) } 
-t r u e  			      { (\p s -> PT p T_TrueToken) }
+t r u e             { (\p s -> PT p T_TrueToken) }
 f a l s e           { (\p s -> PT p T_FalseToken)}
 i n t               { (\p s -> PT p T_IntT) }
 b o o l             { (\p s -> PT p T_BoolT) }
@@ -87,7 +88,6 @@ o r d               { (\p s -> PT p T_OrdT) }
 c h r               { (\p s -> PT p T_ChrT) }
 r e t u r n         { (\p s -> PT p T_ReturnT) }
 \!                  { (\p s -> PT p T_NotT) }
-n u l l             { (\p s -> PT p T_PairLiteral) }
 
 -- | Special tokens matched with regualr exp
 \' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) } -- ^ Char token
@@ -170,7 +170,7 @@ data Tok
  | T_ChrT 
  | T_ReturnT 
  | T_NotT 
- | T_PairLiteral
+ | T_NullT
  | T_CharLiteral !String
  | T_StringLiteral !String
  | T_Identifier !String
@@ -206,6 +206,7 @@ prToken :: Token -- ^ The token to convert
 prToken t = case t of
   PT _ T_CoT -> ","
   PT _ T_SepT -> ";"
+  PT _ T_NullT -> "null"
   PT _ T_EndT -> "end"
   PT _ T_BeginT -> "begin"
   PT _ T_SkipT -> "skip"
@@ -257,7 +258,6 @@ prToken t = case t of
   PT _ T_ChrT -> "chr"
   PT _ T_ReturnT -> "return"
   PT _ T_NotT -> "!"
-  PT _ T_PairLiteral -> "null"
   PT _ (T_CharLiteral s) -> s
   PT _ (T_StringLiteral s) -> s
   PT _ (T_Identifier s) -> s

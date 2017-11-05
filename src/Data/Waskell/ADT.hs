@@ -1,75 +1,77 @@
-{-# LANGUAGE TypeFamilies #-}
-
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.Waskell.ADT where
 
 --import qualified Data.Waskell.ADTHappy as H
 import qualified Data.HashMap.Lazy as M
 
-type family Positionable a where
-  Positionable a = (a, Position)
-
-getPos :: Positionable a -> Position
-getPos = snd
-
-type ScopeBlock = ([Statement], NewScope)
 type Position = (Int, Int)
+type Pos a = (a, Position)
+
+class Positionable a where
+  getPos :: a -> Position
+
+instance Positionable (Pos a) where
+  getPos = snd
+
+type ScopeBlock = ([Pos Statement], NewScope)
 
 type Scope = M.HashMap String Type
 
 newtype NewScope = NewScope Scope
   deriving (Eq, Show)
 
-newtype Identifier = Identifier (Position,String)
-  deriving (Eq, Show)
+type Identifier = Pos String
+
 
 data WaccTree = WaccTree Program
   deriving (Eq, Show)
 
-data Program = Program [Function] ScopeBlock 
+data Program = Program [Pos Function] ScopeBlock 
   deriving (Eq, Show)
 
 data Function = Function Type Identifier [Parameter] ScopeBlock
   deriving (Eq, Show)
 
-data Parameter = Param Type Identifier Position
+data Parameter = Param Type Identifier
+  deriving (Eq, Show)
+
+data StatementOperator
+    = StatDecAss Type Identifier (Pos AssignRhs)
+    | StatAss (Pos AssignLhs) (Pos AssignRhs)
+    | StatRead (Pos AssignLhs)
+    | StatFree (Pos Expression)
+    | StatReturn (Pos Expression)
+    | StatExit (Pos Expression)
+    | StatPrint (Pos Expression)
+    | StatPrintLn (Pos Expression)
   deriving (Eq, Show)
 
 data Statement
     = StatSkip
-    | StatDecAss Type Identifier AssignRhs
-    | StatAss AssignLhs AssignRhs 
-    | StatRead AssignLhs
-    | StatFree Expression
-    | StatReturn Expression
-    | StatExit Expression
-    | StatPrint Expression
-    | StatPrintLn Expression
-    | StatIf Expression ScopeBlock ScopeBlock
-    | StatWhile Expression ScopeBlock
+    | StatIf (Pos Expression) ScopeBlock ScopeBlock
+    | StatWhile (Pos Expression) ScopeBlock
     | StatScope ScopeBlock
+    | StatementOperator (Pos StatementOperator)
   deriving (Eq, Show)
 
-type StatementP = (Statement, Position)
-
-type AssignLhsP = (AssignLhs, Position)
 
 data AssignLhs
-    = AssignToIdent Identifier
-    | AssignToArrayElem ArrayElem
+    = AssignToIdent (Pos String)
+    | AssignToArrayElem (Pos ArrayElem)
     | AssignToPair PairElem
   deriving (Eq, Show)
 
-type AssignRhsP = (AssignRhs, Position)
 
 data AssignRhs
-    = AssignExp Expression 
-    | AssignArrayLit ArrayLiteral
-    | AssignPair Expression Expression
+    = AssignExp (Pos Expression)
+    | AssignArrayLit (Pos ArrayLiteral)
+    | AssignPair (Pos Expression) (Pos Expression)
     | AssignPairElem PairElem
     | AssignFunctionCall Identifier [Expression]
   deriving (Eq, Show)
 
-type PairElem = (Either Expression Expression, Position)
+type PairElem = Pos (Either Expression Expression)
 
 data Type = Pairable Pairable | PairType Type Type
   deriving (Eq, Show)
@@ -81,14 +83,12 @@ data Pairable = BaseType BaseType | ArrayType Type | PairNull
   deriving (Eq, Show)
 
 -- Note this is a list of expressions, e.g a[1][2][3][4]....
-data ArrayElem = ArrayElem Identifier [Expression]
+data ArrayElem = ArrayElem Identifier [Pos Expression]
   deriving (Eq, Show)
 
-data ArrayLiteral = ArrayLiteral [Expression]
+data ArrayLiteral = ArrayLiteral [Pos Expression]
   deriving (Eq, Show)
 
-
-type ExpressionP = (Expression, Position)
 
 data Expression
     = IntExp Int
@@ -97,10 +97,10 @@ data Expression
     | StringExpr String
     | PairExpr
     | IdentExpr Identifier
-    | ArrayExpr ArrayElem
-    | UExpr UnaryOperator Expression
-    | BExp Expression BinaryOperator Expression
-    | BracketExp Expression
+    | ArrayExpr (Pos ArrayElem)
+    | UExpr (Pos UnaryOperator) (Pos Expression)
+    | BExp Expression (Pos BinaryOperator) (Pos Expression)
+    | BracketExp (Pos Expression)
   deriving (Eq, Show)
 
 type UnaryOperatorP = (UnaryOperator, Position)
@@ -108,8 +108,6 @@ type UnaryOperatorP = (UnaryOperator, Position)
 data UnaryOperator
     = UBang | UMinus | ULenght | UOrd | UChr 
   deriving (Eq, Show)
-
-type BinaryOperatorP = (BinaryOperator, Position)
 
 data BinaryOperator
     = BTimes

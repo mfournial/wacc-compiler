@@ -55,17 +55,17 @@ data Statement
   deriving (Eq, Show)
 
 data AssignLhs
-    = AssignToIdent (Pos String)
+    = AssignToIdent Identifier
     | AssignToArrayElem (Pos ArrayElem)
-    | AssignToPair PairElem
+    | AssignToPair (Pos PairElem)
   deriving (Eq, Show)
 
 data AssignRhs
     = AssignExp (Pos Expression)
-    | AssignArrayLit (Pos ArrayLiteral)
+    | AssignArrayLit ArrayLiteral
     | AssignPair (Pos Expression) (Pos Expression)
     | AssignPairElem PairElem
-    | AssignFunctionCall Identifier [Expression]
+    | AssignFunctionCall Identifier [Pos Expression]
   deriving (Eq, Show)
 
 type PairElem = Either (Pos Expression) (Pos Expression)
@@ -86,9 +86,8 @@ data ArrayElem = ArrayElem Identifier [Pos Expression]
 newtype ArrayLiteral = ArrayLiteral [Pos Expression]
   deriving (Eq, Show)
 
-
 data Expression
-    = IntExp Int
+    = IntExp Int 
     | BoolExp Bool
     | CharExpr Char
     | StringExpr String
@@ -100,14 +99,12 @@ data Expression
     | BracketExp (Pos Expression)
   deriving (Eq, Show)
 
-type UnaryOperatorP = (UnaryOperator, Position)
-
 data UnaryOperator
-    = UBang | UMinus | ULenght | UOrd | UChr 
+    = UBang | UMinus | ULength | UOrd | UChr 
   deriving (Eq, Show)
 
 data BinaryOperator
-    = BTimes
+    = BTimes Position
     | BDivide
     | BModulus
     | BPlus

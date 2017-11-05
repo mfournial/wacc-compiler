@@ -38,7 +38,7 @@ instance Ord ErrorData where
              else (level a < level b)
 
 instance (Show a) => Show (ErrorList a) where
-  show (ErrorList (Just a) _) = show a
+  show (ErrorList (Just a) es) = show a ++ "\n" ++ concatMap showError es
   show (ErrorList Nothing _) = "Fatal Error"
 
 data ErrorList a = ErrorList (Maybe a) [ErrorData] 

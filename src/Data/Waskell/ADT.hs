@@ -90,7 +90,17 @@ data AssignRhs
 type PairElem = Either (Pos Expression) (Pos Expression)
 
 data Type = Pairable Pairable | PairType Type Type | IOUnit
-  deriving (Eq, Show)
+  deriving (Eq)
+
+instance Show Type where
+  show (Pairable (BaseType BoolType)) = "Boolean"
+  show (Pairable (BaseType CharType)) = "Char"
+  show (Pairable (BaseType StringType)) = "String"
+  show (Pairable (BaseType IntType)) = "Int"
+  show (Pairable (ArrayType t)) = "[" ++ show t ++ "]"
+  show (Pairable PairNull) = "pair"
+  show (PairType a b) = "pair(" ++ show a ++ ", " ++ show b ++ " )"
+  show IOUnit = "()"
 
 data BaseType = IntType | BoolType | CharType | StringType
   deriving (Eq, Show)

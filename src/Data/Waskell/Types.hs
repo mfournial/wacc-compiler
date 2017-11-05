@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Data.Waskell.Types where
   
@@ -67,7 +68,7 @@ instance WaccTypeable BinaryOperator where
 instance WaccTypeable UnaryOperator where
   getWType UBang    = liftType BoolType                     :-> liftType BoolType :-> RetWT
   getWType UMinus   = liftType IntType                      :-> liftType IntType  :-> RetWT
-  getWType ULenght  = ArrayWaccType (TypeID "a" :=> RetWT)  ::> liftType IntType  :-> RetWT
+  getWType ULength  = ArrayWaccType (TypeID "a" :=> RetWT)  ::> liftType IntType  :-> RetWT
   getWType UOrd     = liftType CharType                     :-> liftType IntType  :-> RetWT
   getWType UChr     = liftType IntType                      :-> liftType CharType :-> RetWT
 
@@ -136,7 +137,8 @@ subType op ts = subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
 subType' :: Show a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList Type
 subType' (((w, w'), (TypeID s)) :+> ws) (t' : ts) _ _ _ _ _= undefined
 subType' ((ArrayWaccType w) ::> ws) (t : ts) _ _ _ _ _ = undefined
-subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts tids op opW (succ track) pos) (\t -> if t == t' then subType' ws ts tids op opW (succ track) pos else subError t t' op opW track pos) (lookup s tids)
+subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts tids op opW (succ track) pos) 
+                                                                     (\t -> if t == t' then subType' ws ts tids op opW (succ track) pos else subError t t' op opW track pos) (lookup s tids)
 subType' (t :-> ws) (t' : ts) tids op opW track pos = if t == t' then subType' ws ts tids op opW (succ track) pos else subError t' t op opW track pos
 subType' (t :-> RetWT) [] _ _ _ _ _ = return t
 subType' ((TypeID s) :=> ws) [] tids op opW _ _ = maybe (fail ("Operator  " ++ show op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) return (lookup s tids)

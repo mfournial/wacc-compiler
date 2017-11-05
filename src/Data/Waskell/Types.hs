@@ -50,6 +50,17 @@ class Typeable a where
 class WaccTypeable a where
   getWType :: a -> WaccType
 
+instance WaccTypeable StatementOperator
+  getWType (StatDecAss type _ _) = type :-> IOUnit :-> RetWT
+  getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
+  getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
+  getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
+  getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT 
+  getWType (StatExit _)          = (liftType Inttype) :-> IOUnit :-> RetWT
+  getWType (StatPrint _)         = (TypeID "a") :=> IOUnit :-> RetWT 
+  getWType (StatPrintLn _)       = (TypeID "a") :=> IOUnit :-> RetWT
+
+
 instance WaccTypeable BinaryOperator where
   getWType BTimes     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
   getWType BDivide    = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT

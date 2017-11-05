@@ -104,8 +104,8 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignPair _ _), _)) = undefined
   getType (Scop ((AssignFunctionCall _ _), _)) = undefined
   getType (Scop ((AssignArrayLit e), scps)) = undefined
-  getType (Scop (AssignPairElem (Left e),  scps)) = getType (Scop (e, scps))
-  getType (Scop (AssignPairElem (Right e), scps)) = getType (Scop (e, scps))
+  getType (Scop (AssignPairElem ((Left e), _),  scps)) = getType (Scop (e, scps))
+  getType (Scop (AssignPairElem ((Right e), _), scps)) = getType (Scop (e, scps))
 
 instance Typeable Function where
   getType (Function t _ _ (sts, scp)) 

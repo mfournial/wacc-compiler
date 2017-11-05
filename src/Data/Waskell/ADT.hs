@@ -10,12 +10,12 @@ type Pos a = (a, Position)
 class Positionable a where
   getPos :: a -> Position
 
+instance Positionable (Pos a) where
+  getPos = snd
+
 class Referenceable a where
   getName :: a -> String
   getClass :: a -> String
-
-instance Positionable (Pos a) where
-  getPos = snd
 
 instance Referenceable a => Referenceable (Pos a) where
   getName (a, _) = getName a
@@ -83,7 +83,7 @@ data AssignRhs
     = AssignExp (Pos Expression)
     | AssignArrayLit ArrayLiteral
     | AssignPair (Pos Expression) (Pos Expression)
-    | AssignPairElem PairElem
+    | AssignPairElem (Pos PairElem)
     | AssignFunctionCall Identifier [Pos Expression]
   deriving (Eq, Show)
 

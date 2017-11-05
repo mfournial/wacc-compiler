@@ -50,13 +50,13 @@ class Typeable a where
 class WaccTypeable a where
   getWType :: a -> WaccType
 
-instance WaccTypeable StatementOperator
-  getWType (StatDecAss type _ _) = type :-> IOUnit :-> RetWT
+instance WaccTypeable StatementOperator where
+  getWType (StatDecAss typ _ _)  = typ :-> IOUnit :-> RetWT
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
   getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT 
-  getWType (StatExit _)          = (liftType Inttype) :-> IOUnit :-> RetWT
+  getWType (StatExit _)          = (liftType IntType) :-> IOUnit :-> RetWT
   getWType (StatPrint _)         = (TypeID "a") :=> IOUnit :-> RetWT 
   getWType (StatPrintLn _)       = (TypeID "a") :=> IOUnit :-> RetWT
 
@@ -144,8 +144,8 @@ checkTypes given@(Scop (e, _)) required = do
 
 subType :: (WaccTypeable a, Referenceable a) => Pos a -> [Type] -> ErrorList Type
 subType op ts = do 
-  (t, ts) <- subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
-  if ts == [] then return t else fail "Too many elements when attempting to do a type substitution"
+  (t, ts') <- subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
+  if ts' == [] then return t else fail "Too many elements when attempting to do a type substitution"
 
 subType' :: Referenceable a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
 subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos 
@@ -153,14 +153,15 @@ subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
   | tw' == t' = subType' ws ts ((s, tw') : tids) op opW track pos
   | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type " ++ show opW ++ " and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
 subType' ((ArrayWaccType w) ::> ws) ((Pairable (ArrayType t)) : ts) tids op opW track pos = do 
-  (t, ts) <- subType' w [t] tids op opW track pos
-  subType' ws ts tids op opW track pos
+  (t', ts') <- subType' w [t] tids op opW track pos
+  subType' ws ts' tids op opW track pos
 subType' ((ArrayWaccType (t :-> RetWT)) ::> ws) (t' : ts) _ op opW track pos = subError ts (Pairable (ArrayType t)) t' op opW track pos
 subType' (ArrayWaccType w ::> ws) (t' : ts) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type " ++ show opW ++ " and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
 subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts ((s, t') : tids) op opW (succ track) pos) (subTypeCheck t' ws ts tids op opW track pos) (lookup s tids)
 subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
 subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t ws ts tids op opW track pos t'
 subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++ ": " ++ getName op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) (\t -> return (t, ts)) (lookup s tids)
+subType' RetWT ts _ _ _ _ _ = fail "hope we don't get here (to reason about this later)"
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 
 subTypeCheck :: Referenceable a => Type -> WaccType -> [Type] -> [(String, Type)] -> a -> WaccType -> Int -> Position -> Type -> ErrorList (Type, [Type])

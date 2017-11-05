@@ -131,7 +131,7 @@ instance Referenceable UnaryOperator where
   getName UChr               = "return"
 
 data BinaryOperator
-    = BTimes Position
+    = BTimes 
     | BDivide
     | BModulus
     | BPlus

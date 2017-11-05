@@ -117,7 +117,7 @@ instance Typeable (Scop Expression) where
   getType (Scop ((BExp e bop e'), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
   getType (Scop ((BracketExp e ), scp)) = getType (Scop (e, scp))
 
-handleOperator :: (WaccTypeable a, Show a) => Pos a -> [Scop (Pos Expression)] -> ErrorList Type
+handleOperator :: (WaccTypeable a, Referenceable a) => Pos a -> [Scop (Pos Expression)] -> ErrorList Type
 handleOperator op sexprs = mapM getType sexprs >>= subType op
 
 handleArray :: Identifier -> Pos Expression -> [NewScope] -> ErrorList ()
@@ -131,19 +131,30 @@ checkTypes given@(Scop (e, _)) required = do
     then return ()
     else expError b a e >> return ()
 
-subType :: (WaccTypeable a, Show a) => Pos a -> [Type] -> ErrorList Type
-subType op ts = subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
+subType :: (WaccTypeable a, Referenceable a) => Pos a -> [Type] -> ErrorList Type
+subType op ts = do 
+  (t, ts) <- subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
+  if ts == [] then return t else fail "Too many elements when attempting to do a type substitution"
 
-subType' :: Show a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList Type
-subType' (((w, w'), (TypeID s)) :+> ws) (t' : ts) _ _ _ _ _= undefined
-subType' ((ArrayWaccType w) ::> ws) (t : ts) _ _ _ _ _ = undefined
-subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts tids op opW (succ track) pos) 
-                                                                     (\t -> if t == t' then subType' ws ts tids op opW (succ track) pos else subError t t' op opW track pos) (lookup s tids)
-subType' (t :-> ws) (t' : ts) tids op opW track pos = if t == t' then subType' ws ts tids op opW (succ track) pos else subError t' t op opW track pos
-subType' (t :-> RetWT) [] _ _ _ _ _ = return t
-subType' ((TypeID s) :=> ws) [] tids op opW _ _ = maybe (fail ("Operator  " ++ show op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) return (lookup s tids)
+subType' :: Referenceable a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
+subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos 
+  | tw == t'  = subType' ws ts ((s, tw)  : tids) op opW track pos
+  | tw' == t' = subType' ws ts ((s, tw') : tids) op opW track pos
+  | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type " ++ show opW ++ " and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+subType' ((ArrayWaccType w) ::> ws) ((Pairable (ArrayType t)) : ts) tids op opW track pos = do 
+  (t, ts) <- subType' w [t] tids op opW track pos
+  subType' ws ts tids op opW track pos
+subType' ((ArrayWaccType (t :-> RetWT)) ::> ws) (t' : ts) _ op opW track pos = subError ts (Pairable (ArrayType t)) t' op opW track pos
+subType' (ArrayWaccType w ::> ws) (t' : ts) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type " ++ show opW ++ " and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts ((s, t') : tids) op opW (succ track) pos) (subTypeCheck t' ws ts tids op opW track pos) (lookup s tids)
+subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
+subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t ws ts tids op opW track pos t'
+subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++ ": " ++ getName op ++ " doesn't have a concrete return type, in fact it has type " ++ show opW)) (\t -> return (t, ts)) (lookup s tids)
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
-subType' RetWT _ _ _ _ _ _ = fail "Too many elements when attempting to do a type substitution"
+
+subTypeCheck :: Referenceable a => Type -> WaccType -> [Type] -> [(String, Type)] -> a -> WaccType -> Int -> Position -> Type -> ErrorList (Type, [Type])
+subTypeCheck giv ws ts tids op opW track pos tar 
+  = if tar == giv then subType' ws ts tids op opW (succ track) pos else subError ts tar giv op opW track pos
 
 grabPairElem :: (Eq a) => a -> (a, a) -> Maybe a
 grabPairElem a (b, c)
@@ -151,15 +162,15 @@ grabPairElem a (b, c)
   | a == c = Just c
   | otherwise = Nothing
 
-subError :: Show a => Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList Type
-subError target given op waccT track pos = throwTypeError target pos ("Operator: " ++ show op ++ " has type " ++ show waccT ++ " but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 
+subError :: Referenceable a => [Type] -> Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
+subError ts target given op waccT track pos = throwTypeError (target, ts) pos (getClass op ++ ": " ++ getName op ++ " has type " ++ show waccT ++ " but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
 lookupType i@(name, _) ((NewScope hmap) : scps) = maybe (lookupType i scps) return (M.lookup name hmap)
 lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
 
-throwTypeError :: Type -> Position -> String -> ErrorList Type
+throwTypeError :: a -> Position -> String -> ErrorList a
 throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)
 
 expError :: Type -> Type -> Pos Expression -> ErrorList Type

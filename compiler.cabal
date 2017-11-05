@@ -32,7 +32,6 @@ library
                    , Data.Waskell.ADT
                    , Bnfc.LexWacc
                    , Bnfc.ParWacc
-                   , Bnfc.AbsWacc
  --                  , Bnfc.PrintWacc
                    , Data.Waskell.Scope
   build-tools:       alex, happy

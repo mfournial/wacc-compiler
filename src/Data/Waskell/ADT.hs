@@ -22,7 +22,7 @@ newtype NewScope = NewScope Scope
 newtype Identifier = Identifier (Position,String)
   deriving (Eq, Show)
 
-data WaccTree = WaccTree Program
+newtype WaccTree = WaccTree Program
   deriving (Eq, Show)
 
 data Program = Program [Function] ScopeBlock 
@@ -84,7 +84,7 @@ data Pairable = BaseType BaseType | ArrayType Type | PairNull
 data ArrayElem = ArrayElem Identifier [Expression]
   deriving (Eq, Show)
 
-data ArrayLiteral = ArrayLiteral [Expression]
+newtype ArrayLiteral = ArrayLiteral [Expression]
   deriving (Eq, Show)
 
 

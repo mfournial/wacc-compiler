@@ -85,7 +85,7 @@ data AssignRhs
 
 type PairElem = Either (Pos Expression) (Pos Expression)
 
-data Type = Pairable Pairable | PairType Type Type
+data Type = Pairable Pairable | PairType Type Type | IOUnit
   deriving (Eq, Show)
 
 data BaseType = IntType | BoolType | CharType | StringType

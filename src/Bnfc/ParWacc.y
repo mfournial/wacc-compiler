@@ -33,7 +33,6 @@ import Data.Waskell.Error
 %name pPairElemType PairElemType
 %name pExpression Expression
 %name pUnaryOperator UnaryOperator
-%name pBinaryOperator BinaryOperator
 %name pIntLiteral IntLiteral
 %monad { ErrorList } { (>>=) } { return }
 %tokentype { Token }
@@ -266,21 +265,37 @@ PairElemType : BaseType { AbsWacc.PairElemTypeBase $1 }
              | ArrayDeclarationLiteral { AbsWacc.PairElemTypeArray $1 }
              | PairT { AbsWacc.PairElemTypePair $1 }
 Expression :: { Expression }
-Expression : Expression BinaryOperator Expression { AbsWacc.BExp $1 $2 $3 }
-           | Expression1 { $1 }
-Expression1 :: { Expression }
-Expression1 : Expression1 MinusToken Expression2 { AbsWacc.BExp $1 (AbsWacc.BMinus $2) $3 }
-            | Expression1 PlusToken Expression2 { AbsWacc.BExp $1 (AbsWacc.BPlus $2) $3 }
-            | Expression2 { $1 }
-Expression2 :: { Expression }
-Expression2 : Expression2 TimesT Expression3 { AbsWacc.BExp $1 (AbsWacc.BTimes $2) $3 }
-            | Expression2 DivideT Expression3 { AbsWacc.BExp $1 (AbsWacc.BDivide $2) $3 }
-            | Expression3 { $1 }
-Expression3 :: { Expression }
-Expression3 : Final { $1 }
-            | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
-Final :: { Expression }
-Final : IntLiteral { AbsWacc.IntExp $1 }
+Expression : ExpressionBool { $1 }
+ExpressionBool :: { Expression }
+ExpressionBool : ExpressionBool OrT ExpressionBool1 { AbsWacc.BExp $1 (AbsWacc.BOr $2) $3 }
+               | ExpressionBool1 { $1 } 
+ExpressionBool1 :: { Expression }
+ExpressionBool1 : ExpressionBool1 AndT ExpressionBool2 { AbsWacc.BExp $1 (AbsWacc.BAnd $2) $3 }
+                | ExpressionBool2 { $1 }
+ExpressionBool2 :: { Expression }
+ExpressionBool2 : ExpressionBool2 EqT ExpressionBool3 { AbsWacc.BExp $1 (AbsWacc.BEqual $2) $3 }
+                | ExpressionBool2 NotEqT ExpressionBool3 { AbsWacc.BExp $1 ( AbsWacc.BNotEqual $2 ) $3 }
+                | ExpressionBool3 { $1 }
+ExpressionBool3 :: { Expression }
+ExpressionBool3 : ExpressionBool3 GreaterT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BGreater $2) $3 }
+                | ExpressionBool3 LessT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BLess $2) $3 }
+                | ExpressionBool3 GreaterEqT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BGreaterEqual $2) $3 }
+                | ExpressionBool3 LessEqT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BLessEqual $2) $3 }
+                | ExpressionTerm { $1 }
+ExpressionTerm :: { Expression }
+ExpressionTerm : ExpressionTerm MinusToken ExpressionFactor { AbsWacc.BExp $1 (AbsWacc.BMinus $2) $3 }
+               | ExpressionTerm PlusToken ExpressionFactor { AbsWacc.BExp $1 (AbsWacc.BPlus $2) $3 }
+               | ExpressionFactor { $1 }
+ExpressionFactor :: { Expression }
+ExpressionFactor : ExpressionFactor TimesT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BTimes $2) $3 }
+                 | ExpressionFactor DivideT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BDivide $2) $3 }
+                 | ExpressionFactor ModuloT ExpressionValue { AbsWacc.BExp $1 (AbsWacc.BModulus $2) $3 }
+                 | ExpressionValue { $1 }
+ExpressionValue :: { Expression }
+ExpressionValue : Value { $1 }
+                | LParenT Expression RParenT { AbsWacc.BracketExp $1 $2 $3 }
+Value :: { Expression }
+Value : IntLiteral { AbsWacc.IntExp $1 }
       | TrueToken { AbsWacc.BoolExp (AbsWacc.TrueToken $1) }
       | FalseToken { AbsWacc.BoolExp (AbsWacc.FalseToken $1) }
       | CharLiteral { AbsWacc.CharExpr $1 }
@@ -295,16 +310,6 @@ UnaryOperator : NotT { AbsWacc.UBang $1 }
               | LenT { AbsWacc.ULength $1 }
               | OrdT { AbsWacc.UOrd $1 }
               | ChrT { AbsWacc.UChr $1 }
-BinaryOperator :: { BinaryOperator }
-BinaryOperator : ModuloT { AbsWacc.BModulus $1 }
-               | GreaterT { AbsWacc.BGreater $1 }
-               | LessT { AbsWacc.BLess $1 }
-               | GreaterEqT { AbsWacc.BGreaterEqual $1 }
-               | LessEqT { AbsWacc.BLessEqual $1 }
-               | EqT { AbsWacc.BEqual $1 }
-               | NotEqT { AbsWacc.BNotEqual $1 }
-               | AndT { AbsWacc.BAnd $1 }
-               | OrT { AbsWacc.BOr $1 }
 IntLiteral :: { IntLiteral }
 IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
                                       then throwFlow (AbsWacc.IntPlus $1 $2) "Int Overflow in "

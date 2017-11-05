@@ -29,7 +29,6 @@ library
   ghc-options:       -Wall -Werror -fno-warn-unused-top-binds -fno-warn-unused-matches -O2
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
-                   , Data.Waskell.Scope
                    , Data.Waskell.ADT
                    , Bnfc.LexWacc
                    , Bnfc.ParWacc

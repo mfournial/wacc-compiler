@@ -14,7 +14,7 @@ class Positionable a where
 instance Positionable (Pos a) where
   getPos = snd
 
-type ScopeBlock = ([Pos Statement], NewScope)
+type ScopeBlock = ([Statement], NewScope)
 
 type Scope = M.HashMap String Type
 
@@ -71,7 +71,7 @@ data AssignRhs
     | AssignFunctionCall Identifier [Expression]
   deriving (Eq, Show)
 
-type PairElem = Pos (Either Expression Expression)
+type PairElem = Either (Pos Expression) (Pos Expression)
 
 data Type = Pairable Pairable | PairType Type Type
   deriving (Eq, Show)
@@ -99,7 +99,7 @@ data Expression
     | IdentExpr Identifier
     | ArrayExpr (Pos ArrayElem)
     | UExpr (Pos UnaryOperator) (Pos Expression)
-    | BExp Expression (Pos BinaryOperator) (Pos Expression)
+    | BExp (Pos Expression) (Pos BinaryOperator) (Pos Expression)
     | BracketExp (Pos Expression)
   deriving (Eq, Show)
 

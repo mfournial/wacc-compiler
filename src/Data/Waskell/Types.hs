@@ -22,8 +22,11 @@ data WaccType = Type :-> WaccType
 newtype ArrayWaccType = ArrayWaccType WaccType
   deriving (Eq)
 
+liftType :: BaseType -> Type
+liftType = Pairable . BaseType
+
 wplus :: BaseType -> BaseType -> (Type, Type) 
-wplus a b = (BaseType a, BaseType b)
+wplus a b = (liftType a, liftType b)
 
 newtype TypeID = TypeID String
   deriving (Eq)
@@ -47,29 +50,35 @@ class WaccTypeable a where
   getWType :: a -> WaccType
 
 instance WaccTypeable BinaryOperator where
-  getWType (BTimes _)     = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
-  getWType (BDivide _)    = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
-  getWType (BModulus _)   = BaseType IntType     :-> BaseType IntType     :-> BaseType IntType  :-> RetWT
-  getWType (BPlus _ _)    = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
-  getWType (BMinus _ _)   = BaseType IntType      :-> BaseType IntType      :-> BaseType IntType  :-> RetWT
-  getWType (BMore _)      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BLess _)      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BMoreEqual _) = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BLessEqual _) = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BEqual _)     = TypeID "a" :=> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BNotEqual _)  = TypeID "a" :=> TypeID "a" :=> BaseType BoolType :-> RetWT
-  getWType (BAnd _)       = BaseType BoolType     :-> BaseType BoolType     :-> BaseType BoolType :-> RetWT
-  getWType (BOr _)        = BaseType BoolType     :-> BaseType BoolType     :-> BaseType BoolType :-> RetWT
+  getWType BTimes     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
+  getWType BDivide    = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
+  getWType BModulus   = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
+  getWType BPlus      = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
+  getWType BMinus     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
+  getWType BMore      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLess      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BMoreEqual = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLessEqual = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BEqual     = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BNotEqual  = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BAnd       = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
+  getWType BOr        = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
 
 instance WaccTypeable UnaryOperator where
-  getWType (UBang _)    = BaseType BoolType                     :-> BaseType BoolType :-> RetWT
-  getWType (UMinus _ _) = BaseType IntType                      :-> BaseType IntType  :-> RetWT
-  getWType (ULenght _)  = ArrayWaccType (TypeID "a" :=> RetWT)  ::> BaseType IntType  :-> RetWT
-  getWType (UOrd _)     = BaseType CharType                     :-> BaseType IntType  :-> RetWT
-  getWType (UChr _)     = BaseType IntType                      :-> BaseType CharType :-> RetWT
+  getWType UBang    = liftType BoolType                     :-> liftType BoolType :-> RetWT
+  getWType UMinus   = liftType IntType                      :-> liftType IntType  :-> RetWT
+  getWType ULenght  = ArrayWaccType (TypeID "a" :=> RetWT)  ::> liftType IntType  :-> RetWT
+  getWType UOrd     = liftType CharType                     :-> liftType IntType  :-> RetWT
+  getWType UChr     = liftType IntType                      :-> liftType CharType :-> RetWT
+
+instance (WaccTypeable a) => WaccTypeable (Pos a) where
+  getWType (a, _) = getWType a
 
 instance Typeable BaseType where
-  getType a = getType (BaseType a)
+  getType a = getType (liftType a)
+
+instance Typeable Pairable where
+  getType a = return (Pairable a)
 
 instance Typeable Type where
   getType a = return a
@@ -78,39 +87,42 @@ instance WaccTypeable Type where
   getWType a = a :-> RetWT
 
 instance Typeable (Scop AssignRhs) where
-  getType (Scop ((AssignExp e _), scps)) = getType (Scop ((e, scps)))
+  getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
   --getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = ArrayType (ArrayDeclarationLiteral (checkSameTypes (map (\(ArrayLiteralElem e _) -> getType (Scop (e, scps)))))
-  getType (Scop ((AssignPair _ _ _), _)) = getType PairType
-  getType (Scop ((AssignFunctionCall _ _ _), _)) = undefined
-  getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = undefined
-  getType (Scop ((AssignPairElem (PairFst e _) _), scps)) = getType (Scop (e, scps))
-  getType (Scop ((AssignPairElem (PairSnd e _) _), scps)) = getType (Scop (e, scps))
+  getType (Scop ((AssignPair _ _), _)) = undefined
+  getType (Scop ((AssignFunctionCall _ _), _)) = undefined
+  getType (Scop ((AssignArrayLit e), scps)) = undefined
+  getType (Scop (AssignPairElem (Left e),  scps)) = getType (Scop (e, scps))
+  getType (Scop (AssignPairElem (Right e), scps)) = getType (Scop (e, scps))
 
 instance Typeable Function where
-  getType (Function t _ _ (sts, scp) pos) 
+  getType (Function t _ _ (sts, scp)) 
     = mapM_ (\e -> checkTypes (Scop (e, [scp])) t) returns >> getType t
     where
-      returns = [e | (StatReturn e _) <- sts]
+      returns = [e | (StatementOperator (StatReturn e, _)) <- sts]
+
+instance Typeable (Scop a) => Typeable (Scop (Pos a)) where
+  getType (Scop ((a, _), scps)) = getType (Scop (a, scps))
 
 instance Typeable (Scop Expression) where
-  getType (Scop ((IntExp _ _), _)) = getType IntType 
-  getType (Scop ((BoolExp _ _), _)) = getType BoolType
-  getType (Scop ((CharExpr _ _), _)) = getType CharType
-  getType (Scop ((StringExpr _ _), _)) = getType StringType
-  getType (Scop ((PairExpr _ _), _)) = getType PairType 
-  getType (Scop ((IdentExpr i _), scp)) = lookupType i scp
-  getType (Scop ((ArrayExpr (ArrayElem i as _) _), scp)) = mapM_ (\a -> handleArray i a scp) as >> lookupType i scp
-  getType (Scop ((UExpr uop e _), scp)) = handleOperator uop [Scop (e, scp)]
-  getType (Scop ((BExp e bop e' _), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
-  getType (Scop ((BracketExp e _), scp)) = getType (Scop (e, scp))
+  getType (Scop ((IntExp _), _)) = getType IntType 
+  getType (Scop ((BoolExp _), _)) = getType BoolType
+  getType (Scop ((CharExpr _), _)) = getType CharType
+  getType (Scop ((StringExpr _), _)) = getType StringType
+  getType (Scop (PairExpr, _)) = getType PairNull
+  getType (Scop ((IdentExpr i), scp)) = lookupType i scp
+  getType (Scop (ArrayExpr (ArrayElem i es, _), scp)) = mapM_ (\e -> handleArray i e scp) es >> lookupType i scp
+  getType (Scop ((UExpr uop e), scp)) = handleOperator uop [Scop (e, scp)]
+  getType (Scop ((BExp e bop e'), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
+  getType (Scop ((BracketExp e ), scp)) = getType (Scop (e, scp))
 
-handleOperator :: (WaccTypeable a, Positionable a, Show a) => a -> [Scop Expression] -> ErrorList Type
+handleOperator :: (WaccTypeable a, Show a) => Pos a -> [Scop (Pos Expression)] -> ErrorList Type
 handleOperator op sexprs = mapM getType sexprs >>= subType op
 
-handleArray :: Identifier -> ArrayAccess -> [NewScope] -> ErrorList ()
-handleArray i (ArrayAccess e _) scp = checkTypes (Scop (e, scp)) IntType
+handleArray :: Identifier -> Pos Expression -> [NewScope] -> ErrorList ()
+handleArray i e scp = checkTypes (Scop (e, scp)) IntType
 
-checkTypes :: (Typeable r) => Scop Expression -> r -> ErrorList ()
+checkTypes :: (Typeable r) => Scop (Pos Expression) -> r -> ErrorList ()
 checkTypes given@(Scop (e, _)) required = do
   a <- getType given
   b <- getType required
@@ -118,7 +130,7 @@ checkTypes given@(Scop (e, _)) required = do
     then return ()
     else expError b a e >> return ()
 
-subType :: (WaccTypeable a, Positionable a, Show a) => a -> [Type] -> ErrorList Type
+subType :: (WaccTypeable a, Show a) => Pos a -> [Type] -> ErrorList Type
 subType op ts = subType' (getWType op) ts [] op (getWType op) 0 (getPos op)
 
 subType' :: Show a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList Type
@@ -142,24 +154,12 @@ subError target given op waccT track pos = throwTypeError target pos ("Operator:
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
-lookupType i@(Identifier (_, name)) ((NewScope hmap) : scps) = maybe (lookupType i scps) return (M.lookup name hmap)
-lookupType (Identifier (p, name)) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
+lookupType i@(name, _) ((NewScope hmap) : scps) = maybe (lookupType i scps) return (M.lookup name hmap)
+lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
 
 throwTypeError :: Type -> Position -> String -> ErrorList Type
 throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)
 
-expError :: Type -> Type -> Expression -> ErrorList Type
+expError :: Type -> Type -> Pos Expression -> ErrorList Type
 expError target given e = 
-  throwTypeError target (getExprPos e) ("Expression: " ++ show e ++ " has type " ++ show target ++ " but needs type " ++ show given)
-
-getExprPos :: Expression -> Position
-getExprPos (IntExp _ p) = p
-getExprPos (BoolExp _ p) = p
-getExprPos (CharExpr _ p) = p
-getExprPos (StringExpr _ p) = p
-getExprPos (PairExpr _ p) = p
-getExprPos (IdentExpr _ p) = p
-getExprPos (ArrayExpr _ p) = p
-getExprPos (UExpr _ _ p) = p
-getExprPos (BExp _ _ _ p) = p
-getExprPos (BracketExp _ p) = p
+  throwTypeError target (getPos e) ("Expression: " ++ show e ++ " has type " ++ show target ++ " but needs type " ++ show given)

@@ -5,6 +5,7 @@ module Data.Waskell.Types where
   
 import Data.Waskell.ADT
 import Data.Waskell.Error
+import Control.Monad
 
 import qualified Data.HashMap.Lazy as M
 
@@ -110,12 +111,14 @@ instance Typeable (Scop AssignLhs) where
 
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
-  --getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = ArrayType (ArrayDeclarationLiteral (checkSameTypes (map (\(ArrayLiteralElem e _) -> getType (Scop (e, scps)))))
-  --getType (Scop ((AssignArrayLit (ArrayLiteral pe:pes)), _)) = foldM (
   getType (Scop ((AssignArrayLit (ArrayLiteral [])), _)) = return (Pairable ArrayNull)
-  getType (Scop ((AssignPair _ _), _)) = undefined
-  getType (Scop ((AssignFunctionCall _ _), _)) = undefined
-  getType (Scop ((AssignArrayLit e), scps)) = undefined
+  getType (Scop ((AssignArrayLit (ArrayLiteral (p : ps))), scp)) = getType (Scop (p, scp)) >>= \d -> foldM (checkSame scp) d ps
+  getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
+
+  --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
+  getType (Scop ((AssignFunctionCall i exps), scp)) = lookupType i scp
+      
+    
   getType (Scop (AssignPairElem ((Left e), _),  scps)) = getType (Scop (e, scps))
   getType (Scop (AssignPairElem ((Right e), _), scps)) = getType (Scop (e, scps))
 
@@ -145,6 +148,11 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
   getType (Scop (o@((StatPrintLn e), pos), scp))          = do  
                                                           expr <- getType  (Scop (e, scp))
                                                           subType o [expr]
+checkSame :: [NewScope] -> Type -> Pos Expression -> ErrorList Type
+checkSame scp a' (b, pb) = do
+  b' <- getType (Scop (b, scp))
+  if (a' == b') then return a' else throwTypeError a' pb ("Array literal declared with multiple element types, in particular we expect a " ++ show a' ++ " but got a " ++ show b')
+
 instance Typeable Function where
   getType (Function t _ _ (sts, scp)) 
     = mapM_ (\e -> checkTypes (Scop (e, [scp])) t) returns >> getType t

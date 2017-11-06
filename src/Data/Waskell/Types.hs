@@ -102,6 +102,7 @@ instance Typeable Type where
 instance WaccTypeable Type where
   getWType a = a :-> RetWT
 
+
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
   --getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = ArrayType (ArrayDeclarationLiteral (checkSameTypes (map (\(ArrayLiteralElem e _) -> getType (Scop (e, scps)))))
@@ -112,6 +113,34 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignArrayLit e), scps)) = undefined
   getType (Scop (AssignPairElem ((Left e), _),  scps)) = getType (Scop (e, scps))
   getType (Scop (AssignPairElem ((Right e), _), scps)) = getType (Scop (e, scps))
+
+instance Typeable (Scop (Pos StatementOperator)) where
+  getType (Scop (o@((StatDecAss typ _ arhs), pos), scp))  = do
+                                                          trhs <- getType (Scop (arhs, scp))
+                                                          subType o [typ, trhs]
+  getType (Scop (o@((StatAss alhs arhs), pos), scp))      = do 
+                                                          tlhs <- getType (Scop (alhs, scp))
+                                                          trhs <- getType (Scop (arhs, scp))
+                                                          subType o [tlhs, trhs]
+  getType (Scop (o@((StatFree e), pos), scp))             = do 
+                                                          exp <- getType  (Scop (e, scp)) 
+                                                          subType o [exp]   
+  getType (Scop (o@((StatRead alhs), pos), scp))          = do 
+                                                          tlhs <- getType  (Scop (alhs, scp))
+                                                          subType o [tlhs]
+  getType (Scop (o@((StatReturn e), pos), scp))           = do 
+                                                          exp <-  getType  (Scop (e, scp)) 
+                                                          subType o [exp] 
+  getType (Scop (o@((StatExit e), pos), scp))             = do
+                                                          exp <- getType  (Scop (e, scp)) 
+                                                          subType o [exp]
+  getType (Scop (o@((StatPrint e), pos), scp))            = do 
+                                                          exp <- getType  (Scop (e, scp))
+                                                          subType o [exp]
+  getType (Scop (o@((StatPrintLn e), pos), scp))          = do  
+                                                          exp <- getType  (Scop (e, scp))
+                                                          subType o [exp]
+
 
 instance Typeable Function where
   getType (Function t _ _ (sts, scp)) 

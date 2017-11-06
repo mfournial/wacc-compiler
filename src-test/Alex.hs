@@ -247,7 +247,7 @@ boolCalc = strip (tokens (
 
 boolExpr1 :: Assertion
 boolExpr1 = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/expressions/BoolExpr1.wacc" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/expressions/boolExpr1.wacc" ))
   @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_NotT, T_LParenT, T_LParenT, T_TrueToken, T_AndT, T_FalseToken, T_RParenT, T_OrT, T_LParenT, T_TrueToken, T_AndT, T_FalseToken, T_RParenT, T_RParenT, T_SepT, T_IfT, (T_Identifier "b"), T_EqT, T_TrueToken, T_ThenT, T_PrintLnT, (T_StringLiteral "\"Correct\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"Wrong\""), T_FiT, T_EndT]
 charComparisonExpr :: Assertion
 charComparisonExpr = strip (tokens (

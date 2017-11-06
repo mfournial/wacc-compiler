@@ -36,7 +36,7 @@ validTests =
   , testGroup "Pairs" pairsTests
   , testGroup "RuntimeErr" runtimeErrTests
   , testGroup "Scope" scopeTests
-  -- , testGroup "Sequences" sequenceTests
+  , testGroup "Sequences" sequenceTests
   -- , testGroup "Variables" variablesTests
   -- , testGroup "While" whileTests
   ] 
@@ -1091,28 +1091,44 @@ sequenceTests =
   ]
 
 basicSeq :: Assertion
-basicSeq = undefined
+basicSeq = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_SkipT, T_SepT, T_SkipT, T_EndT]
 
 basicSeq2 :: Assertion
-basicSeq2 = undefined
+basicSeq2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_SkipT, T_SepT, T_SkipT, T_SepT, T_SkipT, T_EndT]
 
 boolAssignment :: Assertion
-boolAssignment = undefined
+boolAssignment = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_FalseToken, T_SepT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_EndT]
 
 charAssignment :: Assertion
-charAssignment = undefined
+charAssignment = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'a'"), T_SepT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'Z'"), T_EndT]
 
 exitSimple :: Assertion
-exitSimple = undefined
+exitSimple = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_ExitT, (T_IntDigit "42"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Should not print this.\""), T_EndT]
 
 intAssignment :: Assertion
-intAssignment = undefined
+intAssignment = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, (T_Identifier "x"), T_EqualT, (T_IntDigit "20"), T_SepT, T_ExitT, (T_Identifier "x"), T_EndT]
 
 intLeadingZeros :: Assertion
-intLeadingZeros = undefined
+intLeadingZeros = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0000000000000000000000000000000000000042"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0000000000000000000000000000000000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "y"), T_EndT]
 
 stringAssignment :: Assertion
-stringAssignment = undefined
+stringAssignment = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  @=? [ T_BeginT, T_StringT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"foo\""), T_SepT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"bar\""), T_EndT]
 
 variablesTests :: [TestTree]
 variablesTests =

@@ -38,7 +38,7 @@ validTests =
   , testGroup "Scope" scopeTests
   , testGroup "Sequences" sequenceTests
   , testGroup "Variables" variablesTests
-  -- , testGroup "While" whileTests
+  , testGroup "While" whileTests
   ] 
 
 invalidTests :: [TestTree]
@@ -1295,11 +1295,7 @@ whileFalse = strip (tokens (
   @=? [ T_BeginT, T_WhileT, T_FalseToken, T_DoT, T_PrintLnT, (T_StringLiteral "\"looping...\""), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"end of loop\""), T_EndT]
 
 syntacticTests :: [TestTree]
-syntacticTests = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/" ))
-  @=? 
+syntacticTests = undefined
 
 semanticTests :: [TestTree]
-semanticTests = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/" ))
-  @=? 
+semanticTests = undefined

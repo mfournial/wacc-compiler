@@ -37,7 +37,7 @@ validTests =
   , testGroup "RuntimeErr" runtimeErrTests
   , testGroup "Scope" scopeTests
   , testGroup "Sequences" sequenceTests
-  -- , testGroup "Variables" variablesTests
+  , testGroup "Variables" variablesTests
   -- , testGroup "While" whileTests
   ] 
 
@@ -1092,42 +1092,42 @@ sequenceTests =
 
 basicSeq :: Assertion
 basicSeq = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/basicSeq.wacc" ))
   @=? [ T_BeginT, T_SkipT, T_SepT, T_SkipT, T_EndT]
 
 basicSeq2 :: Assertion
 basicSeq2 = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/basicSeq2.wacc" ))
   @=? [ T_BeginT, T_SkipT, T_SepT, T_SkipT, T_SepT, T_SkipT, T_EndT]
 
 boolAssignment :: Assertion
 boolAssignment = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/boolAssignment.wacc" ))
   @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_FalseToken, T_SepT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_EndT]
 
 charAssignment :: Assertion
 charAssignment = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/charAssignment.wacc" ))
   @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'a'"), T_SepT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'Z'"), T_EndT]
 
 exitSimple :: Assertion
 exitSimple = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/exitSimple.wacc" ))
   @=? [ T_BeginT, T_ExitT, (T_IntDigit "42"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Should not print this.\""), T_EndT]
 
 intAssignment :: Assertion
 intAssignment = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/intAssignment.wacc" ))
   @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, (T_Identifier "x"), T_EqualT, (T_IntDigit "20"), T_SepT, T_ExitT, (T_Identifier "x"), T_EndT]
 
 intLeadingZeros :: Assertion
 intLeadingZeros = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/intLeadingZeros.wacc" ))
   @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0000000000000000000000000000000000000042"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0000000000000000000000000000000000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "y"), T_EndT]
 
 stringAssignment :: Assertion
 stringAssignment = strip (tokens (
-  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/" ))
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/sequence/stringAssignment.wacc" ))
   @=? [ T_BeginT, T_StringT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"foo\""), T_SepT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"bar\""), T_EndT]
 
 variablesTests :: [TestTree]
@@ -1149,46 +1149,74 @@ variablesTests =
   ]
 
 underscoreVarName :: Assertion
-underscoreVarName = undefined
+underscoreVarName = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/_VarNames.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "an_underscore"), T_EqualT, (T_IntDigit "19"), T_SepT, T_ExitT, (T_Identifier "an_underscore"), T_EndT]
 
 boolDeclaration :: Assertion
-boolDeclaration = undefined
+boolDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/boolDeclaration.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_FalseToken, T_EndT]
 
 boolDeclaration2 :: Assertion
-boolDeclaration2 = undefined
+boolDeclaration2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/boolDeclaration2.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_EndT]
 
 capCharDeclaration :: Assertion
-capCharDeclaration = undefined
+capCharDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/capCharDeclaration.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'M'"), T_EndT]
 
 charDeclaration :: Assertion
-charDeclaration = undefined
+charDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/charDeclaration.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'a'"), T_EndT]
 
 charDeclaration2 :: Assertion
-charDeclaration2 = undefined
+charDeclaration2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/charDeclaration2.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'z'"), T_EndT]
 
 emptyStringDeclaration :: Assertion
-emptyStringDeclaration = undefined
+emptyStringDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/emptyStringDeclaration.wacc" ))
+  @=? [ T_BeginT, T_StringT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"\""), T_EndT]
 
 intDeclaration :: Assertion
-intDeclaration = undefined
+intDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/intDeclaration.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "42"), T_EndT]
 
 longVarNames :: Assertion
-longVarNames = undefined
+longVarNames = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/longVarNames.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "this_variable_has_a_crazy_long_name_but_ought_to_still_be_valid"), T_EqualT, (T_IntDigit "5"), T_SepT, T_ExitT, (T_Identifier "this_variable_has_a_crazy_long_name_but_ought_to_still_be_valid"), T_EndT]
 
 manyVariables :: Assertion
-manyVariables = undefined
+manyVariables = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/manyVariables.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x0"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "x1"), T_EqualT, (T_IntDigit "1"), T_SepT, T_IntT, (T_Identifier "x2"), T_EqualT, (T_IntDigit "2"), T_SepT, T_IntT, (T_Identifier "x3"), T_EqualT, (T_IntDigit "3"), T_SepT, T_IntT, (T_Identifier "x4"), T_EqualT, (T_IntDigit "4"), T_SepT, T_IntT, (T_Identifier "x5"), T_EqualT, (T_IntDigit "5"), T_SepT, T_IntT, (T_Identifier "x6"), T_EqualT, (T_IntDigit "6"), T_SepT, T_IntT, (T_Identifier "x7"), T_EqualT, (T_IntDigit "7"), T_SepT, T_IntT, (T_Identifier "x8"), T_EqualT, (T_IntDigit "8"), T_SepT, T_IntT, (T_Identifier "x9"), T_EqualT, (T_IntDigit "9"), T_SepT, T_IntT, (T_Identifier "x10"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "x11"), T_EqualT, (T_IntDigit "11"), T_SepT, T_IntT, (T_Identifier "x12"), T_EqualT, (T_IntDigit "12"), T_SepT, T_IntT, (T_Identifier "x13"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IntT, (T_Identifier "x14"), T_EqualT, (T_IntDigit "14"), T_SepT, T_IntT, (T_Identifier "x15"), T_EqualT, (T_IntDigit "15"), T_SepT, T_IntT, (T_Identifier "x16"), T_EqualT, (T_IntDigit "16"), T_SepT, T_IntT, (T_Identifier "x17"), T_EqualT, (T_IntDigit "17"), T_SepT, T_IntT, (T_Identifier "x18"), T_EqualT, (T_IntDigit "18"), T_SepT, T_IntT, (T_Identifier "x19"), T_EqualT, (T_IntDigit "19"), T_SepT, T_IntT, (T_Identifier "x20"), T_EqualT, (T_IntDigit "20"), T_SepT, T_IntT, (T_Identifier "x21"), T_EqualT, (T_IntDigit "21"), T_SepT, T_IntT, (T_Identifier "x22"), T_EqualT, (T_IntDigit "22"), T_SepT, T_IntT, (T_Identifier "x23"), T_EqualT, (T_IntDigit "23"), T_SepT, T_IntT, (T_Identifier "x24"), T_EqualT, (T_IntDigit "24"), T_SepT, T_IntT, (T_Identifier "x25"), T_EqualT, (T_IntDigit "25"), T_SepT, T_IntT, (T_Identifier "x26"), T_EqualT, (T_IntDigit "26"), T_SepT, T_IntT, (T_Identifier "x27"), T_EqualT, (T_IntDigit "27"), T_SepT, T_IntT, (T_Identifier "x28"), T_EqualT, (T_IntDigit "28"), T_SepT, T_IntT, (T_Identifier "x29"), T_EqualT, (T_IntDigit "29"), T_SepT, T_IntT, (T_Identifier "x30"), T_EqualT, (T_IntDigit "30"), T_SepT, T_IntT, (T_Identifier "x31"), T_EqualT, (T_IntDigit "31"), T_SepT, T_IntT, (T_Identifier "x32"), T_EqualT, (T_IntDigit "32"), T_SepT, T_IntT, (T_Identifier "x33"), T_EqualT, (T_IntDigit "33"), T_SepT, T_IntT, (T_Identifier "x34"), T_EqualT, (T_IntDigit "34"), T_SepT, T_IntT, (T_Identifier "x35"), T_EqualT, (T_IntDigit "35"), T_SepT, T_IntT, (T_Identifier "x36"), T_EqualT, (T_IntDigit "36"), T_SepT, T_IntT, (T_Identifier "x37"), T_EqualT, (T_IntDigit "37"), T_SepT, T_IntT, (T_Identifier "x38"), T_EqualT, (T_IntDigit "38"), T_SepT, T_IntT, (T_Identifier "x39"), T_EqualT, (T_IntDigit "39"), T_SepT, T_IntT, (T_Identifier "x40"), T_EqualT, (T_IntDigit "40"), T_SepT, T_IntT, (T_Identifier "x41"), T_EqualT, (T_IntDigit "41"), T_SepT, T_IntT, (T_Identifier "x42"), T_EqualT, (T_IntDigit "42"), T_SepT, T_IntT, (T_Identifier "x43"), T_EqualT, (T_IntDigit "43"), T_SepT, T_IntT, (T_Identifier "x44"), T_EqualT, (T_IntDigit "44"), T_SepT, T_IntT, (T_Identifier "x45"), T_EqualT, (T_IntDigit "45"), T_SepT, T_IntT, (T_Identifier "x46"), T_EqualT, (T_IntDigit "46"), T_SepT, T_IntT, (T_Identifier "x47"), T_EqualT, (T_IntDigit "47"), T_SepT, T_IntT, (T_Identifier "x48"), T_EqualT, (T_IntDigit "48"), T_SepT, T_IntT, (T_Identifier "x49"), T_EqualT, (T_IntDigit "49"), T_SepT, T_IntT, (T_Identifier "x50"), T_EqualT, (T_IntDigit "50"), T_SepT, T_IntT, (T_Identifier "x51"), T_EqualT, (T_IntDigit "51"), T_SepT, T_IntT, (T_Identifier "x52"), T_EqualT, (T_IntDigit "52"), T_SepT, T_IntT, (T_Identifier "x53"), T_EqualT, (T_IntDigit "53"), T_SepT, T_IntT, (T_Identifier "x54"), T_EqualT, (T_IntDigit "54"), T_SepT, T_IntT, (T_Identifier "x55"), T_EqualT, (T_IntDigit "55"), T_SepT, T_IntT, (T_Identifier "x56"), T_EqualT, (T_IntDigit "56"), T_SepT, T_IntT, (T_Identifier "x57"), T_EqualT, (T_IntDigit "57"), T_SepT, T_IntT, (T_Identifier "x58"), T_EqualT, (T_IntDigit "58"), T_SepT, T_IntT, (T_Identifier "x59"), T_EqualT, (T_IntDigit "59"), T_SepT, T_IntT, (T_Identifier "x60"), T_EqualT, (T_IntDigit "60"), T_SepT, T_IntT, (T_Identifier "x61"), T_EqualT, (T_IntDigit "61"), T_SepT, T_IntT, (T_Identifier "x62"), T_EqualT, (T_IntDigit "62"), T_SepT, T_IntT, (T_Identifier "x63"), T_EqualT, (T_IntDigit "63"), T_SepT, T_IntT, (T_Identifier "x64"), T_EqualT, (T_IntDigit "64"), T_SepT, T_IntT, (T_Identifier "x65"), T_EqualT, (T_IntDigit "65"), T_SepT, T_IntT, (T_Identifier "x66"), T_EqualT, (T_IntDigit "66"), T_SepT, T_IntT, (T_Identifier "x67"), T_EqualT, (T_IntDigit "67"), T_SepT, T_IntT, (T_Identifier "x68"), T_EqualT, (T_IntDigit "68"), T_SepT, T_IntT, (T_Identifier "x69"), T_EqualT, (T_IntDigit "69"), T_SepT, T_IntT, (T_Identifier "x70"), T_EqualT, (T_IntDigit "70"), T_SepT, T_IntT, (T_Identifier "x71"), T_EqualT, (T_IntDigit "71"), T_SepT, T_IntT, (T_Identifier "x72"), T_EqualT, (T_IntDigit "72"), T_SepT, T_IntT, (T_Identifier "x73"), T_EqualT, (T_IntDigit "73"), T_SepT, T_IntT, (T_Identifier "x74"), T_EqualT, (T_IntDigit "74"), T_SepT, T_IntT, (T_Identifier "x75"), T_EqualT, (T_IntDigit "75"), T_SepT, T_IntT, (T_Identifier "x76"), T_EqualT, (T_IntDigit "76"), T_SepT, T_IntT, (T_Identifier "x77"), T_EqualT, (T_IntDigit "77"), T_SepT, T_IntT, (T_Identifier "x78"), T_EqualT, (T_IntDigit "78"), T_SepT, T_IntT, (T_Identifier "x79"), T_EqualT, (T_IntDigit "79"), T_SepT, T_IntT, (T_Identifier "x80"), T_EqualT, (T_IntDigit "80"), T_SepT, T_IntT, (T_Identifier "x81"), T_EqualT, (T_IntDigit "81"), T_SepT, T_IntT, (T_Identifier "x82"), T_EqualT, (T_IntDigit "82"), T_SepT, T_IntT, (T_Identifier "x83"), T_EqualT, (T_IntDigit "83"), T_SepT, T_IntT, (T_Identifier "x84"), T_EqualT, (T_IntDigit "84"), T_SepT, T_IntT, (T_Identifier "x85"), T_EqualT, (T_IntDigit "85"), T_SepT, T_IntT, (T_Identifier "x86"), T_EqualT, (T_IntDigit "86"), T_SepT, T_IntT, (T_Identifier "x87"), T_EqualT, (T_IntDigit "87"), T_SepT, T_IntT, (T_Identifier "x88"), T_EqualT, (T_IntDigit "88"), T_SepT, T_IntT, (T_Identifier "x89"), T_EqualT, (T_IntDigit "89"), T_SepT, T_IntT, (T_Identifier "x90"), T_EqualT, (T_IntDigit "90"), T_SepT, T_IntT, (T_Identifier "x91"), T_EqualT, (T_IntDigit "91"), T_SepT, T_IntT, (T_Identifier "x92"), T_EqualT, (T_IntDigit "92"), T_SepT, T_IntT, (T_Identifier "x93"), T_EqualT, (T_IntDigit "93"), T_SepT, T_IntT, (T_Identifier "x94"), T_EqualT, (T_IntDigit "94"), T_SepT, T_IntT, (T_Identifier "x95"), T_EqualT, (T_IntDigit "95"), T_SepT, T_IntT, (T_Identifier "x96"), T_EqualT, (T_IntDigit "96"), T_SepT, T_IntT, (T_Identifier "x97"), T_EqualT, (T_IntDigit "97"), T_SepT, T_IntT, (T_Identifier "x98"), T_EqualT, (T_IntDigit "98"), T_SepT, T_IntT, (T_Identifier "x99"), T_EqualT, (T_IntDigit "99"), T_SepT, T_IntT, (T_Identifier "x100"), T_EqualT, (T_IntDigit "100"), T_SepT, T_IntT, (T_Identifier "x101"), T_EqualT, (T_IntDigit "101"), T_SepT, T_IntT, (T_Identifier "x102"), T_EqualT, (T_IntDigit "102"), T_SepT, T_IntT, (T_Identifier "x103"), T_EqualT, (T_IntDigit "103"), T_SepT, T_IntT, (T_Identifier "x104"), T_EqualT, (T_IntDigit "104"), T_SepT, T_IntT, (T_Identifier "x105"), T_EqualT, (T_IntDigit "105"), T_SepT, T_IntT, (T_Identifier "x106"), T_EqualT, (T_IntDigit "106"), T_SepT, T_IntT, (T_Identifier "x107"), T_EqualT, (T_IntDigit "107"), T_SepT, T_IntT, (T_Identifier "x108"), T_EqualT, (T_IntDigit "108"), T_SepT, T_IntT, (T_Identifier "x109"), T_EqualT, (T_IntDigit "109"), T_SepT, T_IntT, (T_Identifier "x110"), T_EqualT, (T_IntDigit "110"), T_SepT, T_IntT, (T_Identifier "x111"), T_EqualT, (T_IntDigit "111"), T_SepT, T_IntT, (T_Identifier "x112"), T_EqualT, (T_IntDigit "112"), T_SepT, T_IntT, (T_Identifier "x113"), T_EqualT, (T_IntDigit "113"), T_SepT, T_IntT, (T_Identifier "x114"), T_EqualT, (T_IntDigit "114"), T_SepT, T_IntT, (T_Identifier "x115"), T_EqualT, (T_IntDigit "115"), T_SepT, T_IntT, (T_Identifier "x116"), T_EqualT, (T_IntDigit "116"), T_SepT, T_IntT, (T_Identifier "x117"), T_EqualT, (T_IntDigit "117"), T_SepT, T_IntT, (T_Identifier "x118"), T_EqualT, (T_IntDigit "118"), T_SepT, T_IntT, (T_Identifier "x119"), T_EqualT, (T_IntDigit "119"), T_SepT, T_IntT, (T_Identifier "x120"), T_EqualT, (T_IntDigit "120"), T_SepT, T_IntT, (T_Identifier "x121"), T_EqualT, (T_IntDigit "121"), T_SepT, T_IntT, (T_Identifier "x122"), T_EqualT, (T_IntDigit "122"), T_SepT, T_IntT, (T_Identifier "x123"), T_EqualT, (T_IntDigit "123"), T_SepT, T_IntT, (T_Identifier "x124"), T_EqualT, (T_IntDigit "124"), T_SepT, T_IntT, (T_Identifier "x125"), T_EqualT, (T_IntDigit "125"), T_SepT, T_IntT, (T_Identifier "x126"), T_EqualT, (T_IntDigit "126"), T_SepT, T_IntT, (T_Identifier "x127"), T_EqualT, (T_IntDigit "127"), T_SepT, T_IntT, (T_Identifier "x128"), T_EqualT, (T_IntDigit "128"), T_SepT, T_IntT, (T_Identifier "x129"), T_EqualT, (T_IntDigit "129"), T_SepT, T_IntT, (T_Identifier "x130"), T_EqualT, (T_IntDigit "130"), T_SepT, T_IntT, (T_Identifier "x131"), T_EqualT, (T_IntDigit "131"), T_SepT, T_IntT, (T_Identifier "x132"), T_EqualT, (T_IntDigit "132"), T_SepT, T_IntT, (T_Identifier "x133"), T_EqualT, (T_IntDigit "133"), T_SepT, T_IntT, (T_Identifier "x134"), T_EqualT, (T_IntDigit "134"), T_SepT, T_IntT, (T_Identifier "x135"), T_EqualT, (T_IntDigit "135"), T_SepT, T_IntT, (T_Identifier "x136"), T_EqualT, (T_IntDigit "136"), T_SepT, T_IntT, (T_Identifier "x137"), T_EqualT, (T_IntDigit "137"), T_SepT, T_IntT, (T_Identifier "x138"), T_EqualT, (T_IntDigit "138"), T_SepT, T_IntT, (T_Identifier "x139"), T_EqualT, (T_IntDigit "139"), T_SepT, T_IntT, (T_Identifier "x140"), T_EqualT, (T_IntDigit "140"), T_SepT, T_IntT, (T_Identifier "x141"), T_EqualT, (T_IntDigit "141"), T_SepT, T_IntT, (T_Identifier "x142"), T_EqualT, (T_IntDigit "142"), T_SepT, T_IntT, (T_Identifier "x143"), T_EqualT, (T_IntDigit "143"), T_SepT, T_IntT, (T_Identifier "x144"), T_EqualT, (T_IntDigit "144"), T_SepT, T_IntT, (T_Identifier "x145"), T_EqualT, (T_IntDigit "145"), T_SepT, T_IntT, (T_Identifier "x146"), T_EqualT, (T_IntDigit "146"), T_SepT, T_IntT, (T_Identifier "x147"), T_EqualT, (T_IntDigit "147"), T_SepT, T_IntT, (T_Identifier "x148"), T_EqualT, (T_IntDigit "148"), T_SepT, T_IntT, (T_Identifier "x149"), T_EqualT, (T_IntDigit "149"), T_SepT, T_IntT, (T_Identifier "x150"), T_EqualT, (T_IntDigit "150"), T_SepT, T_IntT, (T_Identifier "x151"), T_EqualT, (T_IntDigit "151"), T_SepT, T_IntT, (T_Identifier "x152"), T_EqualT, (T_IntDigit "152"), T_SepT, T_IntT, (T_Identifier "x153"), T_EqualT, (T_IntDigit "153"), T_SepT, T_IntT, (T_Identifier "x154"), T_EqualT, (T_IntDigit "154"), T_SepT, T_IntT, (T_Identifier "x155"), T_EqualT, (T_IntDigit "155"), T_SepT, T_IntT, (T_Identifier "x156"), T_EqualT, (T_IntDigit "156"), T_SepT, T_IntT, (T_Identifier "x157"), T_EqualT, (T_IntDigit "157"), T_SepT, T_IntT, (T_Identifier "x158"), T_EqualT, (T_IntDigit "158"), T_SepT, T_IntT, (T_Identifier "x159"), T_EqualT, (T_IntDigit "159"), T_SepT, T_IntT, (T_Identifier "x160"), T_EqualT, (T_IntDigit "160"), T_SepT, T_IntT, (T_Identifier "x161"), T_EqualT, (T_IntDigit "161"), T_SepT, T_IntT, (T_Identifier "x162"), T_EqualT, (T_IntDigit "162"), T_SepT, T_IntT, (T_Identifier "x163"), T_EqualT, (T_IntDigit "163"), T_SepT, T_IntT, (T_Identifier "x164"), T_EqualT, (T_IntDigit "164"), T_SepT, T_IntT, (T_Identifier "x165"), T_EqualT, (T_IntDigit "165"), T_SepT, T_IntT, (T_Identifier "x166"), T_EqualT, (T_IntDigit "166"), T_SepT, T_IntT, (T_Identifier "x167"), T_EqualT, (T_IntDigit "167"), T_SepT, T_IntT, (T_Identifier "x168"), T_EqualT, (T_IntDigit "168"), T_SepT, T_IntT, (T_Identifier "x169"), T_EqualT, (T_IntDigit "169"), T_SepT, T_IntT, (T_Identifier "x170"), T_EqualT, (T_IntDigit "170"), T_SepT, T_IntT, (T_Identifier "x171"), T_EqualT, (T_IntDigit "171"), T_SepT, T_IntT, (T_Identifier "x172"), T_EqualT, (T_IntDigit "172"), T_SepT, T_IntT, (T_Identifier "x173"), T_EqualT, (T_IntDigit "173"), T_SepT, T_IntT, (T_Identifier "x174"), T_EqualT, (T_IntDigit "174"), T_SepT, T_IntT, (T_Identifier "x175"), T_EqualT, (T_IntDigit "175"), T_SepT, T_IntT, (T_Identifier "x176"), T_EqualT, (T_IntDigit "176"), T_SepT, T_IntT, (T_Identifier "x177"), T_EqualT, (T_IntDigit "177"), T_SepT, T_IntT, (T_Identifier "x178"), T_EqualT, (T_IntDigit "178"), T_SepT, T_IntT, (T_Identifier "x179"), T_EqualT, (T_IntDigit "179"), T_SepT, T_IntT, (T_Identifier "x180"), T_EqualT, (T_IntDigit "180"), T_SepT, T_IntT, (T_Identifier "x181"), T_EqualT, (T_IntDigit "181"), T_SepT, T_IntT, (T_Identifier "x182"), T_EqualT, (T_IntDigit "182"), T_SepT, T_IntT, (T_Identifier "x183"), T_EqualT, (T_IntDigit "183"), T_SepT, T_IntT, (T_Identifier "x184"), T_EqualT, (T_IntDigit "184"), T_SepT, T_IntT, (T_Identifier "x185"), T_EqualT, (T_IntDigit "185"), T_SepT, T_IntT, (T_Identifier "x186"), T_EqualT, (T_IntDigit "186"), T_SepT, T_IntT, (T_Identifier "x187"), T_EqualT, (T_IntDigit "187"), T_SepT, T_IntT, (T_Identifier "x188"), T_EqualT, (T_IntDigit "188"), T_SepT, T_IntT, (T_Identifier "x189"), T_EqualT, (T_IntDigit "189"), T_SepT, T_IntT, (T_Identifier "x190"), T_EqualT, (T_IntDigit "190"), T_SepT, T_IntT, (T_Identifier "x191"), T_EqualT, (T_IntDigit "191"), T_SepT, T_IntT, (T_Identifier "x192"), T_EqualT, (T_IntDigit "192"), T_SepT, T_IntT, (T_Identifier "x193"), T_EqualT, (T_IntDigit "193"), T_SepT, T_IntT, (T_Identifier "x194"), T_EqualT, (T_IntDigit "194"), T_SepT, T_IntT, (T_Identifier "x195"), T_EqualT, (T_IntDigit "195"), T_SepT, T_IntT, (T_Identifier "x196"), T_EqualT, (T_IntDigit "196"), T_SepT, T_IntT, (T_Identifier "x197"), T_EqualT, (T_IntDigit "197"), T_SepT, T_IntT, (T_Identifier "x198"), T_EqualT, (T_IntDigit "198"), T_SepT, T_IntT, (T_Identifier "x199"), T_EqualT, (T_IntDigit "199"), T_SepT, T_IntT, (T_Identifier "x200"), T_EqualT, (T_IntDigit "200"), T_SepT, T_IntT, (T_Identifier "x201"), T_EqualT, (T_IntDigit "201"), T_SepT, T_IntT, (T_Identifier "x202"), T_EqualT, (T_IntDigit "202"), T_SepT, T_IntT, (T_Identifier "x203"), T_EqualT, (T_IntDigit "203"), T_SepT, T_IntT, (T_Identifier "x204"), T_EqualT, (T_IntDigit "204"), T_SepT, T_IntT, (T_Identifier "x205"), T_EqualT, (T_IntDigit "205"), T_SepT, T_IntT, (T_Identifier "x206"), T_EqualT, (T_IntDigit "206"), T_SepT, T_IntT, (T_Identifier "x207"), T_EqualT, (T_IntDigit "207"), T_SepT, T_IntT, (T_Identifier "x208"), T_EqualT, (T_IntDigit "208"), T_SepT, T_IntT, (T_Identifier "x209"), T_EqualT, (T_IntDigit "209"), T_SepT, T_IntT, (T_Identifier "x210"), T_EqualT, (T_IntDigit "210"), T_SepT, T_IntT, (T_Identifier "x211"), T_EqualT, (T_IntDigit "211"), T_SepT, T_IntT, (T_Identifier "x212"), T_EqualT, (T_IntDigit "212"), T_SepT, T_IntT, (T_Identifier "x213"), T_EqualT, (T_IntDigit "213"), T_SepT, T_IntT, (T_Identifier "x214"), T_EqualT, (T_IntDigit "214"), T_SepT, T_IntT, (T_Identifier "x215"), T_EqualT, (T_IntDigit "215"), T_SepT, T_IntT, (T_Identifier "x216"), T_EqualT, (T_IntDigit "216"), T_SepT, T_IntT, (T_Identifier "x217"), T_EqualT, (T_IntDigit "217"), T_SepT, T_IntT, (T_Identifier "x218"), T_EqualT, (T_IntDigit "218"), T_SepT, T_IntT, (T_Identifier "x219"), T_EqualT, (T_IntDigit "219"), T_SepT, T_IntT, (T_Identifier "x220"), T_EqualT, (T_IntDigit "220"), T_SepT, T_IntT, (T_Identifier "x221"), T_EqualT, (T_IntDigit "221"), T_SepT, T_IntT, (T_Identifier "x222"), T_EqualT, (T_IntDigit "222"), T_SepT, T_IntT, (T_Identifier "x223"), T_EqualT, (T_IntDigit "223"), T_SepT, T_IntT, (T_Identifier "x224"), T_EqualT, (T_IntDigit "224"), T_SepT, T_IntT, (T_Identifier "x225"), T_EqualT, (T_IntDigit "225"), T_SepT, T_IntT, (T_Identifier "x226"), T_EqualT, (T_IntDigit "226"), T_SepT, T_IntT, (T_Identifier "x227"), T_EqualT, (T_IntDigit "227"), T_SepT, T_IntT, (T_Identifier "x228"), T_EqualT, (T_IntDigit "228"), T_SepT, T_IntT, (T_Identifier "x229"), T_EqualT, (T_IntDigit "229"), T_SepT, T_IntT, (T_Identifier "x230"), T_EqualT, (T_IntDigit "230"), T_SepT, T_IntT, (T_Identifier "x231"), T_EqualT, (T_IntDigit "231"), T_SepT, T_IntT, (T_Identifier "x232"), T_EqualT, (T_IntDigit "232"), T_SepT, T_IntT, (T_Identifier "x233"), T_EqualT, (T_IntDigit "233"), T_SepT, T_IntT, (T_Identifier "x234"), T_EqualT, (T_IntDigit "234"), T_SepT, T_IntT, (T_Identifier "x235"), T_EqualT, (T_IntDigit "235"), T_SepT, T_IntT, (T_Identifier "x236"), T_EqualT, (T_IntDigit "236"), T_SepT, T_IntT, (T_Identifier "x237"), T_EqualT, (T_IntDigit "237"), T_SepT, T_IntT, (T_Identifier "x238"), T_EqualT, (T_IntDigit "238"), T_SepT, T_IntT, (T_Identifier "x239"), T_EqualT, (T_IntDigit "239"), T_SepT, T_IntT, (T_Identifier "x240"), T_EqualT, (T_IntDigit "240"), T_SepT, T_IntT, (T_Identifier "x241"), T_EqualT, (T_IntDigit "241"), T_SepT, T_IntT, (T_Identifier "x242"), T_EqualT, (T_IntDigit "242"), T_SepT, T_IntT, (T_Identifier "x243"), T_EqualT, (T_IntDigit "243"), T_SepT, T_IntT, (T_Identifier "x244"), T_EqualT, (T_IntDigit "244"), T_SepT, T_IntT, (T_Identifier "x245"), T_EqualT, (T_IntDigit "245"), T_SepT, T_IntT, (T_Identifier "x246"), T_EqualT, (T_IntDigit "246"), T_SepT, T_IntT, (T_Identifier "x247"), T_EqualT, (T_IntDigit "247"), T_SepT, T_IntT, (T_Identifier "x248"), T_EqualT, (T_IntDigit "248"), T_SepT, T_IntT, (T_Identifier "x249"), T_EqualT, (T_IntDigit "249"), T_SepT, T_IntT, (T_Identifier "x250"), T_EqualT, (T_IntDigit "250"), T_SepT, T_IntT, (T_Identifier "x251"), T_EqualT, (T_IntDigit "251"), T_SepT, T_IntT, (T_Identifier "x252"), T_EqualT, (T_IntDigit "252"), T_SepT, T_IntT, (T_Identifier "x253"), T_EqualT, (T_IntDigit "253"), T_SepT, T_IntT, (T_Identifier "x254"), T_EqualT, (T_IntDigit "254"), T_SepT, T_IntT, (T_Identifier "x255"), T_EqualT, (T_IntDigit "255"), T_SepT, T_IntT, (T_Identifier "x256"), T_EqualT, (T_IntDigit "256"), T_EndT]
 
 negIntDeclaration :: Assertion
-negIntDeclaration = undefined
+negIntDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/negIntDeclaration.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "1"), T_EndT]
 
 puncCharDeclaration :: Assertion
-puncCharDeclaration = undefined
+puncCharDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/puncCharDeclaration.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'!'"), T_EndT]
 
 stringDeclaration :: Assertion
-stringDeclaration = undefined
+stringDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/stringDeclaration.wacc" ))
+  @=? [ T_BeginT, T_StringT, (T_Identifier "s"), T_EqualT, (T_StringLiteral "\"Hello World!\""), T_EndT]
 
 zeroIntDeclaration :: Assertion
-zeroIntDeclaration = undefined
+zeroIntDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/variables/zeroIntDeclaration.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0"), T_EndT]
 
 whileTests :: [TestTree]
 whileTests =

@@ -1235,43 +1235,71 @@ whileTests =
   ]
 
 fibonacciFullIt :: Assertion
-fibonacciFullIt = undefined
+fibonacciFullIt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/fibonacciFullIt.wacc" ))
+  @=? [ T_BeginT, T_PrintLnT, (T_StringLiteral "\"This program calculates the nth fibonacci number iteratively.\""), T_SepT, T_PrintT, (T_StringLiteral "\"Please enter n (should not be too large): \""), T_SepT, T_IntT, (T_Identifier "n"), T_EqualT, (T_IntDigit "0"), T_SepT, T_ReadT, (T_Identifier "n"), T_SepT, T_PrintT, (T_StringLiteral "\"The input n is \""), T_SepT, T_PrintLnT, (T_Identifier "n"), T_SepT, T_PrintT, (T_StringLiteral "\"The nth fibonacci number is \""), T_SepT, T_IntT, (T_Identifier "f0"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "f1"), T_EqualT, (T_IntDigit "1"), T_SepT, T_IntT, (T_Identifier "save"), T_EqualT, (T_IntDigit "0"), T_SepT, T_WhileT, (T_Identifier "n"), T_GreaterT, (T_IntDigit "0"), T_DoT, (T_Identifier "save"), T_EqualT, (T_Identifier "f0"), T_SepT, (T_Identifier "f0"), T_EqualT, (T_Identifier "f1"), T_SepT, (T_Identifier "f1"), T_EqualT, (T_Identifier "save"), T_PlusToken, (T_Identifier "f1"), T_SepT, (T_Identifier "n"), T_EqualT, (T_Identifier "n"), T_MinusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintLnT, (T_Identifier "f0"), T_EndT]
 
 fibonacciIterative :: Assertion
-fibonacciIterative = undefined
+fibonacciIterative = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/fibonacciIterative.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "f0"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "f1"), T_EqualT, (T_IntDigit "1"), T_SepT, T_IntT, (T_Identifier "save"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintLnT, (T_StringLiteral "\"The first 20 fibonacci numbers are:\""), T_SepT, T_WhileT, (T_Identifier "i"), T_LessT, (T_IntDigit "20"), T_DoT, T_PrintT, (T_Identifier "f0"), T_SepT, T_PrintT, (T_StringLiteral "\", \""), T_SepT, (T_Identifier "save"), T_EqualT, (T_Identifier "f0"), T_SepT, (T_Identifier "f0"), T_EqualT, (T_Identifier "f1"), T_SepT, (T_Identifier "f1"), T_EqualT, (T_Identifier "save"), T_PlusToken, (T_Identifier "f1"), T_SepT, (T_Identifier "i"), T_EqualT, (T_Identifier "i"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"...\""), T_EndT]
 
 loopCharCondition :: Assertion
-loopCharCondition = undefined
+loopCharCondition = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/loopCharCondition.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'\\0'"), T_SepT, T_WhileT, (T_Identifier "c"), T_EqT, (T_CharLiteral "'\\0'"), T_DoT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'a'"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Change c\""), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"Should print \\\"Change c\\\" once before.\""), T_EndT]
 
 loopIntCondition :: Assertion
-loopIntCondition = undefined
+loopIntCondition = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/loopIntCondition.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "n"), T_EqualT, (T_IntDigit "0"), T_SepT, T_WhileT, (T_Identifier "n"), T_NotEqT, (T_IntDigit "1"), T_DoT, (T_Identifier "n"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Change n\""), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"Should print \\\"Change n\\\" once before.\""), T_EndT]
 
 maxT :: Assertion
-maxT = undefined
+maxT = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/max.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "17"), T_SepT, T_WhileT, T_LParenT, (T_Identifier "y"), T_GreaterT, (T_IntDigit "0"), T_OrT, (T_Identifier "x"), T_GreaterT, (T_IntDigit "0"), T_RParenT, T_DoT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "y"), T_EqualT, (T_Identifier "y"), T_MinusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "i"), T_EqualT, (T_Identifier "i"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintT, (T_StringLiteral "\"max value = \""), T_SepT, T_PrintLnT, (T_Identifier "i"), T_EndT]
 
 minT :: Assertion
-minT = undefined
+minT = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/min.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "17"), T_SepT, T_WhileT, (T_Identifier "y"), T_GreaterT, (T_IntDigit "0"), T_AndT, (T_Identifier "x"), T_GreaterT, (T_IntDigit "0"), T_DoT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "y"), T_EqualT, (T_Identifier "y"), T_MinusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "i"), T_EqualT, (T_Identifier "i"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintT, (T_StringLiteral "\"min value = \""), T_SepT, T_PrintLnT, (T_Identifier "i"), T_EndT]
 
 rmStyleAdd :: Assertion
-rmStyleAdd = undefined
+rmStyleAdd = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/rmStyleAdd.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "3"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "7"), T_SepT, T_PrintT, (T_StringLiteral "\"initial value of x: \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_WhileT, (T_Identifier "y"), T_GreaterT, (T_IntDigit "0"), T_DoT, T_PrintT, (T_StringLiteral "\"(+)\""), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "y"), T_EqualT, (T_Identifier "y"), T_MinusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"\""), T_SepT, T_PrintT, (T_StringLiteral "\"final value of x: \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 rmStyleAddIO :: Assertion
-rmStyleAddIO = undefined
+rmStyleAddIO = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/rmStyleAddIO.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_StringLiteral "\"Enter the first number: \""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintT, (T_StringLiteral "\"Enter the second number: \""), T_SepT, T_ReadT, (T_Identifier "y"), T_SepT, T_PrintT, (T_StringLiteral "\"Initial value of x: \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_WhileT, (T_Identifier "y"), T_GreaterT, (T_IntDigit "0"), T_DoT, T_PrintT, (T_StringLiteral "\"(+)\""), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "1"), T_SepT, (T_Identifier "y"), T_EqualT, (T_Identifier "y"), T_MinusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"\""), T_SepT, T_PrintT, (T_StringLiteral "\"final value of x: \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 whileBasic :: Assertion
-whileBasic = undefined
+whileBasic = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/whileBasic.wacc" ))
+  @=? [ T_BeginT, T_WhileT, T_FalseToken, T_DoT, T_SkipT, T_DoneT, T_EndT]
 
 whileBoolFlip :: Assertion
-whileBoolFlip = undefined
+whileBoolFlip = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/whileBoolFlip.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_SepT, T_WhileT, (T_Identifier "b"), T_DoT, T_PrintLnT, (T_StringLiteral "\"flip b!\""), T_SepT, (T_Identifier "b"), T_EqualT, T_NotT, (T_Identifier "b"), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"end of loop\""), T_EndT]
 
 whileCount :: Assertion
-whileCount = undefined
+whileCount = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/whileCount.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Can you count to 10?\""), T_SepT, T_WhileT, (T_Identifier "i"), T_LessEqT, (T_IntDigit "10"), T_DoT, T_PrintLnT, (T_Identifier "i"), T_SepT, (T_Identifier "i"), T_EqualT, (T_Identifier "i"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_EndT]
 
 whileFalse :: Assertion
-whileFalse = undefined
+whileFalse = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/whileFalse.wacc" ))
+  @=? [ T_BeginT, T_WhileT, T_FalseToken, T_DoT, T_PrintLnT, (T_StringLiteral "\"looping...\""), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"end of loop\""), T_EndT]
 
 syntacticTests :: [TestTree]
-syntacticTests = undefined
+syntacticTests = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/" ))
+  @=? 
 
 semanticTests :: [TestTree]
-semanticTests = undefined
+semanticTests = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/while/" ))
+  @=? 

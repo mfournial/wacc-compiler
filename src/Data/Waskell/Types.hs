@@ -225,7 +225,7 @@ subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++
 
 subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts ((s, t') : tids) op opW (succ track) pos) (subTypeCheck t' ws ts tids op opW track pos) (lookup s tids)
 
-subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t ws ts tids op opW track pos t'
+subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t' ws ts tids op opW track pos t
 
 subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
 

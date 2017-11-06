@@ -16,7 +16,7 @@ genSymbols (WaccTree (Program fsp (sts, _))) = do
   return (WaccTree (Program (zip fs' ps) (retsts, retscp)))
 
 addFuncToScope :: NewScope -> Function -> ErrorList NewScope
-addFuncToScope scp f@(Function _ i _ _) = getType f >>= \t -> extendScope i t scp
+addFuncToScope scp f@(Function r i _ _) = extendScope i r scp
 
 fillScopeBlock :: ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
 fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) ([], scp) sts 
@@ -53,10 +53,11 @@ addStmtToScope (sts, scp) (StatScope sb) parents = do
 addStmtToScope sb StatSkip _ = return sb
 
 genSymbolsF :: Function -> NewScope -> ErrorList Function
-genSymbolsF (Function t i ps sb) scp = do
+genSymbolsF (Function t i ps (sts, _)) scp = do
   ps' <- genParamScope ps
-  sb' <- fillScopeBlock sb [ps', scp]
-  return (Function t i ps sb')
+  sb' <- fillScopeBlock (sts, ps') [ps', scp]
+  t' <- getType (Function t i ps sb')
+  return (Function t' i ps sb')
 
 emptyScope :: NewScope
 emptyScope = NewScope M.empty

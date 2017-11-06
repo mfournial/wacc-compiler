@@ -90,5 +90,5 @@ displayResult (ErrorList b []) = putStrLn (show b)
 displayResult (ErrorList _ eds) = mapM_ printError (sort eds)
 
 displayErrorsAndExit :: ErrorList a -> IO ()
-displayErrorsAndExit (ErrorList _ []) = exitWith ExitSuccess
+displayErrorsAndExit (ErrorList _ []) = putStrLn "SUCCESS" >> exitWith ExitSuccess
 displayErrorsAndExit (ErrorList _ eds) = mapM printError (sort eds) >> maybe (exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))

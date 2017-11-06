@@ -102,6 +102,11 @@ instance Typeable Type where
 instance WaccTypeable Type where
   getWType a = a :-> RetWT
 
+instance Typeable (Scop AssignLhs) where
+  getType (Scop ((AssignToIdent iden), scp)) =  lookupType iden scp
+  getType (Scop ((AssignToArrayElem ae), scp)) = undefined
+  getType (Scop ((AssignToPair ((Left e), _)), scp)) = getType (Scop (e, scp))
+  getType (Scop ((AssignToPair ((Right e), _)), scp)) = getType (Scop (e, scp))
 
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
@@ -114,7 +119,7 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignPairElem ((Left e), _),  scps)) = getType (Scop (e, scps))
   getType (Scop (AssignPairElem ((Right e), _), scps)) = getType (Scop (e, scps))
 
-instance Typeable (Scop (Pos StatementOperator)) where
+instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
   getType (Scop (o@((StatDecAss typ _ arhs), pos), scp))  = do
                                                           trhs <- getType (Scop (arhs, scp))
                                                           subType o [typ, trhs]
@@ -123,23 +128,23 @@ instance Typeable (Scop (Pos StatementOperator)) where
                                                           trhs <- getType (Scop (arhs, scp))
                                                           subType o [tlhs, trhs]
   getType (Scop (o@((StatFree e), pos), scp))             = do 
-                                                          exp <- getType  (Scop (e, scp)) 
-                                                          subType o [exp]   
+                                                          expr <- getType  (Scop (e, scp)) 
+                                                          subType o [expr]   
   getType (Scop (o@((StatRead alhs), pos), scp))          = do 
                                                           tlhs <- getType  (Scop (alhs, scp))
                                                           subType o [tlhs]
   getType (Scop (o@((StatReturn e), pos), scp))           = do 
-                                                          exp <-  getType  (Scop (e, scp)) 
-                                                          subType o [exp] 
+                                                          expr <-  getType  (Scop (e, scp)) 
+                                                          subType o [expr] 
   getType (Scop (o@((StatExit e), pos), scp))             = do
-                                                          exp <- getType  (Scop (e, scp)) 
-                                                          subType o [exp]
+                                                          expr <- getType  (Scop (e, scp)) 
+                                                          subType o [expr]
   getType (Scop (o@((StatPrint e), pos), scp))            = do 
-                                                          exp <- getType  (Scop (e, scp))
-                                                          subType o [exp]
+                                                          expr <- getType  (Scop (e, scp))
+                                                          subType o [expr]
   getType (Scop (o@((StatPrintLn e), pos), scp))          = do  
-                                                          exp <- getType  (Scop (e, scp))
-                                                          subType o [exp]
+                                                          expr <- getType  (Scop (e, scp))
+                                                          subType o [expr]
 
 
 instance Typeable Function where
@@ -150,9 +155,6 @@ instance Typeable Function where
 
 instance {-# OVERLAPPABLE #-} Typeable (Scop a) => Typeable (Scop (Pos a)) where
   getType (Scop ((a, _), scps)) = getType (Scop (a, scps))
-
-instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
-  getType _ = undefined
 
 instance Typeable (Scop Expression) where
   getType (Scop ((IntExp _), _)) = getType IntType 

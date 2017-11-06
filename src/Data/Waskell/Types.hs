@@ -56,7 +56,7 @@ class WaccTypeable a where
   getWType :: a -> WaccType
 
 instance WaccTypeable StatementOperator where
-  getWType (StatDecAss typ _ _)  = typ :-> IOUnit :-> RetWT
+  getWType (StatDecAss typ _ _)  = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT

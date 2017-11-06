@@ -837,43 +837,56 @@ writeSnd = strip (tokens (
      
 runtimeErrTests :: [TestTree]
 runtimeErrTests = 
-  [ testcase "Array out of bound" arrayOutOfBound
-  , testCase "Devide by zero" divideByZero
-  , testCase "Double frees" doubleFrees
-  , testCase "Integer Overflow" integerOverflow
-  , testCase "Null Dereference" nullDereference
+  [ testGroup "Array out of bound" arrayOutOfBound
+  , testGroup "Devide by zero" divideByZerogp
+  , testGroup "Double frees" doubleFrees
+  , testGroup "Integer Overflow" integerOverflow
+  , testGroup "Null Dereference" integerOverflow
   ]
 
 arrayOutOfBound :: [TestTree]
 arrayOutOfBound = 
   [ testCase "Array neg Bound" arrayNegBounds
   , testCase "Array out of bounds" arrayOutOfBounds
-  , testcase "Array out of bound" arrayOutOfBoundsWrite
+  , testCase "Array out of bound" arrayOutOfBoundsWrite
   ]
 
 arrayNegBounds :: Assertion
-arrayNegBounds = undefined
+arrayNegBounds = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/arrayOutOfBounds/arrayNegBounds.wacc" ))
+  @=? [ T_BeginT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "a"), T_EqualT, T_LBracketT, (T_IntDigit "43"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "18"), T_CoT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "b"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RBracketT, T_SepT, T_PrintLnT, (T_Identifier "a"), T_LBracketT, T_MinusToken, (T_IntDigit "2"), T_RBracketT, T_EndT]
 
 arrayOutOfBounds :: Assertion
-arrayOutOfBounds = undefined
+arrayOutOfBounds = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/arrayOutOfBounds/arrayOutOfBounds.wacc" ))
+  @=? [ T_BeginT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "b"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RBracketT, T_SepT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "a"), T_EqualT, T_LBracketT, (T_IntDigit "43"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "18"), T_CoT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_PrintLnT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "5"), T_RBracketT, T_EndT]
 
 arrayOutOfBoundsWrite :: Assertion
-arrayOutOfBoundsWrite = undefined
+arrayOutOfBoundsWrite = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/arrayOutOfBounds/arrayOutOfBoundsWrite.wacc" ))
+  @=? [ T_BeginT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "b"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RBracketT, T_SepT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "a"), T_EqualT, T_LBracketT, (T_IntDigit "43"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "18"), T_CoT, (T_IntDigit "1"), T_RBracketT, T_SepT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "5"), T_RBracketT, T_EqualT, (T_IntDigit "100"), T_SepT, T_PrintLnT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "5"), T_RBracketT, T_EndT]
 
-divideByZero :: [TestTree]
-divideByZero = 
+divideByZerogp :: [TestTree]
+divideByZerogp = 
   [ testCase "Div Zero 1" divZero
   , testCase "Div Zero 2" divideByZero
   , testCase "Mod By Zero" modByZero
   ]
+
 divZero :: Assertion
-divZero = undefined
+divZero = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/divideByZero/divZero.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_Identifier "x"), T_DivideT, (T_Identifier "y"), T_EndT]
 
 divideByZero :: Assertion
-divideByZero = undefined
+divideByZero = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/divideByZero/divideByZero.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_DivideT, (T_IntDigit "0"), T_SepT, T_PrintLnT, (T_StringLiteral "\"should not reach here\""), T_EndT]
 
 modByZero :: Assertion
-modByZero = undefined
+modByZero = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/divideByZero/modByZero.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_Identifier "x"), T_ModuloT, (T_Identifier "y"), T_EndT]
 
 doubleFrees :: [TestTree]
 doubleFrees = 
@@ -882,46 +895,66 @@ doubleFrees =
   ]
 
 doubleFree :: Assertion
-doubleFree = undefined
+doubleFree = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/doubleFrees/doubleFree.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "a"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_FreeT, (T_Identifier "a"), T_SepT, T_FreeT, (T_Identifier "a"), T_EndT]
 
 hiddenDoubleFree :: Assertion
-hiddenDoubleFree = undefined
+hiddenDoubleFree = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/doubleFrees/hiddenDoubleFree.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "a"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "b"), T_EqualT, (T_Identifier "a"), T_SepT, T_FreeT, (T_Identifier "a"), T_SepT, T_FreeT, (T_Identifier "b"), T_EndT]
 
 integerOverflow :: [TestTree]
 integerOverflow = 
   [ testCase "Int Just Overflow" intJustOverflow
-  , tesCase "Int Underflow" intUnderflow
-  , tesCase "Int way Overflow" intWayOverflow
-  , tesCase "Int Mul Overflow" intmultOverflow
-  , tesCase "Int negate Overflow 1" intnegateOverflow
-  , tesCase "Int negate Overflow 1" intnegateOverflow2
-  , tesCase "Int negate Overflow 1" intnegateOverflow3
-  , tesCase "Int negate Overflow 1" intnegateOverflow4
+  , testCase "Int Underflow" intUnderflow
+  , testCase "Int way Overflow" intWayOverflow
+  , testCase "Int Mul Overflow" intmultOverflow
+  , testCase "Int negate Overflow 1" intnegateOverflow
+  , testCase "Int negate Overflow 1" intnegateOverflow2
+  , testCase "Int negate Overflow 1" intnegateOverflow3
+  , testCase "Int negate Overflow 1" intnegateOverflow4
   ]
 
 intJustOverflow :: Assertion
-intJustOverflow = undefined
+intJustOverflow = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intJustOverflow.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2147483646"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intUnderflow :: Assertion
-intUnderflow = undefined
+intUnderflow = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intUnderflow.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2147483"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intWayOverflow :: Assertion
-intWayOverflow = undefined
+intWayOverflow = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intWayOverflow.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intmultOverflow :: Assertion
-intmultOverflow = undefined
+intmultOverflow = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intmultOverflow.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "10"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow :: Assertion
-intnegateOverflow = undefined
+intnegateOverflow = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "20000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "100000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow2 :: Assertion
-intnegateOverflow2 = undefined
+intnegateOverflow2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow2.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow3 :: Assertion
-intnegateOverflow3 = undefined
+intnegateOverflow3 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow3.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483647"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow4 :: Assertion
-intnegateOverflow4 = undefined
+intnegateOverflow4 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow4.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 nullDereference :: [TestTree]
 nullDereference =
@@ -935,25 +968,39 @@ nullDereference =
   ]
 
 freeNull :: Assertion
-freeNull = undefined
+freeNull = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/freeNull.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_PairT, T_CoT, T_PairT, T_RParenT, (T_Identifier "a"), T_EqualT, T_NullT, T_SepT, T_FreeT, (T_Identifier "a"), T_EndT]
 
 readNull :: Assertion
-readNull = undefined
+readNull = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/readNull1.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_ReadT, T_FstT, (T_Identifier "p"), T_EndT]
 
 readNull2 :: Assertion
-readNull2 = undefined
+readNull2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/readNull2.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_ReadT, T_SndT, (T_Identifier "p"), T_EndT]
 
 setNull1 :: Assertion
-setNull1 = undefined
+setNull1 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/setNull1.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_FstT, (T_Identifier "p"), T_EqualT, (T_IntDigit "1"), T_EndT]
 
 setNull2 :: Assertion
-setNull2 = undefined
+setNull2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/setNull2.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_SndT, (T_Identifier "p"), T_EqualT, (T_IntDigit "1"), T_EndT]
 
 useNull1 :: Assertion
-useNull1 = undefined
+useNull1 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/useNull1.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_FstT, (T_Identifier "p"), T_EndT]
 
 useNull2 :: Assertion
-useNull2 = undefined
+useNull2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/nullDereference/useNull2.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_SndT, (T_Identifier "p"), T_EndT]
 
 
 scopeTests :: [TestTree]

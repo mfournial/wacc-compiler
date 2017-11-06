@@ -98,6 +98,7 @@ instance Show Type where
   show (Pairable (BaseType StringType)) = "String"
   show (Pairable (BaseType IntType)) = "Int"
   show (Pairable (ArrayType t)) = "[" ++ show t ++ "]"
+  show (Pairable (ArrayNull)) = "[]"
   show (Pairable PairNull) = "pair"
   show (PairType a b) = "pair(" ++ show a ++ ", " ++ show b ++ " )"
   show IOUnit = "()"
@@ -105,8 +106,16 @@ instance Show Type where
 data BaseType = IntType | BoolType | CharType | StringType
   deriving (Eq, Show)
 
-data Pairable = BaseType BaseType | ArrayType Type | PairNull
-  deriving (Eq, Show)
+data Pairable = BaseType BaseType | ArrayType Type | ArrayNull | PairNull
+  deriving (Show)
+
+instance Eq Pairable where
+  (==) ArrayNull (ArrayType _) = True
+  (==) (ArrayType _) ArrayNull = True
+  (==) (BaseType b) (BaseType b') = b == b' 
+  (==) (ArrayType a) (ArrayType a') = a == a' 
+  (==) PairNull PairNull = True
+  (==) _ _ = False
 
 -- Note this is a list of expressions, e.g a[1][2][3][4]....
 data ArrayElem = ArrayElem Identifier [Pos Expression]

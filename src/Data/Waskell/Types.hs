@@ -119,8 +119,11 @@ instance Typeable Function where
     where
       returns = [e | (StatementOperator (StatReturn e, _)) <- sts]
 
-instance Typeable (Scop a) => Typeable (Scop (Pos a)) where
+instance {-# OVERLAPPABLE #-} Typeable (Scop a) => Typeable (Scop (Pos a)) where
   getType (Scop ((a, _), scps)) = getType (Scop (a, scps))
+
+instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
+  getType _ = undefined
 
 instance Typeable (Scop Expression) where
   getType (Scop ((IntExp _), _)) = getType IntType 

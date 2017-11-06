@@ -1,4 +1,5 @@
-{-| WACC Compiler 
+{-| 
+= WACC Compiler 
 
 Compiler for WACC language as defined in year 2017 Imperial year 2 specification
 
@@ -19,8 +20,8 @@ import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 import System.Environment (getArgs, getProgName)
 import System.IO (stdin, hGetContents)
 
-import Bnfc.LexWacc
-import Bnfc.ParWacc
+import Alex.Waskell
+import Happy.Waskell
 -- import Bnfc.PrintWacc
 import Data.Waskell.ADT
 import Data.Waskell.Error

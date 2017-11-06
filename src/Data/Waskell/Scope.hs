@@ -25,7 +25,7 @@ addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
 addStmtToScope (sts, scp) s@(StatementOperator so@((StatAss (AssignToIdent i) r), _)) parents = do
   _ <- getType (Scop (so, scp : parents))
-  typ <- getRhsType r (scp : parents)
+  typ <- getType (Scop (r, (scp : parents)))
   scp' <- extendScope i typ scp
   return (s : sts, scp')
 
@@ -71,13 +71,4 @@ genParamScope = foldM addParamToScope emptyScope
 
 addParamToScope :: NewScope -> Parameter -> ErrorList NewScope
 addParamToScope ns (Param t i) = extendScope i t ns
-
-getRhsType :: AssignRhs -> [NewScope] -> ErrorList Type
-getRhsType = undefined
-
-getFuncType :: Function -> ErrorList Type
-getFuncType = undefined
-
-getExprType :: Expression -> [NewScope] -> ErrorList Type
-getExprType = undefined
 

@@ -105,7 +105,8 @@ instance WaccTypeable Type where
 
 instance Typeable (Scop AssignLhs) where
   getType (Scop ((AssignToIdent iden), scp)) =  lookupType iden scp
-  getType (Scop ((AssignToArrayElem ae), scp)) = undefined
+  -- Again wrong behaviour similar to functions
+  getType (Scop ((AssignToArrayElem (ArrayElem i exps, pos)), scp)) = lookupType i scp
   getType (Scop ((AssignToPair ((Left e), _)), scp)) = getType (Scop (e, scp))
   getType (Scop ((AssignToPair ((Right e), _)), scp)) = getType (Scop (e, scp))
 

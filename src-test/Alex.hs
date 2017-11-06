@@ -34,7 +34,7 @@ validTests =
   , testGroup "If" ifTests
   , testGroup "IO" ioTests
   , testGroup "Pairs" pairsTests
-  -- , testGroup "RuntimeErr" runtimeErrTests
+  , testGroup "RuntimeErr" runtimeErrTests
   -- , testGroup "Scope" scopeTests
   -- , testGroup "Sequences" sequenceTests
   -- , testGroup "Variables" variablesTests
@@ -841,7 +841,7 @@ runtimeErrTests =
   , testGroup "Devide by zero" divideByZerogp
   , testGroup "Double frees" doubleFrees
   , testGroup "Integer Overflow" integerOverflow
-  , testGroup "Null Dereference" integerOverflow
+  , testGroup "Null Dereference" nullDereference
   ]
 
 arrayOutOfBound :: [TestTree]
@@ -876,12 +876,12 @@ divideByZerogp =
 divZero :: Assertion
 divZero = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/divideByZero/divZero.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_Identifier "x"), T_DivideT, (T_Identifier "y"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_DivideT, (T_IntDigit "0"), T_SepT, T_PrintLnT, (T_StringLiteral "\"should not reach here\""), T_EndT]
 
 divideByZero :: Assertion
 divideByZero = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/divideByZero/divideByZero.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_DivideT, (T_IntDigit "0"), T_SepT, T_PrintLnT, (T_StringLiteral "\"should not reach here\""), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_Identifier "x"), T_DivideT, (T_Identifier "y"), T_EndT]
 
 modByZero :: Assertion
 modByZero = strip (tokens (
@@ -911,9 +911,9 @@ integerOverflow =
   , testCase "Int way Overflow" intWayOverflow
   , testCase "Int Mul Overflow" intmultOverflow
   , testCase "Int negate Overflow 1" intnegateOverflow
-  , testCase "Int negate Overflow 1" intnegateOverflow2
-  , testCase "Int negate Overflow 1" intnegateOverflow3
-  , testCase "Int negate Overflow 1" intnegateOverflow4
+  , testCase "Int negate Overflow 2" intnegateOverflow2
+  , testCase "Int negate Overflow 3" intnegateOverflow3
+  , testCase "Int negate Overflow 4" intnegateOverflow4
   ]
 
 intJustOverflow :: Assertion
@@ -924,37 +924,36 @@ intJustOverflow = strip (tokens (
 intUnderflow :: Assertion
 intUnderflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intUnderflow.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2147483"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483647"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intWayOverflow :: Assertion
 intWayOverflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intWayOverflow.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
-
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  
 intmultOverflow :: Assertion
 intmultOverflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intmultOverflow.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "10"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2147483"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "1000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow :: Assertion
 intnegateOverflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "20000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "100000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow2 :: Assertion
 intnegateOverflow2 = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow2.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
-
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483648"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "10"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 intnegateOverflow3 :: Assertion
 intnegateOverflow3 = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow3.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2147483647"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "20000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_TimesT, (T_IntDigit "100000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 intnegateOverflow4 :: Assertion
 intnegateOverflow4 = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intnegateOverflow4.wacc" ))
-  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_MinusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 nullDereference :: [TestTree]
 nullDereference =

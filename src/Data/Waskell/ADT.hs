@@ -90,7 +90,14 @@ data AssignRhs
 type PairElem = Either (Pos Expression) (Pos Expression)
 
 data Type = Pairable Pairable | PairType Type Type | IOUnit
-  deriving (Eq)
+
+instance Eq Type where
+  (==) (PairType _ _) (Pairable PairNull) = True
+  (==) (Pairable PairNull) (PairType _ _) = True
+  (==) (PairType _ _) (PairType _ _) = True
+  (==) (Pairable a) (Pairable b) = a == b
+  (==) IOUnit IOUnit = True
+  (==) _ _ = False
 
 instance Show Type where
   show (Pairable (BaseType BoolType)) = "Boolean"

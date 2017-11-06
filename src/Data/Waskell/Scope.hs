@@ -23,11 +23,16 @@ fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) (
 
 addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
-addStmtToScope (sts, scp) s@(StatementOperator so@((StatAss (AssignToIdent i) r), _)) parents = do
+addStmtToScope (sts, scp) s@(StatementOperator so@((StatDecAss t i r), _)) parents = do
   _ <- getType (Scop (so, scp : parents))
-  typ <- getType (Scop (r, (scp : parents)))
-  scp' <- extendScope i typ scp
+  scp' <- extendScope i t scp
   return (s : sts, scp')
+
+addStmtToScope (sts, scp) s@(StatementOperator (StatAss sa@(AssignToArrayElem (ArrayElem _ es, _)) rhs, p)) parents = do
+  t <- getType (Scop (sa, scp : parents))
+  tr <- getType (Scop (rhs, scp : parents))
+  _ <- if (t == tr) then return t else throwTypeError t p ("Array assignment requires type " ++ show t ++ " but got type " ++ show tr)
+  return (s : sts, scp)
 
 addStmtToScope (sts, scp) s@(StatementOperator so) parents = do
   _ <- getType (Scop (so, scp : parents))
@@ -55,7 +60,7 @@ addStmtToScope sb StatSkip _ = return sb
 genSymbolsF :: Function -> NewScope -> ErrorList Function
 genSymbolsF (Function t i ps (sts, _)) scp = do
   ps' <- genParamScope ps
-  sb' <- fillScopeBlock (sts, ps') [ps', scp]
+  sb' <- fillScopeBlock (sts, ps') [scp]
   t' <- getType (Function t i ps sb')
   return (Function t' i ps sb')
 

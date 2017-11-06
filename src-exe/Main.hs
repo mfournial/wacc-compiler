@@ -53,10 +53,12 @@ run :: Verbosity -- ^ the desired verbosity
     -> ParseFunction WaccTree -- ^ the parse function to use
     -> String -- ^ the input to compiler
     -> IO ()
-{-run v parser input = showTree v parseErr >> displayErrorsAndExit parseErr
+    {-
+run v parser input = showTree v parseErr >> displayErrorsAndExit parseErr
   where
    parseErr :: ErrorList WaccTree
-   parseErr = myLexer input >>= parser -}
+   parseErr = myLexer input >>= parser 
+   -}
 run _ parser input = displayErrorsAndExit (myLexer input >>= parser >>= genSymbols)
 
 -- | showTree will output the AST and a prettier version of the internal 

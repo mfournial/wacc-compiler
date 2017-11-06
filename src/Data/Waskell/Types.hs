@@ -56,7 +56,7 @@ class WaccTypeable a where
   getWType :: a -> WaccType
 
 instance WaccTypeable StatementOperator where
-  getWType (StatDecAss typ _ _)  = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
+  getWType (StatDecAss typ _ _)  = typ :-> typ :-> IOUnit :-> RetWT
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
@@ -103,25 +103,67 @@ instance Typeable Type where
 instance WaccTypeable Type where
   getWType a = a :-> RetWT
 
+getPairElemTypeL :: Scop Expression -> Position -> ErrorList Type
+getPairElemTypeL s pos = do
+  x <- getType s
+  case x of
+    (PairType t _) -> return t
+    _ -> die TypeStage pos "fst called on non-pair expression" 200
+
+getPairElemTypeR :: Scop Expression -> Position -> ErrorList Type
+getPairElemTypeR s pos = do
+  x <- getType s
+  case x of
+    (PairType _ t) -> return t
+    _ -> die TypeStage pos "fst called on non-pair expression" 200
+
+getArrayElemType :: Identifier -> [Pos Expression] -> Position -> [NewScope] -> ErrorList Type
+getArrayElemType i [] pos scp = fail "Parser error (empty array index) passed to semantic checker"
+getArrayElemType i (e : exps) pos scp = do
+  t <- lookupType i scp
+  getType' (e : exps) t pos
+  where
+    getType' :: [Pos Expression] -> Type -> Position -> ErrorList Type
+    getType' [] t  _ = return t
+    getType' (e' : es') (Pairable (ArrayType t')) _ = do 
+      int <- getType (Scop (e', scp))
+      int' <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      getType' es' t' pos
+    getType' (e' : []) (Pairable (BaseType StringType)) _ = do
+      int <- getType (Scop (e', scp))
+      int' <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      return (liftType CharType)
+    getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") 200
+
 instance Typeable (Scop AssignLhs) where
   getType (Scop ((AssignToIdent iden), scp)) =  lookupType iden scp
-  -- Again wrong behaviour similar to functions
-  getType (Scop ((AssignToArrayElem (ArrayElem i exps, pos)), scp)) = lookupType i scp
-  getType (Scop ((AssignToPair ((Left e), _)), scp)) = getType (Scop (e, scp))
-  getType (Scop ((AssignToPair ((Right e), _)), scp)) = getType (Scop (e, scp))
+  getType (Scop ((AssignToArrayElem (ArrayElem _ [], _)), _)) = fail "Parser error (empty array index) passed to semantic checker"
+  getType (Scop ((AssignToArrayElem (ArrayElem i (e : exps), pos)), scp)) = getArrayElemType i (e : exps) pos scp
+    {-t <- lookupType i scp
+    case t of
+      (Pairable (ArrayType t')) -> return t'
+      _ -> die TypeStage pos ("Attempting to index into non array type " ++ show t) 200
+      -}
+  getType (Scop (AssignToPair ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
+  getType (Scop (AssignToPair ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
 
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
   getType (Scop ((AssignArrayLit (ArrayLiteral [])), _)) = return (Pairable ArrayNull)
-  getType (Scop ((AssignArrayLit (ArrayLiteral (p : ps))), scp)) = getType (Scop (p, scp)) >>= \d -> foldM (checkSame scp) d ps
+  getType (Scop ((AssignArrayLit (ArrayLiteral (p : ps))), scp)) = do
+    t <- getType (Scop (p, scp)) 
+    _ <- foldM (checkSame scp) t ps 
+    return (Pairable (ArrayType t))
+
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
 
   --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
   getType (Scop ((AssignFunctionCall i exps), scp)) = lookupType i scp
       
     
-  getType (Scop (AssignPairElem ((Left e), _),  scps)) = getType (Scop (e, scps))
-  getType (Scop (AssignPairElem ((Right e), _), scps)) = getType (Scop (e, scps))
+  getType (Scop (AssignPairElem ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos 
+  getType (Scop (AssignPairElem ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos 
+
 
 instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
   getType (Scop (o@((StatDecAss typ _ arhs), pos), scp))  = do
@@ -170,7 +212,7 @@ instance Typeable (Scop Expression) where
   getType (Scop ((StringExpr _), _)) = getType StringType
   getType (Scop (PairExpr, _)) = getType PairNull
   getType (Scop ((IdentExpr i), scp)) = lookupType i scp
-  getType (Scop (ArrayExpr (ArrayElem i es, _), scp)) = mapM_ (\e -> handleArray i e scp) es >> lookupType i scp
+  getType (Scop (ArrayExpr (ArrayElem i es, pos), scp)) = mapM_ (\e -> handleArray i e scp) es >> getArrayElemType i es pos scp
   getType (Scop ((UExpr uop e), scp)) = handleOperator uop [Scop (e, scp)]
   getType (Scop ((BExp e bop e'), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
   getType (Scop ((BracketExp e ), scp)) = getType (Scop (e, scp))

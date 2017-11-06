@@ -1,4 +1,5 @@
-{-| WACC Compiler 
+{-| 
+= WACC Compiler 
 
 Compiler for WACC language as defined in year 2017 Imperial year 2 specification
 
@@ -19,10 +20,10 @@ import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 import System.Environment (getArgs, getProgName)
 import System.IO (stdin, hGetContents)
 
-import Bnfc.AbsWacc
-import Bnfc.LexWacc
-import Bnfc.ParWacc
-import Bnfc.PrintWacc
+import Alex.Waskell
+import Happy.Waskell
+-- import Bnfc.PrintWacc
+import Data.Waskell.ADT
 import Data.Waskell.Error
 
 -- | Definition for a parse function: takes a list of Tokens and produces an
@@ -63,7 +64,7 @@ showTree :: Verbosity -- ^ desired verbosity
          -> IO ()
 showTree v (ErrorList (Just tree) _) = do
   putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-  putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+-- putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
 showTree _ (ErrorList Nothing _) = return ()
 
 -- | usage displays usage of the program CLI interface

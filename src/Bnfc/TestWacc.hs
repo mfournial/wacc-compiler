@@ -9,7 +9,7 @@ import Control.Monad ( when )
 
 import Bnfc.LexWacc
 import Bnfc.ParWacc
-import Bnfc.PrintWacc
+-- import Bnfc.PrintWacc
 import Bnfc.AbsWacc
 import Data.Waskell.Error
 
@@ -36,7 +36,7 @@ showTree :: Int -> ErrorList WaccTree -> IO ()
 showTree v (ErrorList (Just tree) _)
  = do
       putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
-      putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
+--      putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
 showTree v (ErrorList Nothing _) = return ()
 
 usage :: IO ()

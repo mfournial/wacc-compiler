@@ -1,66 +1,68 @@
 module Data.Waskell.Scope where
 
 import Data.Waskell.ADT
-import Data.Waskell.Error (ErrorList)
+import Data.Waskell.Error
+import Data.Waskell.Types
+import Control.Monad
 
 import qualified Data.HashMap.Lazy as M
 
 genSymbols :: WaccTree -> ErrorList WaccTree
-genSymbols (WaccTree (Program fs sb pos)) = do
+genSymbols (WaccTree (Program fsp sb)) = do
+  let (fs, ps) = unzip fsp
   fs' <- mapM genSymbolsF fs
   (sts, scp) <- fillScopeBlock sb []
-  scp' <- foldr addFuncToScope (pure scp) fs
-  return (WaccTree (Program fs' (sts, scp') pos))
+  scp' <- foldM addFuncToScope scp fs'
+  return (WaccTree (Program (zip fs' ps) (sts, scp')))
 
-addFuncToScope :: Function -> ErrorList NewScope -> ErrorList NewScope
-addFuncToScope f@(Function _ i _ _ _) escp = extendScope i <$> getFuncType f <*> escp
+addFuncToScope :: NewScope -> Function -> ErrorList NewScope
+addFuncToScope scp f@(Function _ i _ _) = getType f >>= \t -> extendScope i t scp
 
 fillScopeBlock :: ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
-fillScopeBlock (sts, scp) parents = foldr (\x y -> addStmtToScope x y parents) (pure ([], scp)) sts 
+fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) ([], scp) sts 
 
-addStmtToScope :: Statement -> ErrorList ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
+addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
-addStmtToScope s@(StatAss (AssignToIdent i _) r _) esb parents = do
-  (sts, scp) <- esb
+addStmtToScope (sts, scp) s@(StatementOperator ((StatAss (AssignToIdent i) r), _)) parents = do
   typ <- getRhsType r (scp : parents)
-  return (s : sts, extendScope i typ scp)
+  scp' <- extendScope i typ scp
+  return (s : sts, scp')
 
-addStmtToScope (StatIf c sb sb' p) esb parents = do
-  (sts, scp) <- esb
+addStmtToScope (sts, scp) (StatIf c sb sb') parents = do
   sbF <- fillScopeBlock sb (scp : parents)
   sbF' <- fillScopeBlock sb' (scp : parents)
-  return ((StatIf c sbF sbF' p) : sts, scp)
+  return ((StatIf c sbF sbF') : sts, scp)
 
-addStmtToScope (StatWhile c sb p) esb parents = do
-  (sts, scp) <- esb
+addStmtToScope (sts, scp) (StatWhile c sb) parents = do
   sb' <- fillScopeBlock sb (scp : parents)
-  return ((StatWhile c sb' p) : sts, scp)
+  return ((StatWhile c sb') : sts, scp)
 
-addStmtToScope (StatScope sb p) esb parents = do
-  (sts, scp) <- esb
+addStmtToScope (sts, scp) (StatScope sb) parents = do
   sb' <- fillScopeBlock sb (scp : parents)
-  return ((StatScope sb' p) : sts, scp)
+  return ((StatScope sb') : sts, scp)
 
-addStmtToScope s esb _ = do
-  (sts, scp) <- esb
+addStmtToScope (sts, scp) s _ = do
   return (s : sts, scp)
 
 genSymbolsF :: Function -> ErrorList Function
-genSymbolsF (Function t i ps sb pos) = do
-  sb' <- fillScopeBlock sb [genParamScope ps]
-  return (Function t i ps sb' pos)
+genSymbolsF (Function t i ps sb) = do
+  ps' <- genParamScope ps
+  sb' <- fillScopeBlock sb [ps']
+  return (Function t i ps sb')
 
 emptyScope :: NewScope
 emptyScope = NewScope M.empty
 
-extendScope :: Identifier -> Type -> NewScope -> NewScope
-extendScope (Identifier (_,s)) t (NewScope hmap) = NewScope (M.insert s t hmap)
+extendScope :: Identifier -> Type -> NewScope -> ErrorList NewScope
+extendScope (s,p) t m@(NewScope hmap) 
+  | M.member s hmap = throwError m (ErrorData FatalLevel AnalStage p (" attempting to redifine already defined variable or function " ++ s) 200)
+  | otherwise = return $ NewScope (M.insert s t hmap)
 
-genParamScope :: [Parameter] -> NewScope
-genParamScope = foldr addParamToScope emptyScope
+genParamScope :: [Parameter] -> ErrorList NewScope
+genParamScope = foldM addParamToScope emptyScope
 
-addParamToScope :: Parameter -> NewScope -> NewScope
-addParamToScope (Param t i _) = extendScope i t
+addParamToScope :: NewScope -> Parameter -> ErrorList NewScope
+addParamToScope ns (Param t i) = extendScope i t ns
 
 getRhsType :: AssignRhs -> [NewScope] -> ErrorList Type
 getRhsType = undefined

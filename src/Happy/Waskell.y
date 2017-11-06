@@ -1,7 +1,22 @@
+{-| 
+== Happy using parser for WACC
+
+Parser that generates ADT as defined in @ Data.Waskell.ADT @ from list of tokens
+
+Group 26 -- Waskell
+Module      : main
+Maintainer  : mmf115@ic.ac.uk
+Portability : POSIX
+
+This module will return an @ ErrorList WaccTree @ (check Data.Waskell.Error for
+error monad) that possibly contain the tree or errors that were detected during
+parsing.
+
+-}
 {
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-overlapping-patterns #-}
-module Bnfc.ParWacc where
-import Bnfc.LexWacc as LexWacc
+module Happy.Waskell where
+import Alex.Waskell
 
 import Data.Waskell.ADT
 import Data.Waskell.Error

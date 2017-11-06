@@ -30,11 +30,9 @@ library
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
                    , Data.Waskell.ADT
-                   , Bnfc.LexWacc
-                   , Bnfc.ParWacc
-                   , Bnfc.AbsWacc
-                   , Bnfc.PrintWacc
-                   -- , Data.Waskell.Scope
+                   , Alex.Waskell
+                   , Happy.Waskell
+                   , Data.Waskell.Scope
   build-tools:       alex, happy
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11

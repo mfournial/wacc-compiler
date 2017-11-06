@@ -1,76 +1,106 @@
-{-# LANGUAGE TypeFamilies #-}
-
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Data.Waskell.ADT where
 
---import qualified Data.Waskell.ADTHappy as H
 import qualified Data.HashMap.Lazy as M
 
-type family Positionable a where
-  Positionable a = (a, Position)
+type Position = (Int, Int)
+type Pos a = (a, Position)
 
-getPos :: Positionable a -> Position
-getPos = snd
+class Positionable a where
+  getPos :: a -> Position
+
+instance Positionable (Pos a) where
+  getPos = snd
+
+class Referenceable a where
+  getName :: a -> String
+  getClass :: a -> String
+
+instance Referenceable a => Referenceable (Pos a) where
+  getName (a, _) = getName a
+  getClass (a, _) = getClass a
 
 type ScopeBlock = ([Statement], NewScope)
-type Position = (Int, Int)
 
 type Scope = M.HashMap String Type
 
 newtype NewScope = NewScope Scope
   deriving (Eq, Show)
 
-newtype Identifier = Identifier (Position,String)
+type Identifier = Pos String
+
+
+newtype WaccTree = WaccTree Program
   deriving (Eq, Show)
 
-data WaccTree = WaccTree Program
-  deriving (Eq, Show)
-
-data Program = Program [Function] ScopeBlock 
+data Program = Program [Pos Function] ScopeBlock 
   deriving (Eq, Show)
 
 data Function = Function Type Identifier [Parameter] ScopeBlock
   deriving (Eq, Show)
 
-data Parameter = Param Type Identifier Position
+data Parameter = Param Type Identifier
   deriving (Eq, Show)
+
+data StatementOperator
+    = StatDecAss Type Identifier AssignRhs
+    | StatAss AssignLhs AssignRhs
+    | StatRead AssignLhs
+    | StatFree (Pos Expression)
+    | StatReturn (Pos Expression)
+    | StatExit (Pos Expression)
+    | StatPrint (Pos Expression)
+    | StatPrintLn (Pos Expression)
+  deriving (Eq, Show)
+
+instance Referenceable StatementOperator where
+  getClass _                 = "Statement"
+  getName (StatDecAss _ _ _) = "="
+  getName (StatAss _ _)      = "="
+  getName (StatRead _)       = "read"
+  getName (StatFree _)       = "free"
+  getName (StatReturn _)     = "return"
+  getName (StatExit _)       = "exit"
+  getName (StatPrint _)      = "print"
+  getName (StatPrintLn _)    = "printLn"
 
 data Statement
     = StatSkip
-    | StatDecAss Type Identifier AssignRhs
-    | StatAss AssignLhs AssignRhs 
-    | StatRead AssignLhs
-    | StatFree Expression
-    | StatReturn Expression
-    | StatExit Expression
-    | StatPrint Expression
-    | StatPrintLn Expression
-    | StatIf Expression ScopeBlock ScopeBlock
-    | StatWhile Expression ScopeBlock
+    | StatIf (Pos Expression) ScopeBlock ScopeBlock
+    | StatWhile (Pos Expression) ScopeBlock
     | StatScope ScopeBlock
+    | StatementOperator (Pos StatementOperator)
   deriving (Eq, Show)
-
-type AssignLhsP = (AssignLhs, Position)
 
 data AssignLhs
     = AssignToIdent Identifier
-    | AssignToArrayElem ArrayElem
-    | AssignToPair PairElem
+    | AssignToArrayElem (Pos ArrayElem)
+    | AssignToPair (Pos PairElem)
   deriving (Eq, Show)
-
-type AssignRhsP = (AssignRhs, Position)
 
 data AssignRhs
-    = AssignExp Expression 
+    = AssignExp (Pos Expression)
     | AssignArrayLit ArrayLiteral
-    | AssignPair Expression Expression
-    | AssignPairElem PairElem
-    | AssignFunctionCall Identifier [Expression]
+    | AssignPair (Pos Expression) (Pos Expression)
+    | AssignPairElem (Pos PairElem)
+    | AssignFunctionCall Identifier [Pos Expression]
   deriving (Eq, Show)
 
-type PairElem = (Either Expression Expression, Position)
+type PairElem = Either (Pos Expression) (Pos Expression)
 
-data Type = Pairable Pairable | PairType Type Type
-  deriving (Eq, Show)
+data Type = Pairable Pairable | PairType Type Type | IOUnit
+  deriving (Eq)
+
+instance Show Type where
+  show (Pairable (BaseType BoolType)) = "Boolean"
+  show (Pairable (BaseType CharType)) = "Char"
+  show (Pairable (BaseType StringType)) = "String"
+  show (Pairable (BaseType IntType)) = "Int"
+  show (Pairable (ArrayType t)) = "[" ++ show t ++ "]"
+  show (Pairable PairNull) = "pair"
+  show (PairType a b) = "pair(" ++ show a ++ ", " ++ show b ++ " )"
+  show IOUnit = "()"
 
 data BaseType = IntType | BoolType | CharType | StringType
   deriving (Eq, Show)
@@ -79,38 +109,39 @@ data Pairable = BaseType BaseType | ArrayType Type | PairNull
   deriving (Eq, Show)
 
 -- Note this is a list of expressions, e.g a[1][2][3][4]....
-data ArrayElem = ArrayElem Identifier [Expression]
+data ArrayElem = ArrayElem Identifier [Pos Expression]
   deriving (Eq, Show)
 
-data ArrayLiteral = ArrayLiteral [Expression]
+newtype ArrayLiteral = ArrayLiteral [Pos Expression]
   deriving (Eq, Show)
-
-
-type ExpressionP = (Expression, Position)
 
 data Expression
-    = IntExp Int
+    = IntExp Int 
     | BoolExp Bool
     | CharExpr Char
     | StringExpr String
     | PairExpr
     | IdentExpr Identifier
-    | ArrayExpr ArrayElem
-    | UExpr UnaryOperator Expression
-    | BExp Expression BinaryOperator Expression
-    | BracketExp Expression
+    | ArrayExpr (Pos ArrayElem)
+    | UExpr (Pos UnaryOperator) (Pos Expression)
+    | BExp (Pos Expression) (Pos BinaryOperator) (Pos Expression)
+    | BracketExp (Pos Expression)
   deriving (Eq, Show)
-
-type UnaryOperatorP = (UnaryOperator, Position)
 
 data UnaryOperator
-    = UBang | UMinus | ULenght | UOrd | UChr 
+    = UBang | UMinus | ULength | UOrd | UChr 
   deriving (Eq, Show)
 
-type BinaryOperatorP = (BinaryOperator, Position)
+instance Referenceable UnaryOperator where
+  getClass _                 = "Operator"
+  getName UBang              = "!"
+  getName UMinus             = "-"
+  getName ULength            = "len"
+  getName UOrd               = "ord"
+  getName UChr               = "return"
 
 data BinaryOperator
-    = BTimes
+    = BTimes 
     | BDivide
     | BModulus
     | BPlus
@@ -124,3 +155,19 @@ data BinaryOperator
     | BAnd
     | BOr
   deriving (Eq, Show)
+
+instance Referenceable BinaryOperator where
+  getClass _         = "Operator"
+  getName BTimes     = "*"
+  getName BDivide    = "/"
+  getName BModulus   = "%"
+  getName BPlus      = "+"
+  getName BMinus     = "-"
+  getName BMore      = ">"
+  getName BLess      = "<"
+  getName BMoreEqual = ">="
+  getName BLessEqual = "<="
+  getName BEqual     = "=="
+  getName BNotEqual  = "!="
+  getName BAnd       = "&&"
+  getName BOr        = "||"

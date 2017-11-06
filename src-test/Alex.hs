@@ -35,7 +35,7 @@ validTests =
   , testGroup "Arrays" arrayTests 
   , testGroup "Basic" basicTests
   , testGroup "Expressions" expressionsTests
-  -- , testGroup "Functions" functionsTests
+  , testGroup "Functions" functionsTests
   -- , testGroup "If" ifTests
   -- , testGroup "IO" ioTests
   -- , testGroup "Pairs" pairsTests
@@ -87,18 +87,6 @@ arrayTests =
   , testCase "Modify String" modifyString
   , testCase "Print Ref" printRef
   ]
-
-
-
-
-
-
-
-
-
-
-
-
 
 array :: Assertion
 array = strip (tokens (
@@ -482,34 +470,54 @@ simpleFunctionsTests =
   ]
 
 asciiTable :: Assertion
-asciiTable = undefined
+asciiTable = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/asciiTable.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "printLine"), T_LParenT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "0"), T_SepT, T_WhileT, (T_Identifier "i"), T_LessT, (T_Identifier "n"), T_DoT, T_PrintT, (T_StringLiteral "\"-\""), T_SepT, (T_Identifier "i"), T_EqualT, (T_Identifier "i"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_PrintLnT, (T_StringLiteral "\"\""), T_SepT, T_ReturnT, T_TrueToken, T_EndT, T_BoolT, (T_Identifier "printMap"), T_LParenT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_PrintT, (T_StringLiteral "\"|  \""), T_SepT, T_IfT, (T_Identifier "n"), T_LessT, (T_IntDigit "100"), T_ThenT, T_PrintT, (T_StringLiteral "\" \""), T_ElseT, T_SkipT, T_FiT, T_SepT, T_PrintT, (T_Identifier "n"), T_SepT, T_PrintT, (T_StringLiteral "\" = \""), T_SepT, T_PrintT, T_ChrT, (T_Identifier "n"), T_SepT, T_PrintLnT, (T_StringLiteral "\"  |\""), T_SepT, T_ReturnT, T_TrueToken, T_EndT, T_PrintLnT, (T_StringLiteral "\"Asci character lookup table:\""), T_SepT, T_BoolT, (T_Identifier "r"), T_EqualT, T_CallT, (T_Identifier "printLine"), T_LParenT, (T_IntDigit "13"), T_RParenT, T_SepT, T_IntT, (T_Identifier "num"), T_EqualT, T_OrdT, (T_CharLiteral "' '"), T_SepT, T_WhileT, (T_Identifier "num"), T_LessT, (T_IntDigit "127"), T_DoT, (T_Identifier "r"), T_EqualT, T_CallT, (T_Identifier "printMap"), T_LParenT, (T_Identifier "num"), T_RParenT, T_SepT, (T_Identifier "num"), T_EqualT, (T_Identifier "num"), T_PlusToken, (T_IntDigit "1"), T_DoneT, T_SepT, (T_Identifier "r"), T_EqualT, T_CallT, (T_Identifier "printLine"), T_LParenT, (T_IntDigit "13"), T_RParenT, T_EndT]
 
 functionDeclaration :: Assertion
-functionDeclaration = undefined
+functionDeclaration = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/functionDeclaration.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "f"), T_LParenT, T_RParenT, T_IsT, T_ReturnT, (T_IntDigit "0"), T_EndT, T_SkipT, T_EndT]
 
 functionManyArguments :: Assertion
-functionManyArguments = undefined
+functionManyArguments = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/functionManyArguments.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "doSomething"), T_LParenT, T_IntT, (T_Identifier "a"), T_CoT, T_BoolT, (T_Identifier "b"), T_CoT, T_CharT, (T_Identifier "c"), T_CoT, T_StringT, (T_Identifier "d"), T_CoT, T_BoolT, T_LBracketT, T_RBracketT, (T_Identifier "e"), T_CoT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "f"), T_RParenT, T_IsT, T_PrintT, (T_StringLiteral "\"a is \""), T_SepT, T_PrintLnT, (T_Identifier "a"), T_SepT, T_PrintT, (T_StringLiteral "\"b is \""), T_SepT, T_PrintLnT, (T_Identifier "b"), T_SepT, T_PrintT, (T_StringLiteral "\"c is \""), T_SepT, T_PrintLnT, (T_Identifier "c"), T_SepT, T_PrintT, (T_StringLiteral "\"d is \""), T_SepT, T_PrintLnT, (T_Identifier "d"), T_SepT, T_PrintT, (T_StringLiteral "\"e is \""), T_SepT, T_PrintLnT, (T_Identifier "e"), T_SepT, T_PrintT, (T_StringLiteral "\"f is \""), T_SepT, T_PrintLnT, (T_Identifier "f"), T_SepT, T_ReturnT, (T_CharLiteral "'g'"), T_EndT, T_BoolT, T_LBracketT, T_RBracketT, (T_Identifier "bools"), T_EqualT, T_LBracketT, T_FalseToken, T_CoT, T_TrueToken, T_RBracketT, T_SepT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "ints"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_RBracketT, T_SepT, T_CharT, (T_Identifier "answer"), T_EqualT, T_CallT, (T_Identifier "doSomething"), T_LParenT, (T_IntDigit "42"), T_CoT, T_TrueToken, T_CoT, (T_CharLiteral "'u'"), T_CoT, (T_StringLiteral "\"hello\""), T_CoT, (T_Identifier "bools"), T_CoT, (T_Identifier "ints"), T_RParenT, T_SepT, T_PrintT, (T_StringLiteral "\"answer is \""), T_SepT, T_PrintLnT, (T_Identifier "answer"), T_EndT]
 
 functionReturnPair :: Assertion
-functionReturnPair = undefined
+functionReturnPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/functionReturnPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "getPair"), T_LParenT, T_RParenT, T_IsT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_IntDigit "15"), T_RParenT, T_SepT, T_ReturnT, (T_Identifier "p"), T_EndT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_CallT, (T_Identifier "getPair"), T_LParenT, T_RParenT, T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 functionSimple :: Assertion
-functionSimple = undefined
+functionSimple = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/functionSimple.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "f"), T_LParenT, T_RParenT, T_IsT, T_ReturnT, (T_IntDigit "0"), T_EndT, T_IntT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 functionUpdateParameter :: Assertion
-functionUpdateParameter = undefined
+functionUpdateParameter = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/functionUpdateParameter.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "f"), T_LParenT, T_IntT, (T_Identifier "x"), T_RParenT, T_IsT, T_PrintT, (T_StringLiteral "\"x is \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_IntDigit "5"), T_SepT, T_PrintT, (T_StringLiteral "\"x is now \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_ReturnT, (T_Identifier "x"), T_EndT, T_IntT, (T_Identifier "y"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintT, (T_StringLiteral "\"y is \""), T_SepT, T_PrintLnT, (T_Identifier "y"), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, (T_Identifier "y"), T_RParenT, T_SepT, T_PrintT, (T_StringLiteral "\"y is still \""), T_SepT, T_PrintLnT, (T_Identifier "y"), T_EndT]
 
 incFunction :: Assertion
-incFunction = undefined
+incFunction = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/incFunction.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "inc"), T_LParenT, T_IntT, (T_Identifier "x"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "1"), T_EndT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0"), T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "inc"), T_LParenT, (T_Identifier "x"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "inc"), T_LParenT, (T_Identifier "x"), T_RParenT, T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "inc"), T_LParenT, (T_Identifier "x"), T_RParenT, T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "inc"), T_LParenT, (T_Identifier "x"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 negFunction :: Assertion
-negFunction = undefined
+negFunction = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/negFunction.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "neg"), T_LParenT, T_BoolT, (T_Identifier "b"), T_RParenT, T_IsT, T_ReturnT, T_NotT, (T_Identifier "b"), T_EndT, T_BoolT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_SepT, T_PrintLnT, (T_Identifier "b"), T_SepT, (T_Identifier "b"), T_EqualT, T_CallT, (T_Identifier "neg"), T_LParenT, (T_Identifier "b"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "b"), T_SepT, (T_Identifier "b"), T_EqualT, T_CallT, (T_Identifier "neg"), T_LParenT, (T_Identifier "b"), T_RParenT, T_SepT, (T_Identifier "b"), T_EqualT, T_CallT, (T_Identifier "neg"), T_LParenT, (T_Identifier "b"), T_RParenT, T_SepT, (T_Identifier "b"), T_EqualT, T_CallT, (T_Identifier "neg"), T_LParenT, (T_Identifier "b"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "b"), T_EndT]
 
 sameArgName :: Assertion
-sameArgName = undefined
+sameArgName = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/sameArgName.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "f"), T_LParenT, T_IntT, (T_Identifier "f"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "f"), T_EndT, T_IntT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, (T_IntDigit "99"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 sameArgName2 :: Assertion
-sameArgName2 = undefined
+sameArgName2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/simple_functions/sameArgName2.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "f"), T_LParenT, T_IntT, (T_Identifier "f"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "f"), T_EndT, T_IntT, (T_Identifier "f"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, (T_IntDigit "99"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "f"), T_EndT]
 
 nestedFunctionsTests :: [TestTree]
 nestedFunctionsTests =
@@ -520,16 +528,24 @@ nestedFunctionsTests =
   ]
 
 fibonacciFullRec :: Assertion
-fibonacciFullRec = undefined
+fibonacciFullRec = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/nested_functions/fibonacciFullRec.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "fibonacci"), T_LParenT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_IfT, (T_Identifier "n"), T_LessEqT, (T_IntDigit "1"), T_ThenT, T_ReturnT, (T_Identifier "n"), T_ElseT, T_SkipT, T_FiT, T_SepT, T_IntT, (T_Identifier "f1"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_Identifier "n"), T_MinusToken, (T_IntDigit "1"), T_RParenT, T_SepT, T_IntT, (T_Identifier "f2"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_Identifier "n"), T_MinusToken, (T_IntDigit "2"), T_RParenT, T_SepT, T_ReturnT, (T_Identifier "f1"), T_PlusToken, (T_Identifier "f2"), T_EndT, T_PrintLnT, (T_StringLiteral "\"This program calculates the nth fibonacci number recursively.\""), T_SepT, T_PrintT, (T_StringLiteral "\"Please enter n (should not be too large): \""), T_SepT, T_IntT, (T_Identifier "n"), T_EqualT, (T_IntDigit "0"), T_SepT, T_ReadT, (T_Identifier "n"), T_SepT, T_PrintT, (T_StringLiteral "\"The input n is \""), T_SepT, T_PrintLnT, (T_Identifier "n"), T_SepT, T_PrintT, (T_StringLiteral "\"The nth fibonacci number is \""), T_SepT, T_IntT, (T_Identifier "result"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_Identifier "n"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "result"), T_EndT]
 
 fibonacciRecursive :: Assertion
-fibonacciRecursive = undefined
+fibonacciRecursive = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/nested_functions/fibonacciRecursive.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "fibonacci"), T_LParenT, T_IntT, (T_Identifier "n"), T_CoT, T_BoolT, (T_Identifier "toPrint"), T_RParenT, T_IsT, T_IfT, (T_Identifier "n"), T_LessEqT, (T_IntDigit "1"), T_ThenT, T_ReturnT, (T_Identifier "n"), T_ElseT, T_SkipT, T_FiT, T_SepT, T_IntT, (T_Identifier "f1"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_Identifier "n"), T_MinusToken, (T_IntDigit "1"), T_CoT, (T_Identifier "toPrint"), T_RParenT, T_SepT, T_IfT, (T_Identifier "toPrint"), T_ThenT, T_PrintT, (T_Identifier "f1"), T_SepT, T_PrintT, (T_StringLiteral "\", \""), T_ElseT, T_SkipT, T_FiT, T_SepT, T_IntT, (T_Identifier "f2"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_Identifier "n"), T_MinusToken, (T_IntDigit "2"), T_CoT, T_FalseToken, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "f1"), T_PlusToken, (T_Identifier "f2"), T_EndT, T_PrintLnT, (T_StringLiteral "\"The first 20 fibonacci numbers are:\""), T_SepT, T_PrintT, (T_StringLiteral "\"0, \""), T_SepT, T_IntT, (T_Identifier "result"), T_EqualT, T_CallT, (T_Identifier "fibonacci"), T_LParenT, (T_IntDigit "19"), T_CoT, T_TrueToken, T_RParenT, T_SepT, T_PrintT, (T_Identifier "result"), T_SepT, T_PrintLnT, (T_StringLiteral "\"...\""), T_EndT]
 
 fixedPointRealArithmetic :: Assertion
-fixedPointRealArithmetic = undefined
+fixedPointRealArithmetic = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/nested_functions/fixedPointRealArithmetic.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "q"), T_LParenT, T_RParenT, T_IsT, T_ReturnT, (T_IntDigit "14"), T_EndT, T_IntT, (T_Identifier "power"), T_LParenT, T_IntT, (T_Identifier "base"), T_CoT, T_IntT, (T_Identifier "amount"), T_RParenT, T_IsT, T_IntT, (T_Identifier "result"), T_EqualT, (T_IntDigit "1"), T_SepT, T_WhileT, (T_Identifier "amount"), T_GreaterT, (T_IntDigit "0"), T_DoT, (T_Identifier "result"), T_EqualT, (T_Identifier "result"), T_TimesT, (T_Identifier "base"), T_SepT, (T_Identifier "amount"), T_EqualT, (T_Identifier "amount"), T_MinusToken, (T_IntDigit "1"), T_DoneT, T_SepT, T_ReturnT, (T_Identifier "result"), T_EndT, T_IntT, (T_Identifier "f"), T_LParenT, T_RParenT, T_IsT, T_IntT, (T_Identifier "qq"), T_EqualT, T_CallT, (T_Identifier "q"), T_LParenT, T_RParenT, T_SepT, T_IntT, (T_Identifier "f"), T_EqualT, T_CallT, (T_Identifier "power"), T_LParenT, (T_IntDigit "2"), T_CoT, (T_Identifier "qq"), T_RParenT, T_SepT, T_ReturnT, (T_Identifier "f"), T_EndT, T_IntT, (T_Identifier "intToFixedPoint"), T_LParenT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "n"), T_TimesT, (T_Identifier "ff"), T_EndT, T_IntT, (T_Identifier "fixedPointToIntRoundDown"), T_LParenT, T_IntT, (T_Identifier "x"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "x"), T_DivideT, (T_Identifier "ff"), T_EndT, T_IntT, (T_Identifier "fixedPointToIntRoundNear"), T_LParenT, T_IntT, (T_Identifier "x"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_IfT, (T_Identifier "x"), T_GreaterEqT, (T_IntDigit "0"), T_ThenT, T_ReturnT, T_LParenT, (T_Identifier "x"), T_PlusToken, (T_Identifier "ff"), T_DivideT, (T_IntDigit "2"), T_RParenT, T_DivideT, (T_Identifier "ff"), T_ElseT, T_ReturnT, T_LParenT, (T_Identifier "x"), T_MinusToken, (T_Identifier "ff"), T_DivideT, (T_IntDigit "2"), T_RParenT, T_DivideT, (T_Identifier "ff"), T_FiT, T_EndT, T_IntT, (T_Identifier "add"), T_LParenT, T_IntT, (T_Identifier "x1"), T_CoT, T_IntT, (T_Identifier "x2"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "x1"), T_PlusToken, (T_Identifier "x2"), T_EndT, T_IntT, (T_Identifier "subtract"), T_LParenT, T_IntT, (T_Identifier "x1"), T_CoT, T_IntT, (T_Identifier "x2"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "x1"), T_MinusToken, (T_Identifier "x2"), T_EndT, T_IntT, (T_Identifier "addByInt"), T_LParenT, T_IntT, (T_Identifier "x"), T_CoT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "x"), T_PlusToken, (T_Identifier "n"), T_TimesT, (T_Identifier "ff"), T_EndT, T_IntT, (T_Identifier "subtractByInt"), T_LParenT, T_IntT, (T_Identifier "x"), T_CoT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "x"), T_MinusToken, (T_Identifier "n"), T_TimesT, (T_Identifier "ff"), T_EndT, T_IntT, (T_Identifier "multiply"), T_LParenT, T_IntT, (T_Identifier "x1"), T_CoT, T_IntT, (T_Identifier "x2"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "x1"), T_TimesT, (T_Identifier "x2"), T_DivideT, (T_Identifier "ff"), T_EndT, T_IntT, (T_Identifier "multiplyByInt"), T_LParenT, T_IntT, (T_Identifier "x"), T_CoT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "x"), T_TimesT, (T_Identifier "n"), T_EndT, T_IntT, (T_Identifier "divide"), T_LParenT, T_IntT, (T_Identifier "x1"), T_CoT, T_IntT, (T_Identifier "x2"), T_RParenT, T_IsT, T_IntT, (T_Identifier "ff"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_ReturnT, (T_Identifier "x1"), T_TimesT, (T_Identifier "ff"), T_DivideT, (T_Identifier "x2"), T_EndT, T_IntT, (T_Identifier "divideByInt"), T_LParenT, T_IntT, (T_Identifier "x"), T_CoT, T_IntT, (T_Identifier "n"), T_RParenT, T_IsT, T_ReturnT, (T_Identifier "x"), T_DivideT, (T_Identifier "n"), T_EndT, T_IntT, (T_Identifier "n1"), T_EqualT, (T_IntDigit "10"), T_SepT, T_IntT, (T_Identifier "n2"), T_EqualT, (T_IntDigit "3"), T_SepT, T_PrintT, (T_StringLiteral "\"Using fixed-point real: \""), T_SepT, T_PrintT, (T_Identifier "n1"), T_SepT, T_PrintT, (T_StringLiteral "\" / \""), T_SepT, T_PrintT, (T_Identifier "n2"), T_SepT, T_PrintT, (T_StringLiteral "\" * \""), T_SepT, T_PrintT, (T_Identifier "n2"), T_SepT, T_PrintT, (T_StringLiteral "\" = \""), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "intToFixedPoint"), T_LParenT, (T_Identifier "n1"), T_RParenT, T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "divideByInt"), T_LParenT, (T_Identifier "x"), T_CoT, (T_Identifier "n2"), T_RParenT, T_SepT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "multiplyByInt"), T_LParenT, (T_Identifier "x"), T_CoT, (T_Identifier "n2"), T_RParenT, T_SepT, T_IntT, (T_Identifier "result"), T_EqualT, T_CallT, (T_Identifier "fixedPointToIntRoundNear"), T_LParenT, (T_Identifier "x"), T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "result"), T_EndT]
 
 functionConditionalReturn :: Assertion
-functionConditionalReturn = undefined
+functionConditionalReturn = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/function/nested_functions/functionConditionalReturn.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "f"), T_LParenT, T_RParenT, T_IsT, T_IfT, T_TrueToken, T_ThenT, T_ReturnT, T_TrueToken, T_ElseT, T_ReturnT, T_FalseToken, T_FiT, T_EndT, T_BoolT, (T_Identifier "x"), T_EqualT, T_CallT, (T_Identifier "f"), T_LParenT, T_RParenT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 ifTests :: [TestTree]
 ifTests =

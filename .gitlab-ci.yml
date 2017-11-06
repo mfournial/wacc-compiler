@@ -18,7 +18,7 @@ test:
   script:
     - stack test --coverage
     - mkdir public
-    - cp /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* public/
+    - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* public/
   artifacts:
     paths:
       - "public/"

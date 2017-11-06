@@ -23,26 +23,33 @@ fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) (
 
 addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
-addStmtToScope (sts, scp) s@(StatementOperator ((StatAss (AssignToIdent i) r), _)) parents = do
+addStmtToScope (sts, scp) s@(StatementOperator so@((StatAss (AssignToIdent i) r), _)) parents = do
+  getType (Scop (so, scp : parents))
   typ <- getRhsType r (scp : parents)
   scp' <- extendScope i typ scp
   return (s : sts, scp')
 
-addStmtToScope (sts, scp) (StatIf c sb sb') parents = do
+addStmtToScope (sts, scp) s@(StatementOperator so) parents = do
+  getType (Scop (so, scp : parents))
+  return (s : sts, scp)
+
+addStmtToScope (sts, scp) (StatIf (c, p) sb sb') parents = do
+  b <- getType (Scop (c, scp : parents))
+  if (b == liftType BoolType) then return b else throwTypeError (liftType BoolType) p ("conditional of if expression should have type bool, but infact has type " ++ show b)
   sbF <- fillScopeBlock sb (scp : parents)
   sbF' <- fillScopeBlock sb' (scp : parents)
-  return ((StatIf c sbF sbF') : sts, scp)
+  return ((StatIf (c, p) sbF sbF') : sts, scp)
 
-addStmtToScope (sts, scp) (StatWhile c sb) parents = do
+addStmtToScope (sts, scp) (StatWhile (c, p) sb) parents = do
+  b <- getType (Scop (c, scp : parents))
+  if (b == liftType BoolType) then return b else throwTypeError (liftType BoolType) p ("conditional of while expression should have type bool, but infact has type " ++ show b)
   sb' <- fillScopeBlock sb (scp : parents)
-  return ((StatWhile c sb') : sts, scp)
+  return ((StatWhile (c, p) sb') : sts, scp)
 
 addStmtToScope (sts, scp) (StatScope sb) parents = do
   sb' <- fillScopeBlock sb (scp : parents)
   return ((StatScope sb') : sts, scp)
 
-addStmtToScope (sts, scp) s _ = do
-  return (s : sts, scp)
 
 genSymbolsF :: Function -> ErrorList Function
 genSymbolsF (Function t i ps sb) = do

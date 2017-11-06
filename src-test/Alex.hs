@@ -16,12 +16,7 @@ strip (ErrorList _ _) = []
 
 tests :: [TestTree]
 tests =
-  [ -- , testGroup "SmallCheck" scTests
-    testGroup "Unit Tests" huTests
-  ]
-
-scTests :: [TestTree]
-scTests = undefined -- TODO Write some tests for functions inside the class
+  [testGroup "Lexer Tests" huTests]
 
 huTests :: [TestTree]
 huTests =
@@ -36,7 +31,7 @@ validTests =
   , testGroup "Basic" basicTests
   , testGroup "Expressions" expressionsTests
   , testGroup "Functions" functionsTests
-  -- , testGroup "If" ifTests
+  , testGroup "If" ifTests
   -- , testGroup "IO" ioTests
   -- , testGroup "Pairs" pairsTests
   -- , testGroup "RuntimeErr" runtimeErrTests
@@ -561,35 +556,66 @@ ifTests =
   , testCase "Whitespace" whitespaceIf
   ]
 
+
+
+
+
+
+
+
+
+
+
+
 if1 :: Assertion
-if1 = undefined
+if1 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if1.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IfT, (T_Identifier "a"), T_EqT, (T_IntDigit "13"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_EndT]
 
 if2 :: Assertion
-if2 = undefined
+if2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if2.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IfT, (T_Identifier "a"), T_NotEqT, (T_IntDigit "13"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_FiT, T_EndT]
 
 if3 :: Assertion
-if3 = undefined
+if3 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if3.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IntT, (T_Identifier "b"), T_EqualT, (T_IntDigit "37"), T_SepT, T_IfT, (T_Identifier "a"), T_LessT, (T_Identifier "b"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_EndT]
 
 if4 :: Assertion
-if4 = undefined
+if4 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if4.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_SepT, T_BoolT, (T_Identifier "c"), T_EqualT, T_FalseToken, T_SepT, T_IfT, (T_Identifier "b"), T_AndT, (T_Identifier "c"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_FiT, T_EndT]
 
 if5 :: Assertion
-if5 = undefined
+if5 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if5.wacc" ))
+  @=? [ T_BeginT, T_BoolT, (T_Identifier "b"), T_EqualT, T_TrueToken, T_SepT, T_BoolT, (T_Identifier "c"), T_EqualT, T_FalseToken, T_SepT, T_IfT, (T_Identifier "b"), T_OrT, (T_Identifier "c"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_EndT]
 
 if6 :: Assertion
-if6 = undefined
+if6 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/if6.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c1"), T_EqualT, (T_CharLiteral "'f'"), T_SepT, T_CharT, (T_Identifier "c2"), T_EqualT, (T_CharLiteral "'F'"), T_SepT, T_IfT, (T_Identifier "c1"), T_EqT, (T_Identifier "c2"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_FiT, T_EndT]
 
 ifBasic :: Assertion
-ifBasic = undefined
+ifBasic = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/ifBasic.wacc" ))
+  @=? [ T_BeginT, T_IfT, T_TrueToken, T_ThenT, T_SkipT, T_ElseT, T_SkipT, T_FiT, T_EndT]
 
 ifFalse :: Assertion
-ifFalse = undefined
+ifFalse = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/ifFalse.wacc" ))
+  @=? [ T_BeginT, T_IfT, T_FalseToken, T_ThenT, T_PrintLnT, (T_StringLiteral "\"not here\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"here\""), T_FiT, T_EndT]
 
 ifTrue :: Assertion
-ifTrue = undefined
+ifTrue = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/ifTrue.wacc" ))
+  @=? [ T_BeginT, T_IfT, T_TrueToken, T_ThenT, T_PrintLnT, (T_StringLiteral "\"here\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"not here\""), T_FiT, T_EndT]
 
 whitespaceIf :: Assertion
-whitespaceIf = undefined
+whitespaceIf = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/if/whitespace.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IfT, (T_Identifier "a"), T_EqT, (T_IntDigit "13"), T_ThenT, (T_Identifier "a"), T_EqualT, (T_IntDigit "1"), T_ElseT, (T_Identifier "a"), T_EqualT, (T_IntDigit "0"), T_FiT, T_SepT, T_PrintLnT, (T_Identifier "a"), T_EndT]
      
 ioTests :: [TestTree]
 ioTests =

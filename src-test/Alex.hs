@@ -35,7 +35,7 @@ validTests =
   , testGroup "IO" ioTests
   , testGroup "Pairs" pairsTests
   , testGroup "RuntimeErr" runtimeErrTests
-  -- , testGroup "Scope" scopeTests
+  , testGroup "Scope" scopeTests
   -- , testGroup "Sequences" sequenceTests
   -- , testGroup "Variables" variablesTests
   -- , testGroup "While" whileTests
@@ -930,7 +930,7 @@ intWayOverflow :: Assertion
 intWayOverflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intWayOverflow.wacc" ))
   @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "x"), T_PlusToken, (T_IntDigit "2000000000"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
-  
+
 intmultOverflow :: Assertion
 intmultOverflow = strip (tokens (
   unsafePerformIO $ readFile "src-test/wacc-samples/valid/runtimeErr/integerOverflow/intmultOverflow.wacc" ))
@@ -1016,35 +1016,67 @@ scopeTests =
   , testCase "Scope Vars" scopeVars
   ]
 
+
+
+
+
+
+
+
+
+
+
+
+
 ifNested1 :: Assertion
-ifNested1 = undefined
+ifNested1 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/ifNested1.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IfT, (T_Identifier "a"), T_EqT, (T_IntDigit "13"), T_ThenT, T_IfT, (T_Identifier "a"), T_GreaterT, (T_IntDigit "5"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_EndT]
 
 ifNested2 :: Assertion
-ifNested2 = undefined
+ifNested2 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/ifNested2.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "a"), T_EqualT, (T_IntDigit "13"), T_SepT, T_IfT, (T_Identifier "a"), T_EqT, (T_IntDigit "13"), T_ThenT, T_IfT, (T_Identifier "a"), T_GreaterT, (T_IntDigit "5"), T_ThenT, T_IfT, (T_Identifier "a"), T_LessT, (T_IntDigit "10"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_ElseT, T_IfT, (T_Identifier "a"), T_GreaterT, (T_IntDigit "12"), T_ThenT, T_IfT, (T_Identifier "a"), T_GreaterT, (T_IntDigit "13"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"correct\""), T_FiT, T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_FiT, T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_ElseT, T_PrintLnT, (T_StringLiteral "\"incorrect\""), T_FiT, T_EndT]
 
 indentationNotImportant :: Assertion
-indentationNotImportant = undefined
+indentationNotImportant = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/indentationNotImportant.wacc" ))
+  @=? [ T_BeginT, T_WhileT, T_FalseToken, T_DoT, T_SkipT, T_DoneT, T_EndT]
 
 intsAndKeywords :: Assertion
-intsAndKeywords = undefined
+intsAndKeywords = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/intsAndKeywords.wacc" ))
+  @=? [ T_BeginT, T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "125"), T_EndT, T_EndT]
 
 printAllTypes :: Assertion
-printAllTypes = undefined
+printAllTypes = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/printAllTypes.wacc" ))
+  @=? [ T_BeginT, T_StringT, (T_Identifier "comma"), T_EqualT, (T_StringLiteral "\", \""), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "5"), T_SepT, T_BeginT, T_CharT, (T_Identifier "x"), T_EqualT, (T_CharLiteral "'x'"), T_SepT, T_BeginT, T_BoolT, (T_Identifier "x"), T_EqualT, T_TrueToken, T_SepT, T_BeginT, T_StringT, (T_Identifier "x"), T_EqualT, (T_StringLiteral "\"this is a string\""), T_SepT, T_BeginT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "x"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RBracketT, T_SepT, T_BeginT, T_CharT, T_LBracketT, T_RBracketT, (T_Identifier "x"), T_EqualT, T_LBracketT, (T_CharLiteral "'x'"), T_CoT, (T_CharLiteral "'y'"), T_CoT, (T_CharLiteral "'z'"), T_RBracketT, T_SepT, T_BeginT, T_BoolT, T_LBracketT, T_RBracketT, (T_Identifier "x"), T_EqualT, T_LBracketT, T_TrueToken, T_CoT, T_FalseToken, T_CoT, T_TrueToken, T_RBracketT, T_SepT, T_BeginT, T_StringT, T_LBracketT, T_RBracketT, (T_Identifier "x"), T_EqualT, T_LBracketT, (T_StringLiteral "\"array\""), T_CoT, (T_StringLiteral "\"of\""), T_CoT, (T_StringLiteral "\"strings\""), T_RBracketT, T_SepT, T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "x"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_RParenT, T_SepT, T_BeginT, T_PairT, T_LParenT, T_CharT, T_CoT, T_BoolT, T_RParenT, (T_Identifier "y"), T_EqualT, T_NewpairT, T_LParenT, (T_CharLiteral "'a'"), T_CoT, T_TrueToken, T_RParenT, T_SepT, T_PairT, T_LParenT, T_CharT, T_CoT, T_BoolT, T_RParenT, (T_Identifier "z"), T_EqualT, T_NewpairT, T_LParenT, (T_CharLiteral "'b'"), T_CoT, T_FalseToken, T_RParenT, T_SepT, T_PairT, T_LParenT, T_CharT, T_CoT, T_BoolT, T_RParenT, T_LBracketT, T_RBracketT, (T_Identifier "x"), T_EqualT, T_LBracketT, (T_Identifier "y"), T_CoT, (T_Identifier "z"), T_RBracketT, T_SepT, T_BeginT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "y"), T_EqualT, T_LBracketT, (T_IntDigit "1"), T_CoT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RBracketT, T_SepT, T_CharT, T_LBracketT, T_RBracketT, (T_Identifier "z"), T_EqualT, T_LBracketT, (T_CharLiteral "'a'"), T_CoT, (T_CharLiteral "'b'"), T_CoT, (T_CharLiteral "'c'"), T_RBracketT, T_SepT, T_PairT, T_LParenT, T_IntT, T_LBracketT, T_RBracketT, T_CoT, T_CharT, T_LBracketT, T_RBracketT, T_RParenT, (T_Identifier "x"), T_EqualT, T_NewpairT, T_LParenT, (T_Identifier "y"), T_CoT, (T_Identifier "z"), T_RParenT, T_SepT, T_BeginT, T_SkipT, T_EndT, T_SepT, T_IntT, T_LBracketT, T_RBracketT, (T_Identifier "a"), T_EqualT, T_FstT, (T_Identifier "x"), T_SepT, T_CharT, T_LBracketT, T_RBracketT, (T_Identifier "b"), T_EqualT, T_SndT, (T_Identifier "x"), T_SepT, T_PrintT, (T_StringLiteral "\"( [\""), T_SepT, T_PrintT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "a"), T_LBracketT, (T_IntDigit "2"), T_RBracketT, T_SepT, T_PrintT, (T_StringLiteral "\"] , [\""), T_SepT, T_PrintT, (T_Identifier "b"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "b"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "b"), T_LBracketT, (T_IntDigit "2"), T_RBracketT, T_SepT, T_PrintLnT, (T_StringLiteral "\"] )\""), T_EndT, T_SepT, T_PairT, T_LParenT, T_CharT, T_CoT, T_BoolT, T_RParenT, (T_Identifier "a"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_CharT, (T_Identifier "aa"), T_EqualT, T_FstT, (T_Identifier "a"), T_SepT, T_BoolT, (T_Identifier "ab"), T_EqualT, T_SndT, (T_Identifier "a"), T_SepT, T_PairT, T_LParenT, T_CharT, T_CoT, T_BoolT, T_RParenT, (T_Identifier "b"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_CharT, (T_Identifier "ba"), T_EqualT, T_FstT, (T_Identifier "b"), T_SepT, T_BoolT, (T_Identifier "bb"), T_EqualT, T_SndT, (T_Identifier "b"), T_SepT, T_PrintT, (T_StringLiteral "\"[ \""), T_SepT, T_PrintT, (T_Identifier "a"), T_SepT, T_PrintT, (T_StringLiteral "\" = (\""), T_SepT, T_PrintT, (T_Identifier "aa"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "ab"), T_SepT, T_PrintT, (T_StringLiteral "\"), \""), T_SepT, T_PrintT, (T_Identifier "b"), T_SepT, T_PrintT, (T_StringLiteral "\" = (\""), T_SepT, T_PrintT, (T_Identifier "ba"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "bb"), T_SepT, T_PrintLnT, (T_StringLiteral "\") ]\""), T_EndT, T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, T_FstT, (T_Identifier "x"), T_SepT, T_IntT, (T_Identifier "z"), T_EqualT, T_SndT, (T_Identifier "x"), T_SepT, T_PrintT, (T_Identifier "y"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintLnT, (T_Identifier "z"), T_EndT, T_SepT, T_StringT, (T_Identifier "a"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_StringT, (T_Identifier "b"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_StringT, (T_Identifier "c"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "2"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "a"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "b"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintLnT, (T_Identifier "c"), T_EndT, T_SepT, T_PrintT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "2"), T_RBracketT, T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_IntT, (T_Identifier "a"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_SepT, T_IntT, (T_Identifier "b"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "1"), T_RBracketT, T_SepT, T_IntT, (T_Identifier "c"), T_EqualT, (T_Identifier "x"), T_LBracketT, (T_IntDigit "2"), T_RBracketT, T_SepT, T_PrintT, (T_Identifier "a"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintT, (T_Identifier "b"), T_SepT, T_PrintT, (T_Identifier "comma"), T_SepT, T_PrintLnT, (T_Identifier "c"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 scope :: Assertion
-scope = undefined
+scope = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/scope.wacc" ))
+  @=? [ T_BeginT, T_BeginT, T_BeginT, T_BeginT, T_BeginT, T_SkipT, T_EndT, T_EndT, T_EndT, T_EndT, T_EndT]
 
 scopeBasic :: Assertion
-scopeBasic = undefined
+scopeBasic = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/scopeBasic.wacc" ))
+  @=? [ T_BeginT, T_SkipT, T_SepT, T_BeginT, T_SkipT, T_EndT, T_EndT]
 
 scopeRedefine :: Assertion
-scopeRedefine = undefined
+scopeRedefine = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/scopeRedefine.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "1"), T_SepT, T_BeginT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2"), T_SepT, T_BoolT, (T_Identifier "x"), T_EqualT, T_TrueToken, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 scopeSimpleRedefine :: Assertion
-scopeSimpleRedefine = undefined
+scopeSimpleRedefine = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/scopeSimpleRedefine.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "12"), T_SepT, T_BeginT, T_BoolT, (T_Identifier "x"), T_EqualT, T_TrueToken, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 scopeVars :: Assertion
-scopeVars = undefined
+scopeVars = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/scope/scopeVars.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "2"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "4"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT, T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 sequenceTests :: [TestTree]
 sequenceTests =

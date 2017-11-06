@@ -8,12 +8,12 @@ import Control.Monad
 import qualified Data.HashMap.Lazy as M
 
 genSymbols :: WaccTree -> ErrorList WaccTree
-genSymbols (WaccTree (Program fsp sb)) = do
+genSymbols (WaccTree (Program fsp (sts, _))) = do
   let (fs, ps) = unzip fsp
-  fs' <- mapM genSymbolsF fs
-  (sts, scp) <- fillScopeBlock sb []
-  scp' <- foldM addFuncToScope scp fs'
-  return (WaccTree (Program (zip fs' ps) (sts, scp')))
+  ns <- foldM addFuncToScope emptyScope fs
+  fs' <- mapM (\f -> genSymbolsF f ns) fs
+  (retsts, retscp) <- fillScopeBlock (sts, ns) []
+  return (WaccTree (Program (zip fs' ps) (retsts, retscp)))
 
 addFuncToScope :: NewScope -> Function -> ErrorList NewScope
 addFuncToScope scp f@(Function _ i _ _) = getType f >>= \t -> extendScope i t scp
@@ -52,10 +52,10 @@ addStmtToScope (sts, scp) (StatScope sb) parents = do
 
 addStmtToScope sb StatSkip _ = return sb
 
-genSymbolsF :: Function -> ErrorList Function
-genSymbolsF (Function t i ps sb) = do
+genSymbolsF :: Function -> NewScope -> ErrorList Function
+genSymbolsF (Function t i ps sb) scp = do
   ps' <- genParamScope ps
-  sb' <- fillScopeBlock sb [ps']
+  sb' <- fillScopeBlock sb [ps', scp]
   return (Function t i ps sb')
 
 emptyScope :: NewScope

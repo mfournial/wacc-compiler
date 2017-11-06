@@ -111,8 +111,8 @@ instance Typeable (Scop AssignLhs) where
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
   --getType (Scop ((AssignArrayLit (ArrayLiteral litElems _) _), scps)) = ArrayType (ArrayDeclarationLiteral (checkSameTypes (map (\(ArrayLiteralElem e _) -> getType (Scop (e, scps)))))
-  --getType (Scop ((AssignArrayLit (ArrayLiteral [])))) = ArrayType Nothing
-  --getType (Scop ((AssignArrayLit (ArrayLiteral pe:pes)))) = undefined--(map (\e -> Scop (e, scps)) pes) 
+  --getType (Scop ((AssignArrayLit (ArrayLiteral pe:pes)), _)) = foldM (
+  getType (Scop ((AssignArrayLit (ArrayLiteral [])), _)) = return (Pairable ArrayNull)
   getType (Scop ((AssignPair _ _), _)) = undefined
   getType (Scop ((AssignFunctionCall _ _), _)) = undefined
   getType (Scop ((AssignArrayLit e), scps)) = undefined
@@ -145,8 +145,6 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
   getType (Scop (o@((StatPrintLn e), pos), scp))          = do  
                                                           expr <- getType  (Scop (e, scp))
                                                           subType o [expr]
-
-
 instance Typeable Function where
   getType (Function t _ _ (sts, scp)) 
     = mapM_ (\e -> checkTypes (Scop (e, [scp])) t) returns >> getType t
@@ -192,7 +190,12 @@ subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
   | tw == t'  = subType' ws ts ((s, tw)  : tids) op opW (succ track) pos
   | tw' == t' = subType' ws ts ((s, tw') : tids) op opW (succ track) pos
   | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+
+
+
 subType' ((ArrayWaccType (TypeID _ :=> RetWT)) ::> ws) ((Pairable (ArrayType t)) : ts) tids op opW track pos = if (ws /= RetWT) then subType' ws ts tids op opW track pos else return (t, ts)
+
+
 subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) tids op opW track pos = if t == t' 
   then
     if (ws /= RetWT) then subType' ws ts tids op opW track pos else return (t, ts)
@@ -200,18 +203,30 @@ subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) t
     if (ws /= RetWT) 
       then subType' ws ts tids op opW track pos >>= \res -> throwTypeError res pos ("Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We required [" ++ show t' ++ "] but were given [" ++ show t ++ "]")
       else die TypeStage pos ("Type Error: " ++ "Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We require [" ++ show t' ++ "] but were given [" ++ show t ++ "]") 200
+
+
 subType' ((ArrayWaccType (t :-> RetWT)) ::> ws) (t' : ts) _ op opW track pos = if t == t' then return (t, ts) else subError ts (Pairable (ArrayType t)) t' op opW track pos
+
+
 subType' (ArrayWaccType w ::> ws) (t' : ts) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+
+
 subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++ ": " ++ getName op ++ " doesn't have a concrete return type, in fact it has type (" ++ show opW ++ ")")) (\t -> return (t, ts)) (lookup s tids)
+
+
 subType' ((TypeID s) :=> ws) (t' : ts) tids op opW track pos = maybe (subType' ws ts ((s, t') : tids) op opW (succ track) pos) (subTypeCheck t' ws ts tids op opW track pos) (lookup s tids)
+
 subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t ws ts tids op opW track pos t'
+
 subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
+
 subType' RetWT ts _ _ _ _ _ = fail "hope we don't get here (to reason about this later)"
+
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 
 subTypeCheck :: Referenceable a => Type -> WaccType -> [Type] -> [(String, Type)] -> a -> WaccType -> Int -> Position -> Type -> ErrorList (Type, [Type])
 subTypeCheck giv ws ts tids op opW track pos tar 
-  = if tar == giv then subType' ws ts tids op opW (succ track) pos else subError ts giv tar op opW track pos
+  = if tar == giv then subType' ws ts tids op opW (succ track) pos else subError ts tar giv op opW track pos >> subType' ws ts tids op opW (succ track) pos
 
 grabPairElem :: (Eq a) => a -> (a, a) -> Maybe a
 grabPairElem a (b, c)

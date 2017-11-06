@@ -32,8 +32,8 @@ validTests =
   , testGroup "Expressions" expressionsTests
   , testGroup "Functions" functionsTests
   , testGroup "If" ifTests
-  -- , testGroup "IO" ioTests
-  -- , testGroup "Pairs" pairsTests
+  , testGroup "IO" ioTests
+  , testGroup "Pairs" pairsTests
   -- , testGroup "RuntimeErr" runtimeErrTests
   -- , testGroup "Scope" scopeTests
   -- , testGroup "Sequences" sequenceTests
@@ -626,14 +626,20 @@ ioTests =
   ]
 
 ioLoop :: Assertion
-ioLoop = undefined
+ioLoop = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/IOLoop.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "continue"), T_EqualT, (T_CharLiteral "'Y'"), T_SepT, T_IntT, (T_Identifier "buff"), T_EqualT, (T_IntDigit "0"), T_SepT, T_WhileT, (T_Identifier "continue"), T_NotEqT, (T_CharLiteral "'N'"), T_DoT, T_PrintT, (T_StringLiteral "\"Please input an integer: \""), T_SepT, T_ReadT, (T_Identifier "buff"), T_SepT, T_PrintT, (T_StringLiteral "\"echo input: \""), T_SepT, T_PrintLnT, (T_Identifier "buff"), T_SepT, T_PrintLnT, (T_StringLiteral "\"Do you want to continue entering input?\""), T_SepT, T_PrintLnT, (T_StringLiteral "\"(enter Y for \\'yes\\' and N for \\'no\\')\""), T_SepT, T_ReadT, (T_Identifier "continue"), T_DoneT, T_EndT] 
 
 ioSequence :: Assertion
-ioSequence = undefined
+ioSequence = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/IOSequence.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_StringLiteral "\"Please input an integer: \""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintT, (T_StringLiteral "\"You input: \""), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 printTests :: [TestTree]
 printTests = 
-  [ testCase "Print" printT
+  [ testCase "Multiple String Assignments" multipleStringAssignments
+  , testCase "Hash in program" hashInProgram
+  , testCase "Print" printT
   , testCase "Print Bool" printBool
   , testCase "Print Char" printChar
   , testCase "Print Esc Char" printEscChar
@@ -641,23 +647,45 @@ printTests =
   , testCase "Print Ln" println
   ]
 
+hashInProgram :: Assertion
+hashInProgram = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/hashInProgram.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "0"), T_SepT, T_PrintT, (T_StringLiteral "\"We can print the hash character: \""), T_SepT, T_PrintLnT, (T_CharLiteral "'#'"), T_SepT, T_PrintLnT, (T_StringLiteral "\"We can also print # when its in a string.\""), T_EndT] 
+
+multipleStringAssignments :: Assertion
+multipleStringAssignments = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/multipleStringsAssignment.wacc" ))
+  @=? [ T_BeginT, T_StringT, (T_Identifier "s1"), T_EqualT, (T_StringLiteral "\"Hi\""), T_SepT, T_StringT, (T_Identifier "s2"), T_EqualT, (T_StringLiteral "\"Hi\""), T_SepT, T_PrintT, (T_StringLiteral "\"s1 is \""), T_SepT, T_PrintLnT, (T_Identifier "s1"), T_SepT, T_PrintT, (T_StringLiteral "\"s2 is \""), T_SepT, T_PrintLnT, (T_Identifier "s2"), T_SepT, T_IfT, (T_Identifier "s1"), T_EqT, (T_Identifier "s2"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"They are the same.\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"They are not the same.\""), T_FiT, T_SepT, T_PrintLnT, (T_StringLiteral "\"Now modify s1[0] = \\'h\\'\""), T_SepT, (T_Identifier "s1"), T_LBracketT, (T_IntDigit "0"), T_RBracketT, T_EqualT, (T_CharLiteral "'h'"), T_SepT, T_PrintT, (T_StringLiteral "\"s1 is \""), T_SepT, T_PrintLnT, (T_Identifier "s1"), T_SepT, T_PrintT, (T_StringLiteral "\"s2 is \""), T_SepT, T_PrintLnT, (T_Identifier "s2"), T_SepT, T_IfT, (T_Identifier "s1"), T_EqT, (T_Identifier "s2"), T_ThenT, T_PrintLnT, (T_StringLiteral "\"They are the same.\""), T_ElseT, T_PrintLnT, (T_StringLiteral "\"They are not the same.\""), T_FiT, T_EndT]
+
 printT :: Assertion
-printT = undefined
+printT = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/print.wacc" ))
+  @=? [ T_BeginT, T_PrintT, (T_StringLiteral "\"Hello World!\\n\""), T_EndT]
 
 printBool :: Assertion
-printBool = undefined
+printBool = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/printBool.wacc" ))
+  @=? [ T_BeginT, T_PrintT, (T_StringLiteral "\"True is \""), T_SepT, T_PrintLnT, T_TrueToken, T_SepT, T_PrintT, (T_StringLiteral "\"False is \""), T_SepT, T_PrintLnT, T_FalseToken, T_EndT]
 
 printChar :: Assertion
-printChar = undefined
+printChar = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/printChar.wacc" ))
+  @=? [ T_BeginT, T_PrintT, (T_StringLiteral "\"A simple character example is \""), T_SepT, T_PrintLnT, (T_CharLiteral "'f'"), T_EndT]
 
 printEscChar :: Assertion
-printEscChar = undefined
+printEscChar = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/printEscChar.wacc" ))
+  @=? [ T_BeginT, T_PrintT, (T_StringLiteral "\"An escaped character example is \""), T_SepT, T_PrintLnT, (T_CharLiteral "'\\\"'"), T_EndT]
 
 printInt :: Assertion
-printInt = undefined
+printInt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/printInt.wacc" ))
+  @=? [ T_BeginT, T_PrintT, (T_StringLiteral "\"An example integer is \""), T_SepT, T_PrintLnT, (T_IntDigit "189"), T_EndT]
 
 println :: Assertion
-println = undefined
+println = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/print/println.wacc" ))
+  @=? [ T_BeginT, T_PrintLnT, (T_StringLiteral "\"Hello World!\""), T_EndT]
 
 
 readTests :: [TestTree]
@@ -672,25 +700,39 @@ readTests =
   ]
 
 echoBigInt :: Assertion
-echoBigInt = undefined
+echoBigInt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoBigInt.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter an integer to echo\""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 echoBigNegInt :: Assertion
-echoBigNegInt = undefined
+echoBigNegInt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoBigNegInt.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter an integer to echo\""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 echoChar :: Assertion
-echoChar = undefined
+echoChar = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoChar.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'\\0'"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter a character to echo\""), T_SepT, T_ReadT, (T_Identifier "c"), T_SepT, T_PrintLnT, (T_Identifier "c"), T_EndT]
 
 echoInt :: Assertion
-echoInt = undefined
+echoInt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoInt.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter an integer to echo\""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 echoNegInt :: Assertion
-echoNegInt = undefined
+echoNegInt = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoNegInt.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "1"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter an integer to echo\""), T_SepT, T_ReadT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EndT]
 
 echoPuncChar :: Assertion
-echoPuncChar = undefined
+echoPuncChar = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/echoPuncChar.wacc" ))
+  @=? [ T_BeginT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'\\0'"), T_SepT, T_PrintLnT, (T_StringLiteral "\"enter a character to echo\""), T_SepT, T_ReadT, (T_Identifier "c"), T_SepT, T_PrintLnT, (T_Identifier "c"), T_EndT]
 
 readT :: Assertion
-readT = undefined
+readT = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/IO/read/read.wacc" ))
+  @=? [ T_BeginT, T_IntT, (T_Identifier "x"), T_EqualT, (T_IntDigit "10"), T_SepT, T_PrintLnT, (T_StringLiteral "\"input an integer to continue...\""), T_SepT, T_ReadT, (T_Identifier "x"), T_EndT]
 
 pairsTests :: [TestTree]
 pairsTests =
@@ -713,56 +755,206 @@ pairsTests =
   ]
 
 checkRefPair :: Assertion
-checkRefPair = undefined
+checkRefPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/checkRefPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "q"), T_EqualT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "q"), T_SepT, T_PrintLnT, (T_Identifier "p"), T_EqT, (T_Identifier "q"), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_IntT, (T_Identifier "y"), T_EqualT, T_FstT, (T_Identifier "q"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_SepT, T_PrintLnT, (T_Identifier "y"), T_SepT, T_PrintLnT, (T_Identifier "x"), T_EqT, (T_Identifier "y"), T_SepT, T_CharT, (T_Identifier "c1"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_CharT, (T_Identifier "c2"), T_EqualT, T_SndT, (T_Identifier "q"), T_SepT, T_PrintLnT, (T_Identifier "c1"), T_SepT, T_PrintLnT, (T_Identifier "c2"), T_SepT, T_PrintLnT, (T_Identifier "c1"), T_EqT, (T_Identifier "c2"), T_EndT]
 
 createPair :: Assertion
-createPair = undefined
+createPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/createPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_IntDigit "3"), T_RParenT, T_EndT]
 
 createPair02 :: Assertion
-createPair02 = undefined
+createPair02 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/createPair02.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_CharT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_CharLiteral "'a'"), T_CoT, (T_CharLiteral "'b'"), T_RParenT, T_EndT]
 
 createPair03 :: Assertion
-createPair03 = undefined
+createPair03 = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/createPair03.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_EndT]
 
 createRefPair :: Assertion
-createRefPair = undefined
+createRefPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/createRefPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "q"), T_EqualT, (T_Identifier "p"), T_EndT]
 
 freePair :: Assertion
-freePair = undefined
+freePair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/free.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "a"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_FreeT, (T_Identifier "a"), T_EndT]
 
 linkedList :: Assertion
-linkedList = undefined
+linkedList = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/linkedList.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "11"), T_CoT, T_NullT, T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "q"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "4"), T_CoT, (T_Identifier "p"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "r"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "2"), T_CoT, (T_Identifier "q"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "s"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "1"), T_CoT, (T_Identifier "r"), T_RParenT, T_SepT, T_PrintT, (T_StringLiteral "\"list = {\""), T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "x"), T_EqualT, (T_Identifier "s"), T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "y"), T_EqualT, T_SndT, (T_Identifier "x"), T_SepT, T_IntT, (T_Identifier "f"), T_EqualT, (T_IntDigit "0"), T_SepT, T_WhileT, (T_Identifier "y"), T_NotEqT, T_NullT, T_DoT, (T_Identifier "f"), T_EqualT, T_FstT, (T_Identifier "x"), T_SepT, T_PrintT, (T_Identifier "f"), T_SepT, T_PrintT, (T_StringLiteral "\", \""), T_SepT, (T_Identifier "x"), T_EqualT, (T_Identifier "y"), T_SepT, (T_Identifier "y"), T_EqualT, T_SndT, (T_Identifier "x"), T_DoneT, T_SepT, (T_Identifier "f"), T_EqualT, T_FstT, (T_Identifier "x"), T_SepT, T_PrintT, (T_Identifier "f"), T_SepT, T_PrintLnT, (T_StringLiteral "\"}\""), T_EndT]
 
 nestedPair :: Assertion
-nestedPair = undefined
+nestedPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/nestedPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "2"), T_CoT, (T_IntDigit "3"), T_RParenT, T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_PairT, T_RParenT, (T_Identifier "q"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "1"), T_CoT, (T_Identifier "p"), T_RParenT, T_EndT]
 
 nullPair :: Assertion
-nullPair = undefined
+nullPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/null.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_PairT, T_CoT, T_PairT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_PrintLnT, (T_Identifier "p"), T_SepT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_PrintLnT, (T_Identifier "p"), T_EndT]
 
 printNullP :: Assertion
-printNullP = undefined
+printNullP = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/printNull.wacc" ))
+  @=? [ T_BeginT, T_PrintLnT, T_NullT, T_EndT]
 
 printNullPair :: Assertion
-printNullPair = undefined
+printNullPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/printNullPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_PairT, T_CoT, T_PairT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NullT, T_SepT, T_PrintLnT, (T_Identifier "p"), T_EndT]
 
 printPair :: Assertion
-printPair = undefined
+printPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/printPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_PrintT, (T_Identifier "p"), T_SepT, T_PrintT, (T_StringLiteral "\" = (\""), T_SepT, T_IntT, (T_Identifier "x"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintT, (T_Identifier "x"), T_SepT, T_PrintT, (T_StringLiteral "\", \""), T_SepT, T_CharT, (T_Identifier "c"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_PrintT, (T_Identifier "c"), T_SepT, T_PrintLnT, (T_CharLiteral "')'"), T_EndT]
 
 printPairOfNulls :: Assertion
-printPairOfNulls = undefined
+printPairOfNulls = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/printPairOfNulls.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_PairT, T_CoT, T_PairT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, T_NullT, T_CoT, T_NullT, T_RParenT, T_SepT, T_PrintT, (T_Identifier "p"), T_SepT, T_PrintT, (T_StringLiteral "\" = (\""), T_SepT, T_PairT, T_LParenT, T_PairT, T_CoT, T_PairT, T_RParenT, (T_Identifier "q"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintT, (T_Identifier "q"), T_SepT, T_PrintT, (T_StringLiteral "\",\""), T_SepT, T_PairT, T_LParenT, T_IntT, T_CoT, T_BoolT, T_RParenT, (T_Identifier "r"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_PrintT, (T_Identifier "r"), T_SepT, T_PrintLnT, (T_StringLiteral "\")\""), T_EndT]
 
 readPair :: Assertion
-readPair = undefined
+readPair = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/readPair.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_CharT, T_CoT, T_IntT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_CharLiteral "'\\0'"), T_CoT, (T_IntDigit "0"), T_RParenT, T_SepT, T_PrintT, (T_StringLiteral "\"Please enter the first element (char): \""), T_SepT, T_CharT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'0'"), T_SepT, T_ReadT, (T_Identifier "c"), T_SepT, T_FstT, (T_Identifier "p"), T_EqualT, (T_Identifier "c"), T_SepT, T_PrintT, (T_StringLiteral "\"Please enter the second element (int): \""), T_SepT, T_IntT, (T_Identifier "i"), T_EqualT, (T_IntDigit "0"), T_SepT, T_ReadT, (T_Identifier "i"), T_SepT, T_SndT, (T_Identifier "p"), T_EqualT, (T_Identifier "i"), T_SepT, (T_Identifier "c"), T_EqualT, (T_CharLiteral "'\\0'"), T_SepT, (T_Identifier "i"), T_EqualT, T_MinusToken, (T_IntDigit "1"), T_SepT, T_PrintT, (T_StringLiteral "\"The first element was \""), T_SepT, (T_Identifier "c"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "c"), T_SepT, T_PrintT, (T_StringLiteral "\"The second element was \""), T_SepT, (T_Identifier "i"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "i"), T_EndT]
 
 writeFst :: Assertion
-writeFst = undefined
+writeFst = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/writeFst.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_IntT, (T_Identifier "f"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "f"), T_SepT, T_FstT, (T_Identifier "p"), T_EqualT, (T_IntDigit "42"), T_SepT, (T_Identifier "f"), T_EqualT, T_FstT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "f"), T_EndT]
 
 writeSnd :: Assertion
-writeSnd = undefined
+writeSnd = strip (tokens (
+  unsafePerformIO $ readFile "src-test/wacc-samples/valid/pairs/writeSnd.wacc" ))
+  @=? [ T_BeginT, T_PairT, T_LParenT, T_IntT, T_CoT, T_CharT, T_RParenT, (T_Identifier "p"), T_EqualT, T_NewpairT, T_LParenT, (T_IntDigit "10"), T_CoT, (T_CharLiteral "'a'"), T_RParenT, T_SepT, T_CharT, (T_Identifier "s"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "s"), T_SepT, T_SndT, (T_Identifier "p"), T_EqualT, (T_CharLiteral "'Z'"), T_SepT, (T_Identifier "s"), T_EqualT, T_SndT, (T_Identifier "p"), T_SepT, T_PrintLnT, (T_Identifier "s"), T_EndT]
 
      
 runtimeErrTests :: [TestTree]
-runtimeErrTests = undefined -- TODO a looot
+runtimeErrTests = 
+  [ testcase "Array out of bound" arrayOutOfBound
+  , testCase "Devide by zero" divideByZero
+  , testCase "Double frees" doubleFrees
+  , testCase "Integer Overflow" integerOverflow
+  , testCase "Null Dereference" nullDereference
+  ]
+
+arrayOutOfBound :: [TestTree]
+arrayOutOfBound = 
+  [ testCase "Array neg Bound" arrayNegBounds
+  , testCase "Array out of bounds" arrayOutOfBounds
+  , testcase "Array out of bound" arrayOutOfBoundsWrite
+  ]
+
+arrayNegBounds :: Assertion
+arrayNegBounds = undefined
+
+arrayOutOfBounds :: Assertion
+arrayOutOfBounds = undefined
+
+arrayOutOfBoundsWrite :: Assertion
+arrayOutOfBoundsWrite = undefined
+
+divideByZero :: [TestTree]
+divideByZero = 
+  [ testCase "Div Zero 1" divZero
+  , testCase "Div Zero 2" divideByZero
+  , testCase "Mod By Zero" modByZero
+  ]
+divZero :: Assertion
+divZero = undefined
+
+divideByZero :: Assertion
+divideByZero = undefined
+
+modByZero :: Assertion
+modByZero = undefined
+
+doubleFrees :: [TestTree]
+doubleFrees = 
+  [ testCase "Double free" doubleFree
+  , testCase "Hidden double free" hiddenDoubleFree
+  ]
+
+doubleFree :: Assertion
+doubleFree = undefined
+
+hiddenDoubleFree :: Assertion
+hiddenDoubleFree = undefined
+
+integerOverflow :: [TestTree]
+integerOverflow = 
+  [ testCase "Int Just Overflow" intJustOverflow
+  , tesCase "Int Underflow" intUnderflow
+  , tesCase "Int way Overflow" intWayOverflow
+  , tesCase "Int Mul Overflow" intmultOverflow
+  , tesCase "Int negate Overflow 1" intnegateOverflow
+  , tesCase "Int negate Overflow 1" intnegateOverflow2
+  , tesCase "Int negate Overflow 1" intnegateOverflow3
+  , tesCase "Int negate Overflow 1" intnegateOverflow4
+  ]
+
+intJustOverflow :: Assertion
+intJustOverflow = undefined
+
+intUnderflow :: Assertion
+intUnderflow = undefined
+
+intWayOverflow :: Assertion
+intWayOverflow = undefined
+
+intmultOverflow :: Assertion
+intmultOverflow = undefined
+
+intnegateOverflow :: Assertion
+intnegateOverflow = undefined
+
+intnegateOverflow2 :: Assertion
+intnegateOverflow2 = undefined
+
+intnegateOverflow3 :: Assertion
+intnegateOverflow3 = undefined
+
+intnegateOverflow4 :: Assertion
+intnegateOverflow4 = undefined
+
+nullDereference :: [TestTree]
+nullDereference =
+  [ testCase "Free Null" freeNull
+  , testCase "Read Null 1" readNull
+  , testCase "Read Null 2" readNull2
+  , testCase "Set Null 1" setNull1
+  , testCase "Set Null 2" setNull2
+  , testCase "Use Null 1" useNull1
+  , testCase "Use Null 2" useNull2
+  ]
+
+freeNull :: Assertion
+freeNull = undefined
+
+readNull :: Assertion
+readNull = undefined
+
+readNull2 :: Assertion
+readNull2 = undefined
+
+setNull1 :: Assertion
+setNull1 = undefined
+
+setNull2 :: Assertion
+setNull2 = undefined
+
+useNull1 :: Assertion
+useNull1 = undefined
+
+useNull2 :: Assertion
+useNull2 = undefined
+
 
 scopeTests :: [TestTree]
 scopeTests =

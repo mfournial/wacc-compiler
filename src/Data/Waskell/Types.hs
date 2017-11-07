@@ -183,9 +183,14 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
                                                           tlhs <- getType (Scop (alhs, scp))
                                                           trhs <- getType (Scop (arhs, scp))
                                                           subType o [tlhs, trhs]
+  --Ideally we would implement recursion on pairs in subType' but it seems like overengineering
+  --just for this one example, so we hacked it instead.
   getType (Scop (o@((StatFree e), pos), scp))             = do 
                                                           expr <- getType  (Scop (e, scp)) 
-                                                          subType o [expr]   
+                                                          case expr of
+                                                            (Pairable (ArrayType _)) -> return IOUnit
+                                                            (PairType _ _) -> return IOUnit
+                                                            _ -> throwTypeError IOUnit pos "Attempting to free non pair/array type"  
   getType (Scop (o@((StatRead alhs), pos), scp))          = do 
                                                           tlhs <- getType  (Scop (alhs, scp))
                                                           subType o [tlhs]

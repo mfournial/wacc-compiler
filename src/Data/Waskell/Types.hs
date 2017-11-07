@@ -290,7 +290,7 @@ subError ts target given op waccT track pos = throwTypeError (target, ts) pos (g
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
-lookupType i@(name, _) ((NewScope hmap) : scps) = maybe (lookupType i scps) return (M.lookup name hmap)
+lookupType i@(name, p) ((NewScope hmap) : scps) = maybe (lookupType i scps) (either return (\_ -> die AnalStage p "Attempted to treat function as first class object" 200)) (M.lookup name hmap)
 lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
 
 throwTypeError :: a -> Position -> String -> ErrorList a

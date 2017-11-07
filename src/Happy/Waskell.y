@@ -113,19 +113,19 @@ L_StringLiteral { PT _ (T_StringLiteral _) }
 L_Identifier { PT _ (T_Identifier _) }
 
 -- ^ Binary operators
-L_TimesT { PT _ (T_TimesT) }
-L_DivideT { PT _ (T_DivideT) }
-L_PlusToken { PT _ (T_PlusToken) }
-L_MinusToken { PT _ (T_MinusToken) }
-L_ModuloT { PT _ (T_ModuloT) }
-L_GreaterT { PT _ (T_GreaterT) }
-L_LessT { PT _ (T_LessT) }
-L_GreaterEqT { PT _ (T_GreaterEqT) }
-L_LessEqT { PT _ (T_LessEqT) }
-L_EqT { PT _ (T_EqT) }
-L_NotEqT { PT _ (T_NotEqT) }
-L_AndT { PT _ (T_AndT) }
-L_OrT { PT _ (T_OrT) }
+'*' { PT _ (T_TimesT) }
+'/' { PT _ (T_DivideT) }
+'+' { PT _ (T_PlusToken) }
+'-' { PT _ (T_MinusToken) }
+'%' { PT _ (T_ModuloT) }
+'>' { PT _ (T_GreaterT) }
+'<' { PT _ (T_LessT) }
+'>=' { PT _ (T_GreaterEqT) }
+'<=' { PT _ (T_LessEqT) }
+'==' { PT _ (T_EqT) }
+'!=' { PT _ (T_NotEqT) }
+'&&' { PT _ (T_AndT) }
+'||' { PT _ (T_OrT) }
 
 -- ^ Pair operators
 L_FstT { PT _ (T_FstT) }
@@ -137,8 +137,13 @@ L_LenT { PT _ (T_LenT) }
 L_OrdT { PT _ (T_OrdT) }
 L_ChrT { PT _ (T_ChrT) }
 
-%left L_PlusToken L_MinusToken
-%left L_TimesT L_DivideT
+%left '||'
+%left '&&'
+%left '==' '!='
+%left '<' '>' '<=' '>='
+%left '+' '-'
+%left '*' '/' '%'
+%left UNARY
 
 %%
 
@@ -167,21 +172,6 @@ IntDigit      :: { (String, Position) } : L_IntDigit { mkPosStrToken $1 }
 CharLiteral   :: { (String, Position) } : L_CharLiteral { mkPosStrToken $1 }
 StringLiteral :: { (String, Position) } : L_StringLiteral { mkPosStrToken $1 }
 Identifier    :: { Identifier } : L_Identifier { mkPosStrToken $1 }
-
--- ^ Binary operators
-TimesT     :: { Position } : L_TimesT { mkPosToken $1 }
-DivideT    :: { Position } : L_DivideT { mkPosToken $1 }
-PlusToken  :: { Position } : L_PlusToken { mkPosToken $1 }
-MinusToken :: { Position } : L_MinusToken { mkPosToken $1 }
-ModuloT    :: { Position } : L_ModuloT { mkPosToken $1 }
-GreaterT   :: { Position } : L_GreaterT { mkPosToken $1 }
-LessT      :: { Position } : L_LessT { mkPosToken $1 }
-GreaterEqT :: { Position } : L_GreaterEqT { mkPosToken $1 }
-LessEqT    :: { Position } : L_LessEqT { mkPosToken $1 }
-EqT        :: { Position } : L_EqT { mkPosToken $1 }
-NotEqT     :: { Position } : L_NotEqT { mkPosToken $1 }
-AndT       :: { Position } : L_AndT { mkPosToken $1 }
-OrT        :: { Position } : L_OrT { mkPosToken $1 }
 
 -- ^ Pair operators
 FstT    :: { Position } : L_FstT { mkPosToken $1 }
@@ -352,70 +342,56 @@ PairElemType : BaseType { Pairable (BaseType $1) }
 -- | Expression parsing. Doesn't use operator precedence pragma to ensure 
 -- portability on all versions of happy (labTS)
 Expression :: { Pos Expression }
-Expression : ExpressionBool { $1 }
-ExpressionBool :: { Pos Expression }
-ExpressionBool : ExpressionBool OrT ExpressionBool1 
-                 { (BExp $1 (BOr, $2) $3, $2) }
-               | ExpressionBool1 { $1 } 
-ExpressionBool1 :: { Pos Expression }
-ExpressionBool1 : ExpressionBool1 AndT ExpressionBool2 
-                  { (BExp $1 (BAnd, $2) $3, $2) }
-                | ExpressionBool2 { $1 }
-ExpressionBool2 :: { Pos Expression }
-ExpressionBool2 : ExpressionBool2 EqT ExpressionBool3 
-                  { (BExp $1 (BEqual, $2) $3, $2) }
-                | ExpressionBool2 NotEqT ExpressionBool3 
-                  { (BExp $1 (BNotEqual, $2) $3, $2) }
-                | ExpressionBool3 { $1 }
-ExpressionBool3 :: { Pos Expression }
-ExpressionBool3 : ExpressionBool3 GreaterT  ExpressionValue 
-                  { (BExp $1 (BMore, $2) $3, $2) }
-                | ExpressionBool3 LessT  ExpressionValue 
-                  { (BExp $1 (BLess, $2) $3, $2) }
-                | ExpressionBool3 GreaterEqT ExpressionValue 
-                  { (BExp $1 (BMoreEqual, $2) $3, $2) }
-                | ExpressionBool3 LessEqT ExpressionValue 
-                  { (BExp $1 (BLessEqual, $2) $3, $2) }
-                | ExpressionTerm { $1 }
-ExpressionTerm :: { Pos Expression }
-ExpressionTerm : ExpressionTerm MinusToken ExpressionFactor 
-                 { (BExp $1 (BMinus, $2) $3, $2) }
-               | ExpressionTerm PlusToken ExpressionFactor 
-                 { (BExp $1 (BPlus, $2) $3, $2) }
-               | ExpressionFactor { $1 }
-ExpressionFactor :: { Pos Expression }
-ExpressionFactor : ExpressionFactor TimesT  ExpressionValue 
-                   { (BExp $1 (BTimes, $2) $3, $2) }
-                 | ExpressionFactor DivideT ExpressionValue 
-                   { (BExp $1 (BDivide, $2) $3, $2) }
-                 | ExpressionFactor ModuloT ExpressionValue 
-                   { (BExp $1 (BModulus, $2) $3, $2) }
-                 | ExpressionValue { $1 }
-ExpressionValue :: { Pos Expression }
-ExpressionValue : IntLiteral { $1 }
-                | TrueToken { (BoolExp (True), $1) }
-                | FalseToken { (BoolExp (False), $1) }
-                | CharLiteral { (CharExpr (mkChar $1), snd $1) }
-                | StringLiteral { (StringExpr (mkString $1), snd $1) }
-                | NullT { (PairExpr, $1) }
-                | Identifier { (IdentExpr $1, snd $1) }
-                | ArrayElem { (ArrayExpr $1, snd $1) }
-                | UnaryOperator Expression { (UExpr $1 $2, snd $1) }
-                | '(' Expression ')' { (BracketExp $2, mkPosToken $1) }
+Expression : Expression '||' Expression
+             { (BExp $1 (BOr, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '&&' Expression
+             { (BExp $1 (BAnd, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '==' Expression
+             { (BExp $1 (BEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '!=' Expression
+             { (BExp $1 (BNotEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '-' Expression
+             { (BExp $1 (BMinus, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '+' Expression
+             { (BExp $1 (BPlus, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '>' Expression 
+             { (BExp $1 (BMore, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '<'  Expression 
+             { (BExp $1 (BLess, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '>=' Expression 
+             { (BExp $1 (BMoreEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '<=' Expression 
+             { (BExp $1 (BLessEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '/' Expression
+             { (BExp $1 (BDivide, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '%' Expression
+             { (BExp $1 (BModulus, mkPosToken $2) $3, mkPosToken $2) }
+           | Expression '*' Expression
+             { (BExp $1 (BTimes, mkPosToken $ $2) $3, mkPosToken $ $2) }
+           | UnaryOperator Expression %prec UNARY { (UExpr $1 $2, getPos $1) }
+           | IntLiteral { $1 }
+           | TrueToken { (BoolExp (True), $1) }
+           | FalseToken { (BoolExp (False), $1) }
+           | CharLiteral { (CharExpr (mkChar $1), getPos $1) }
+           | StringLiteral { (StringExpr (mkString $1), getPos $1) }
+           | NullT { (PairExpr, $1) }
+           | Identifier { (IdentExpr $1, getPos $1) }
+           | ArrayElem { (ArrayExpr $1, getPos $1) }
+           | '(' Expression ')' { (BracketExp $2, mkPosToken $1) }
 UnaryOperator :: { Pos UnaryOperator }
 UnaryOperator : NotT { (UBang, $1) }
-              | MinusToken { (UMinus, $1) }
+              | '-' %prec UNARY { (UMinus, mkPosToken $1) }
               | LenT { (ULength, $1) }
               | OrdT { (UOrd, $1) }
               | ChrT { (UChr, $1) }
 IntLiteral :: { (Expression, Position) }
-IntLiteral : PlusToken IntDigit { % if checkOverflow $2 
+IntLiteral : '+' IntDigit { % if checkOverflow $2 
                                       then throwFlow $2 "Int Overflow in "
-                                      else return (IntExp $ read' $2, $1) 
+                                      else return (IntExp $ read' $2, mkPosToken $1) 
                                 }
-           | MinusToken IntDigit { % if checkUnderflow $2 
+           | '-' IntDigit { % if checkUnderflow $2 
                                        then throwFlow $2 "Int Underflow in "
-                                       else return (IntExp $ - read' $2, $1)
+                                       else return (IntExp $ - read' $2, mkPosToken $1)
                                  }
            | IntDigit { % if checkOverflow $1
                             then throwFlow $1 "Int Overflow in "

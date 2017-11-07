@@ -21,11 +21,10 @@ import System.Environment (getArgs, getProgName)
 import System.IO (stdin, hGetContents)
 
 import Alex.Waskell
-import Happy.Waskell
--- import Bnfc.PrintWacc
 import Data.Waskell.ADT
 import Data.Waskell.Error
 import Data.Waskell.Scope
+import Happy.Waskell
 
 -- | Definition for a parse function: takes a list of Tokens and produces an
 -- errorList possibly containing the ADT or the errors produced during parsing

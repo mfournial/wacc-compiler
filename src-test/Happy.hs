@@ -9,7 +9,7 @@ main = defaultMain $ testGroup "Unit Tests" tests
 
 tests :: [TestTree]
 tests =
-  [ testCase "Basic" 45 @?= (succ 44) --testGroup "Valid wacc files" validTests
+  [ testCase "Basic" (45 @?= (succ 44)) --testGroup "Valid wacc files" validTests
 --  , testGroup "Invalid wacc files" invalidTests
   ]
 

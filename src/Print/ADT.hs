@@ -78,37 +78,6 @@ instance Print Double where
   prt _ x = doc (shows x)
 
 
-instance Print EndT where
-  prt _ (EndT (_)) = doc . showString $ "END"
-
-
-instance Print BeginT where
-  prt _ (BeginT (_)) = doc . showString $ "BEGIN"
-
-
-instance Print SkipT where
-  prt _ (SkipT (_)) = doc . showString $ "SKIP"
-
-
-instance Print ReadT where
-  prt _ (ReadT (_)) = doc . showString $ "READ"
-
-
-instance Print PrintT where
-  prt _ (PrintT (_)) = doc . showString $ "PRINT"
-
-
-instance Print PrintLnT where
-  prt _ (PrintLnT (_)) = doc . showString $ "PRINTLN"
-
-
-instance Print FreeT where
-  prt _ (FreeT (_)) = doc . showString $ "FREE"
-
-
-instance Print ExitT where
-  prt _ (ExitT (_)) = doc . showString $ "EXIT"
-
 instance Print IntDigit where
   prt _ (IntDigit (_, i)) = doc .showString $ i
 
@@ -399,7 +368,7 @@ instance Print PairElemType where
 
 instance Print Expression where
   prt i e = case e of
-    IntExp intliteral -> prPrec i 0 (concatD [prt 0 intliteral])
+    IntExp i -> show i
     BoolExp boolliteral -> prPrec i 0 (concatD [prt 0 boolliteral])
     CharExpr charliteral -> prPrec i 0 (concatD [prt 0 charliteral])
     StringExpr stringliteral -> prPrec i 0 (concatD [prt 0 stringliteral])
@@ -412,27 +381,27 @@ instance Print Expression where
 
 instance Print UnaryOperator where
   prt i e = case e of
-    UBang nott -> prPrec i 0 (concatD [prt 0 nott])
-    UMinus minustoken -> prPrec i 0 (concatD [prt 0 minustoken])
-    ULength lent -> prPrec i 0 (concatD [prt 0 lent])
-    UOrd ordt -> prPrec i 0 (concatD [prt 0 ordt])
-    UChr chrt -> prPrec i 0 (concatD [prt 0 chrt])
+    UBang nott -> "!"
+    UMinus minustoken -> "-"
+    ULength lent -> "len"
+    UOrd ordt -> "ord"
+    UChr chrt -> "chr"
 
 instance Print BinaryOperator where
   prt i e = case e of
-    BTimes timest -> prPrec i 0 (concatD [prt 0 timest])
-    BDivide dividet -> prPrec i 0 (concatD [prt 0 dividet])
-    BModulus modulot -> prPrec i 0 (concatD [prt 0 modulot])
-    BPlus plustoken -> prPrec i 0 (concatD [prt 0 plustoken])
-    BMinus minustoken -> prPrec i 0 (concatD [prt 0 minustoken])
-    BGreater greatert -> prPrec i 0 (concatD [prt 0 greatert])
-    BLess lesst -> prPrec i 0 (concatD [prt 0 lesst])
-    BGreaterEqual greatereqt -> prPrec i 0 (concatD [prt 0 greatereqt])
-    BLessEqual lesseqt -> prPrec i 0 (concatD [prt 0 lesseqt])
-    BEqual eqt -> prPrec i 0 (concatD [prt 0 eqt])
-    BNotEqual noteqt -> prPrec i 0 (concatD [prt 0 noteqt])
-    BAnd andt -> prPrec i 0 (concatD [prt 0 andt])
-    BOr ort -> prPrec i 0 (concatD [prt 0 ort])
+    BTimes -> "*"
+    BDivide -> "/"
+    BModulus -> "%"
+    BPlus -> "+"
+    BMinus -> "-"
+    BGreater ->">" 
+    BLess -> "<"
+    BGreaterEqual -> ">="
+    BLessEqual -> "<=" 
+    BEqual -> "=="
+    BNotEqual -> "!=" 
+    BAnd -> "&&" 
+    BOr -> "||"
 
 instance Print IntLiteral where
   prt i e = case e of

@@ -51,6 +51,9 @@ import Data.Waskell.Scope
 
 %monad { ErrorList } { (>>=) } { return } -- ^ Use monadic instance of parser
 
+%error { parseError }
+%errorhandlertype explist
+
 %tokentype { Token } -- ^ Declare type of tokens returned by lexer
 
 -- | __List of tokens__
@@ -428,18 +431,12 @@ mkPosToken (PT p _) = posLineCol p
 mkPosStrToken :: Token -> (String, Position)
 mkPosStrToken t@(PT p _) = (prToken t, posLineCol p)
 
-{-
-happyError :: [Token] -> ErrorList a
-happyError []
-  = die ParserStage (0, 0) "File ended unexpectedly" 100
-happyError [(PT (Pn _ l c) _)]
-  = die ParserStage (l, c) " error at end of file" 100
-happyError [(PT (Pn _ l c) _), a]
-  = die ParserStage (l, c) (" before " ++ prToken a) 100
-happyError [(PT (Pn _ l c) _), a, b]
-  = die ParserStage (l, c) " before " ++ unwords (map (id . prToken) [a,b])
-happyError (t@(PT (Pn _ l c) _) : b : c : e : ts)
--}
+
+parseError :: ([Token], [String]) -> ErrorList a
+parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
+parseError (ts@((PT (Pn _ l c) _) : ts'), strs) =
+  die ParserStage (l, c) ("error before " ++ concat (take 4 strs)) 100
+
 
 happyError :: [Token] -> ErrorList a
 happyError [] = die ParserStage (0, 0) "File ended unexpectedly" 100

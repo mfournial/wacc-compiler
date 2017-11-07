@@ -429,22 +429,29 @@ mkPosToken :: Token -> Position
 mkPosToken (PT p _) = posLineCol p
 
 mkPosStrToken :: Token -> (String, Position)
-mkPosStrToken t@(PT p _) = (prToken t, posLineCol p)
+mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 
 
 parseError :: ([Token], [String]) -> ErrorList a
 parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
-parseError (ts@((PT (Pn _ l c) _) : ts'), strs) =
-  die ParserStage (l, c) ("error before " ++ concat (take 4 strs)) 100
+parseError (ts@((PT (Pn _ l c) t) : ts'), _) =
+  die ParserStage (l, c) ("error on " ++ (prToken t) ++ " " ++ str) 100
+  where 
+  str = case ts of
+        [] -> []
+        _ -> unwords (map (prToken . stripToken) (take 4 ts))
 
+stripToken :: Token -> Tok
+stripToken (PT _ t) = t
 
+{-
 happyError :: [Token] -> ErrorList a
 happyError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
 happyError ts@((PT (Pn _ l c) _) : ts') = die ParserStage (l, c) str 100
   where
     str = case ts of
         [] -> []
-        _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))
+        _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))-}
 
 -- | Create digit safely create a digit checking for overflow
 checkOverflow :: (String, Position) -- ^ IntDigit to be checked for overflow

@@ -58,7 +58,7 @@ run v parser input = showTree v parseErr >> displayErrorsAndExit parseErr
    parseErr :: ErrorList WaccTree
    parseErr = myLexer input >>= parser 
    -}
-run _ parser input = displayErrorsAndExit (myLexer input >>= parser >>= genSymbols)
+run _ parser input = displayResult (myLexer input >>= parser)
 
 -- | showTree will output the AST and a prettier version of the internal 
 -- representation of the program

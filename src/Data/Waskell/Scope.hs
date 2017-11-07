@@ -28,12 +28,6 @@ addStmtToScope (sts, scp) s@(StatementOperator so@((StatDecAss t i r), _)) paren
   scp' <- extendScope i t scp
   return (s : sts, scp')
 
-addStmtToScope (sts, scp) s@(StatementOperator (StatAss sa@(AssignToArrayElem (ArrayElem _ es, _)) rhs, p)) parents = do
-  t <- getType (Scop (sa, scp : parents))
-  tr <- getType (Scop (rhs, scp : parents))
-  _ <- if (t == tr) then return t else throwTypeError t p ("Array assignment requires type " ++ show t ++ " but got type " ++ show tr)
-  return (s : sts, scp)
-
 addStmtToScope (sts, scp) s@(StatementOperator so) parents = do
   _ <- getType (Scop (so, scp : parents))
   return (s : sts, scp)

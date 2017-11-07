@@ -102,7 +102,7 @@ r e t u r n         { (\p s -> PT p T_ReturnT) }
 -- | Special tokens matched with regualr exp
 \' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) } -- ^ Char token
 \" ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \"{ (\p s -> PT p ((T_StringLiteral ) s)) } -- ^ String token
-(\_ | $s)($l | $d | \_)*                          { (\p s -> PT p ((T_Identifier ) s)) } -- ^ Identifier token
+(\_ | $l)($l | $d | \_)*                          { (\p s -> PT p ((T_Identifier ) s)) } -- ^ Identifier token
 
 {
 {- | Create digit safely create a digit checking for overflow

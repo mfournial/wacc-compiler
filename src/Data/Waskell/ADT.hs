@@ -23,13 +23,12 @@ instance Referenceable a => Referenceable (Pos a) where
 
 type ScopeBlock = ([Statement], NewScope)
 
-type Scope = M.HashMap String Type
+type Scope = M.HashMap String (Either Type Function)
 
 newtype NewScope = NewScope Scope
   deriving (Eq, Show)
 
 type Identifier = Pos String
-
 
 newtype WaccTree = WaccTree Program
   deriving (Eq, Show)

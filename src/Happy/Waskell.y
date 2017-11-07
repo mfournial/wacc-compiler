@@ -286,6 +286,7 @@ Statement : 'skip' { StatSkip }
           | AssignStatement { $1 }
           | ReadStatement { $1 }
           | FreeStatement { $1 }
+          | ReturnT Expression { % die ParserStage $1 "Found unexpected return statement in program main body" 200 }
           | PrintStatement { $1 }
           | PrintlnStatement { $1 }
           | ExitT Expression { statOp (StatExit $2, $1) }

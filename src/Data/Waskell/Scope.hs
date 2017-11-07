@@ -16,7 +16,7 @@ genSymbols (WaccTree (Program fsp (sts, empty))) = do
   return (WaccTree (Program (zip fs' ps) (retsts, retscp)))
 
 addFuncToScope :: NewScope -> Function -> ErrorList NewScope
-addFuncToScope scp f@(Function r i _ _) = extendScope i r scp
+addFuncToScope scp f@(Function _ i _ _) = extendScope i (Right f) scp
 
 fillScopeBlock :: ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
 fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) ([], scp) sts 
@@ -25,7 +25,7 @@ addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
 addStmtToScope (sts, scp) s@(StatementOperator so@((StatDecAss t i r), _)) parents = do
   _ <- getType (Scop (so, scp : parents))
-  scp' <- extendScope i t scp
+  scp' <- extendScope i (Left t) scp
   return (s : sts, scp')
 
 addStmtToScope (sts, scp) s@(StatementOperator so) parents = do
@@ -61,7 +61,7 @@ genSymbolsF (Function t i ps (sts, _)) scp = do
 emptyScope :: NewScope
 emptyScope = NewScope M.empty
 
-extendScope :: Identifier -> Type -> NewScope -> ErrorList NewScope
+extendScope :: Identifier -> Either Type Function -> NewScope -> ErrorList NewScope
 extendScope (s,p) t m@(NewScope hmap) 
   | M.member s hmap = throwError m (ErrorData FatalLevel AnalStage p (" attempting to redifine already defined variable or function " ++ s) 200)
   | otherwise = return $ NewScope (M.insert s t hmap)
@@ -70,5 +70,5 @@ genParamScope :: [Parameter] -> ErrorList NewScope
 genParamScope = foldM addParamToScope emptyScope
 
 addParamToScope :: NewScope -> Parameter -> ErrorList NewScope
-addParamToScope ns (Param t i) = extendScope i t ns
+addParamToScope ns (Param t i) = extendScope i (Left t) ns
 

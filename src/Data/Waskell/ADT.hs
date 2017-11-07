@@ -91,6 +91,8 @@ type PairElem = Either (Pos Expression) (Pos Expression)
 data Type = Pairable Pairable | PairType Type Type | IOUnit
 
 instance Eq Type where
+  (==) (Pairable (BaseType StringType)) (Pairable (ArrayType (Pairable (BaseType CharType)))) = True
+  (==) (Pairable (ArrayType (Pairable (BaseType CharType)))) (Pairable (BaseType StringType)) = True
   (==) (PairType _ _) (Pairable PairNull) = True
   (==) (Pairable PairNull) (PairType _ _) = True
   (==) (PairType _ _) (PairType _ _) = True

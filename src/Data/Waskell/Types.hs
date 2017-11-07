@@ -158,7 +158,16 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
 
   --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
-  getType (Scop ((AssignFunctionCall i exps), scp)) = lookupType i scp
+  getType (Scop ((AssignFunctionCall i exps), scp)) = do
+    (Function ret _ ps _) <- lookupFunction i scp
+    _ <- sequence $ zipWith3 (checker ret) exps ps [1..] 
+    return ret
+    where
+      checker :: Type -> Pos Expression -> Parameter -> Int -> ErrorList Type
+      checker ret ep@(e, pos) (Param t _) track
+        | getType (Scop (ep, scp)) == getType t = return ret
+        | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ show i ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
+                        
       
     
   getType (Scop (AssignPairElem ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos 
@@ -292,6 +301,10 @@ subError ts target given op waccT track pos = throwTypeError (target, ts) pos (g
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
 lookupType i@(name, p) ((NewScope hmap) : scps) = maybe (lookupType i scps) (either return (\_ -> die AnalStage p "Attempted to treat function as first class object" 200)) (M.lookup name hmap)
 lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
+
+lookupFunction :: Identifier -> [NewScope] -> ErrorList Function
+lookupFunction i@(name, p) ((NewScope hmap) : scps) = maybe (lookupFunction i scps) (either (\_ -> die AnalStage p "Attempted to treat value as function" 200) return) (M.lookup name hmap)
+lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
 
 throwTypeError :: a -> Position -> String -> ErrorList a
 throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)

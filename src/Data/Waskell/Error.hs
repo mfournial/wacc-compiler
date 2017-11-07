@@ -81,6 +81,7 @@ printError = putStrLn . showError
 showError :: ErrorData -> String
 showError ed = show (level ed) ++ ": in stage " ++ show (stage ed) ++ " at position " ++ show (position ed) ++ " with error:\n" ++ message ed 
 
+
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x : xs) = Just x
@@ -89,6 +90,6 @@ displayResult :: Show a => ErrorList a -> IO ()
 displayResult (ErrorList b []) = putStrLn (show b)
 displayResult (ErrorList _ eds) = mapM_ printError (sort eds)
 
-displayErrorsAndExit :: ErrorList a -> IO ()
-displayErrorsAndExit (ErrorList _ []) = putStrLn "SUCCESS" >> exitWith ExitSuccess
-displayErrorsAndExit (ErrorList _ eds) = mapM printError (sort eds) >> maybe (exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))
+displayErrorsAndExit :: Show a => Int -> ErrorList a -> IO ()
+displayErrorsAndExit v (ErrorList a []) = if v > 1 then putStrLn "SUCCESS" >> putStrLn (show a) >> exitWith ExitSuccess else exitWith ExitSuccess
+displayErrorsAndExit v (ErrorList _ eds) = mapM printError (sort eds) >> maybe (if v > 1 then putStrLn "SUCCESS" >> exitWith ExitSuccess else exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))

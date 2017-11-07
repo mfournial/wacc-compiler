@@ -15,10 +15,10 @@ infixr :+>
 infixr ::>
 
 data WaccType = Type :-> WaccType 
-                         | TypeID :=> WaccType 
-                         | ((Type, Type), TypeID) :+> WaccType 
-                         | ArrayWaccType ::> WaccType 
-                         | RetWT
+              | TypeID :=> WaccType 
+              | ((Type, Type), TypeID) :+> WaccType 
+              | ArrayWaccType ::> WaccType 
+              | RetWT
   deriving (Eq)
 
 newtype ArrayWaccType = ArrayWaccType WaccType
@@ -72,10 +72,10 @@ instance WaccTypeable BinaryOperator where
   getWType BModulus   = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
   getWType BPlus      = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
   getWType BMinus     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BMore      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLess      = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BMoreEqual = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLessEqual = ((wplus IntType CharType), (TypeID "a")) :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BMore      = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLess      = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BMoreEqual = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLessEqual = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BEqual     = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BNotEqual  = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BAnd       = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
@@ -136,21 +136,21 @@ getArrayElemType i (e : exps) pos scp = do
     getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") 200
 
 instance Typeable (Scop AssignLhs) where
-  getType (Scop ((AssignToIdent iden), scp)) =  lookupType iden scp
-  getType (Scop ((AssignToArrayElem (ArrayElem _ [], _)), _)) = fail "Parser error (empty array index) passed to semantic checker"
-  getType (Scop ((AssignToArrayElem (ArrayElem i (e : exps), pos)), scp)) = getArrayElemType i (e : exps) pos scp
+  getType (Scop (AssignToIdent iden, scp)) =  lookupType iden scp
+  getType (Scop (AssignToArrayElem (ArrayElem _ [], _), _)) = fail "Parser error (empty array index) passed to semantic checker"
+  getType (Scop (AssignToArrayElem (ArrayElem i (e : exps), pos), scp)) = getArrayElemType i (e : exps) pos scp
     {-t <- lookupType i scp
     case t of
       (Pairable (ArrayType t')) -> return t'
       _ -> die TypeStage pos ("Attempting to index into non array type " ++ show t) 200
       -}
-  getType (Scop (AssignToPair ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
-  getType (Scop (AssignToPair ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
+  getType (Scop (AssignToPair (Left (e, pos), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
+  getType (Scop (AssignToPair (Right (e, pos), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
 
 instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
-  getType (Scop ((AssignArrayLit (ArrayLiteral [])), _)) = return (Pairable ArrayNull)
-  getType (Scop ((AssignArrayLit (ArrayLiteral (p : ps))), scp)) = do
+  getType (Scop (AssignArrayLit (ArrayLiteral []), _)) = return (Pairable ArrayNull)
+  getType (Scop (AssignArrayLit (ArrayLiteral (p : ps)), scp)) = do
     t <- getType (Scop (p, scp)) 
     _ <- foldM (checkSame scp) t ps 
     return (Pairable (ArrayType t))

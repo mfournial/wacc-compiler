@@ -158,15 +158,16 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
 
   --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
-  getType (Scop ((AssignFunctionCall i exps), scp)) = do
+  getType (Scop ((AssignFunctionCall i@(sid, pid) exps), scp)) = do
     (Function ret _ ps _) <- lookupFunction i scp
+    when (length ps /= length exps) $ throwTypeError () pid ("Function with identifier " ++ sid ++ " called with wrong number of arguments")
     _ <- sequence $ zipWith3 (checker ret) exps ps [1..] 
     return ret
     where
       checker :: Type -> Pos Expression -> Parameter -> Int -> ErrorList Type
       checker ret ep@(e, pos) (Param t _) track
         | getType (Scop (ep, scp)) == getType t = return ret
-        | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ show i ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
+        | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ sid ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
                         
       
     

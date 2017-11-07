@@ -16,8 +16,11 @@ parsing.
 {
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-overlapping-patterns #-}
 module Happy.Waskell where
-import Alex.Waskell
 
+import System.Environment(getArgs)
+import System.IO.Unsafe (unsafePerformIO)
+
+import Alex.Waskell
 import Data.Waskell.ADT
 import Data.Waskell.Error
 import Data.Waskell.Scope
@@ -51,8 +54,10 @@ import Data.Waskell.Scope
 
 %monad { ErrorList } { (>>=) } { return } -- ^ Use monadic instance of parser
 
-%error { parseError }
+%error { parseError }      -- ^ Use monadic error function
 %errorhandlertype explist
+
+%expect 0 -- ^ shift/reduce or r/r conflicts (to the price of code repetition)
 
 %tokentype { Token } -- ^ Declare type of tokens returned by lexer
 
@@ -140,10 +145,12 @@ L_LenT { PT _ (T_LenT) }
 L_OrdT { PT _ (T_OrdT) }
 L_ChrT { PT _ (T_ChrT) }
 
+
+-- | Operator precedence and associativity (from less to more)
 %left '||'
 %left '&&'
 %left '==' '!='
-%left '<' '>' '<=' '>='
+%nonassoc '<' '>' '<=' '>=' -- ^ @ %nonassoc @ means @a < b < c@ is meaningless
 %left '+' '-'
 %left '*' '/' '%'
 %left UNARY
@@ -342,8 +349,8 @@ PairElemType : BaseType { Pairable (BaseType $1) }
              | ArrayDeclarationLiteral { Pairable $1 }
              | 'pair' { Pairable PairNull }
 
--- | Expression parsing. Doesn't use operator precedence pragma to ensure 
--- portability on all versions of happy (labTS)
+-- | Expression parsing. Uses the precedence pragma on top of file to ensure
+-- associativity and precedence
 Expression :: { Pos Expression }
 Expression : Expression '||' Expression
              { (BExp $1 (BOr, mkPosToken $2) $3, mkPosToken $2) }
@@ -371,7 +378,6 @@ Expression : Expression '||' Expression
              { (BExp $1 (BModulus, mkPosToken $2) $3, mkPosToken $2) }
            | Expression '*' Expression
              { (BExp $1 (BTimes, mkPosToken $ $2) $3, mkPosToken $ $2) }
-           | UnaryOperator Expression %prec UNARY { (UExpr $1 $2, getPos $1) }
            | IntLiteral { $1 }
            | TrueToken { (BoolExp (True), $1) }
            | FalseToken { (BoolExp (False), $1) }
@@ -381,25 +387,77 @@ Expression : Expression '||' Expression
            | Identifier { (IdentExpr $1, getPos $1) }
            | ArrayElem { (ArrayExpr $1, getPos $1) }
            | '(' Expression ')' { (BracketExp $2, mkPosToken $1) }
+           | UnaryOperator Expression %prec UNARY { (UExpr $1 $2, getPos $1) }
+           | '-' PureExpression %prec UNARY { (UExpr (UMinus, mkPosToken $1) $2, mkPosToken $1) }
 UnaryOperator :: { Pos UnaryOperator }
 UnaryOperator : NotT { (UBang, $1) }
-              | '-' %prec UNARY { (UMinus, mkPosToken $1) }
               | LenT { (ULength, $1) }
               | OrdT { (UOrd, $1) }
               | ChrT { (UChr, $1) }
 IntLiteral :: { (Expression, Position) }
 IntLiteral : '+' IntDigit { % if checkOverflow $2 
-                                      then throwFlow $2 "Int Overflow in "
-                                      else return (IntExp $ read' $2, mkPosToken $1) 
-                                }
+                                then throwFlow $2 "Int Overflow in "
+                                else return (IntExp $ read' $2, mkPosToken $1) 
+                          }
            | '-' IntDigit { % if checkUnderflow $2 
-                                       then throwFlow $2 "Int Underflow in "
-                                       else return (IntExp $ - read' $2, mkPosToken $1)
-                                 }
+                                then throwFlow $2 "Int Underflow in "
+                                else return (IntExp $ - read' $2, mkPosToken $1)
+                          }
            | IntDigit { % if checkOverflow $1
                             then throwFlow $1 "Int Overflow in "
                             else return (IntExp $ read' $1, snd $1) 
                       }
+
+-- | PureExpression is an exact copy of Expression except for the fact that 
+-- it doesn't contain the possibility of having a digit without a sign.
+-- This dissallow all ambiguity in grammar caused by unary minus or a negative
+-- int. The team had the choice between 1 shift/reduce conflict that had the
+-- correct behavior or this fix, the choice was made to get them down to 0, even
+-- if that (unique in happy?) solution is really not pretty.
+PureExpression :: { Pos Expression }
+PureExpression : PureExpression '||' PureExpression
+             { (BExp $1 (BOr, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '&&' PureExpression
+             { (BExp $1 (BAnd, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '==' PureExpression
+             { (BExp $1 (BEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '!=' PureExpression
+             { (BExp $1 (BNotEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '-' PureExpression
+             { (BExp $1 (BMinus, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '+' PureExpression
+             { (BExp $1 (BPlus, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '>' PureExpression 
+             { (BExp $1 (BMore, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '<'  PureExpression 
+             { (BExp $1 (BLess, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '>=' PureExpression 
+             { (BExp $1 (BMoreEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '<=' PureExpression 
+             { (BExp $1 (BLessEqual, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '/' PureExpression
+             { (BExp $1 (BDivide, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '%' PureExpression
+             { (BExp $1 (BModulus, mkPosToken $2) $3, mkPosToken $2) }
+           | PureExpression '*' PureExpression
+             { (BExp $1 (BTimes, mkPosToken $ $2) $3, mkPosToken $ $2) }
+           | '+' IntDigit { % if checkOverflow $2 
+                                then throwFlow $2 "Int Overflow in "
+                                else return (IntExp $ read' $2, mkPosToken $1) 
+                          }
+           | '-' IntDigit { % if checkUnderflow $2 
+                                then throwFlow $2 "Int Underflow in "
+                                else return (IntExp $ - read' $2, mkPosToken $1)
+                          }
+           | TrueToken { (BoolExp (True), $1) }
+           | FalseToken { (BoolExp (False), $1) }
+           | CharLiteral { (CharExpr (mkChar $1), getPos $1) }
+           | StringLiteral { (StringExpr (mkString $1), getPos $1) }
+           | NullT { (PairExpr, $1) }
+           | Identifier { (IdentExpr $1, getPos $1) }
+           | ArrayElem { (ArrayExpr $1, getPos $1) }
+           | '(' PureExpression ')' { (BracketExp $2, mkPosToken $1) }
+           | UnaryOperator PureExpression %prec UNARY { (UExpr $1 $2, getPos $1) }
 {
 
 -- | Shortens the parser code
@@ -439,19 +497,9 @@ parseError (ts@((PT (Pn _ l c) t) : ts'), _) =
   where 
   str = case ts of
         [] -> []
-        _ -> unwords (map (prToken . stripToken) (take 4 ts))
+        _ -> unwords (map (prToken . (\(PT _ t) -> t)) (take 4 ts))
 
-stripToken :: Token -> Tok
-stripToken (PT _ t) = t
 
-{-
-happyError :: [Token] -> ErrorList a
-happyError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
-happyError ts@((PT (Pn _ l c) _) : ts') = die ParserStage (l, c) str 100
-  where
-    str = case ts of
-        [] -> []
-        _ -> " error before " ++ unwords (map (id . prToken) (take 4 ts))-}
 
 -- | Create digit safely create a digit checking for overflow
 checkOverflow :: (String, Position) -- ^ IntDigit to be checked for overflow

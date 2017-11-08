@@ -1,6 +1,7 @@
 import Test.Tasty
 import Test.Tasty.HUnit
 import System.IO.Unsafe (unsafePerformIO)
+import Data.Maybe
 
 import Alex.Tokens
 import Alex.Waskell
@@ -10,10 +11,9 @@ main :: IO ()
 main = defaultMain $ testGroup "all-tests" tests
 
 strip :: ErrorList [Token] -> [Tok]
-strip (ErrorList (Just a) []) = map stip' a
+strip el = map strip' (fromJust (errorListToMaybe el))
   where
-    stip' (PT _ t) = t
-strip (ErrorList _ _) = []
+    strip' (PT _ t) = t
 
 tests :: [TestTree]
 tests =

@@ -22,7 +22,9 @@ module Data.Waskell.Error (
   die,
   displayResult,
   displayErrorsAndExit,
-  checkForFatals
+  checkForFatals,
+  unsafeErrorListToMaybe,
+  errorListToMaybe
   ) where
 
 
@@ -121,6 +123,16 @@ showErrorMessage ed = message ed
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
 safeHead (x : _) = Just x
+
+-- | Will extract a maybe value from the errorlist. N.B This may not actually be the value of the computation performed, and could be filled with values designed to perform error recovery.
+-- For example, in typechecking an expression we may return IntType when actually there was a TypeError.
+unsafeErrorListToMaybe :: ErrorList a -> Maybe a
+unsafeErrorListToMaybe (ErrorList v _) = v
+
+-- | Checks for fatal errors, if there are none we will return Just the value computed, if there is a fatal error however, we return nothing.
+-- This is equivalent to unsafeErrorListToMaybe . checkForFatals
+errorListToMaybe :: ErrorList a -> Maybe a 
+errorListToMaybe = unsafeErrorListToMaybe . checkForFatals
 
 displayResult :: Show a => ErrorList a -> IO ()
 displayResult (ErrorList b []) = putStrLn (show b)

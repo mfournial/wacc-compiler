@@ -118,7 +118,7 @@ getPairElemTypeR s pos = do
     _ -> die TypeStage pos "fst called on non-pair expression" 200
 
 getArrayElemType :: Identifier -> [Pos Expression] -> Position -> [NewScope] -> ErrorList Type
-getArrayElemType i [] pos scp = fail "Parser error (empty array index) passed to semantic checker"
+getArrayElemType _ [] _ _ = fail "Parser error (empty array index) passed to semantic checker"
 getArrayElemType i (e : exps) pos scp = do
   t <- lookupType i scp
   getType' (e : exps) t pos
@@ -127,11 +127,11 @@ getArrayElemType i (e : exps) pos scp = do
     getType' [] t  _ = return t
     getType' (e' : es') (Pairable (ArrayType t')) _ = do 
       int <- getType (Scop (e', scp))
-      int' <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
       getType' es' t' pos
     getType' (e' : []) (Pairable (BaseType StringType)) _ = do
       int <- getType (Scop (e', scp))
-      int' <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
       return (liftType CharType)
     getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") 200
 
@@ -159,7 +159,7 @@ instance Typeable (Scop AssignRhs) where
     return ret
     where
       checker :: Type -> Pos Expression -> Parameter -> Int -> ErrorList Type
-      checker ret ep@(e, pos) (Param t _) track
+      checker ret ep@(_, pos) (Param t _) track
         | getType (Scop (ep, scp)) == getType t = return ret
         | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ sid ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
                         
@@ -170,35 +170,35 @@ instance Typeable (Scop AssignRhs) where
 
 
 instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
-  getType (Scop (o@((StatDecAss typ _ arhs), pos), scp))  = do
+  getType (Scop (o@((StatDecAss typ _ arhs), _), scp))  = do
                                                           trhs <- getType (Scop (arhs, scp))
                                                           subType o [typ, trhs]
-  getType (Scop (o@((StatAss alhs arhs), pos), scp))      = do 
+  getType (Scop (o@((StatAss alhs arhs), _), scp))      = do 
                                                           tlhs <- getType (Scop (alhs, scp))
                                                           trhs <- getType (Scop (arhs, scp))
                                                           subType o [tlhs, trhs]
   --Ideally we would implement recursion on pairs in subType' but it seems like overengineering
   --just for this one example, so we hacked it instead.
-  getType (Scop (o@((StatFree e), pos), scp))             = do 
+  getType (Scop (((StatFree e), pos), scp))             = do 
                                                           expr <- getType  (Scop (e, scp)) 
                                                           case expr of
                                                             (Pairable (ArrayType _)) -> return IOUnit
                                                             (PairType _ _) -> return IOUnit
                                                             _ -> throwTypeError IOUnit pos "Attempting to free non pair/array type"  
 
-  getType (Scop (o@((StatRead alhs), pos), scp))          = do 
+  getType (Scop (o@((StatRead alhs), _), scp))          = do 
                                                           tlhs <- getType  (Scop (alhs, scp))
                                                           subType o [tlhs]
-  getType (Scop (o@((StatReturn e), pos), scp))           = do 
+  getType (Scop (o@((StatReturn e), _), scp))           = do 
                                                           expr <-  getType  (Scop (e, scp)) 
                                                           subType o [expr] 
-  getType (Scop (o@((StatExit e), pos), scp))             = do
+  getType (Scop (o@((StatExit e), _), scp))             = do
                                                           expr <- getType  (Scop (e, scp)) 
                                                           subType o [expr]
-  getType (Scop (o@((StatPrint e), pos), scp))            = do 
+  getType (Scop (o@((StatPrint e), _), scp))            = do 
                                                           expr <- getType  (Scop (e, scp))
                                                           subType o [expr]
-  getType (Scop (o@((StatPrintLn e), pos), scp))          = do  
+  getType (Scop (o@((StatPrintLn e), _), scp))          = do  
                                                           expr <- getType  (Scop (e, scp))
                                                           subType o [expr]
 checkSame :: [NewScope] -> Type -> Pos Expression -> ErrorList Type
@@ -231,7 +231,7 @@ handleOperator :: (WaccTypeable a, Referenceable a) => Pos a -> [Scop (Pos Expre
 handleOperator op sexprs = mapM getType sexprs >>= subType op
 
 handleArray :: Identifier -> Pos Expression -> [NewScope] -> ErrorList ()
-handleArray i e scp = checkTypes (Scop (e, scp)) IntType
+handleArray _ e scp = checkTypes (Scop (e, scp)) IntType
 
 checkTypes :: (Typeable r) => Scop (Pos Expression) -> r -> ErrorList ()
 checkTypes given@(Scop (e, _)) required = do
@@ -266,10 +266,10 @@ subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) t
       else die TypeStage pos ("Type Error: " ++ "Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We require [" ++ show t' ++ "] but were given [" ++ show t ++ "]") 200
 
 
-subType' ((ArrayWaccType (t :-> RetWT)) ::> ws) (t' : ts) _ op opW track pos = if t == t' then return (t, ts) else subError ts (Pairable (ArrayType t)) t' op opW track pos
+subType' ((ArrayWaccType (t :-> RetWT)) ::> _) (t' : ts) _ op opW track pos = if t == t' then return (t, ts) else subError ts (Pairable (ArrayType t)) t' op opW track pos
 
 
-subType' (ArrayWaccType w ::> ws) (t' : ts) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+subType' (ArrayWaccType _ ::> _) (t' : _) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
 
 
 subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++ ": " ++ getName op ++ " doesn't have a concrete return type, in fact it has type (" ++ show opW ++ ")")) (\t -> return (t, ts)) (lookup s tids)
@@ -281,7 +281,7 @@ subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t' ws ts tids
 
 subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
 
-subType' RetWT ts _ _ _ _ _ = fail "hope we don't get here (to reason about this later)"
+subType' RetWT _ _ _ _ _ _ = fail "hope we don't get here (to reason about this later)"
 
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 

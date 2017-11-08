@@ -1,5 +1,4 @@
 {-|
-= WACC Compiler
 
 Error Monad
 
@@ -14,7 +13,6 @@ Otherwise we continue with the placeholder value.
 
 -}
 
-
 module Data.Waskell.Error (
   Level(..),
   Stage(..),
@@ -27,8 +25,10 @@ module Data.Waskell.Error (
   checkForFatals
   ) where
 
+
 import Control.Monad (liftM)
 import Data.List
+import System.Console.ANSI
 import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 
 
@@ -65,7 +65,7 @@ instance Ord ErrorData where
              else (level a < level b)
 
 instance (Show a) => Show (ErrorList a) where
-  show (ErrorList (Just a) es) = show a ++ "\n" ++ concatMap showError es
+  show (ErrorList (Just a) es) = show a ++ "\n" ++ concatMap (\ed -> message ed) es
   show (ErrorList Nothing _) = "Fatal Error"
 
 data ErrorList a = ErrorList (Maybe a) [ErrorData]
@@ -103,12 +103,20 @@ die :: Stage -> (Int, Int) -> String -> Int -> ErrorList a
 die s p m i = ErrorList Nothing [(ErrorData FatalLevel s p m i)]
 
 printError :: ErrorData -> IO ()
-printError = putStrLn . showError
+printError ed = do
+  setSGR [SetColor Foreground Vivid Red]
+  putStrLn (showErrorHeader ed)
+  setSGR [Reset]
+  putStrLn (showErrorMessage ed)
 
-showError :: ErrorData -> String
-showError ed = "*** " ++ show (level ed) ++ ": in stage " ++ show (stage ed) ++
-               " at position " ++ show (position ed) ++ " with error:\n" ++ 
-               message ed 
+-- | Shows the meta informations about the error
+showErrorHeader :: ErrorData -> String
+showErrorHeader ed = "*** " ++ show (level ed) ++ ": in stage " ++ show (stage ed) ++
+                     " at position " ++ show (position ed) ++ " with error:\n"
+
+-- | Shows the error message in the error data
+showErrorMessage :: ErrorData -> String
+showErrorMessage ed = message ed 
 
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing

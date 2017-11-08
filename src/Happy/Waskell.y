@@ -444,25 +444,28 @@ PureExpression : PureExpression '||' PureExpression
            | UnaryOperator PureExpression %prec UNA { (UExpr $1 $2, getPos $1) }
 {
 
--- | Shortens the parser code.
+-- | Shorten the parser code.
 statOp :: Pos StatementOperator -> Statement
 statOp = StatementOperator
 
--- | Generates a new scope block.
+-- | Generate a new scope block.
 mkSB :: [Statement] -> ScopeBlock
 mkSB sts = (sts, emptyScope)
 
--- | Strips char token of surrounding quotes.
+-- | Strip char token of surrounding quotes.
 mkChar :: (String, Position) -> Char
 mkChar = (!!2) . fst
 
--- | Strip string token of surrounding quotes
+-- | Strip string token of surrounding quotes.
 mkString :: (String, Position) -> String
 mkString = tail . init . fst
 
-read' :: (String, Position) -> Int
+-- | Read the value of IntDigit Tokens.
+read' :: (String, Position) -- ^ the int token to read
+      -> Int -- ^ the read value
 read' = read . fst
 
+-- | Throw and overflow Error and recover.
 throwFlow :: (String, Position)  -- ^ Token to throw
           -> String -- ^ Error message to display to user
           -> ErrorList (Expression, Position) -- ^ Returned error
@@ -470,14 +473,24 @@ throwFlow (s, p) msg = throwError
                          (IntExp 0, p) 
                          (ErrorData FatalLevel ParserStage p (msg ++ s) 100)
 
-mkPosToken :: Token -> Position
+-- | Strip Token from Tok attribute.
+mkPosToken :: Token -- ^ The token to strip
+           -> Position -- ^ The position of the token
 mkPosToken (PT p _) = posLineCol p
 
-mkPosStrToken :: Token -> (String, Position)
+-- | Strip String Token from Tok attribute.
+mkPosStrToken :: Token -- ^ The token to strip
+              -> (String, Position) -- ^ The postion and content of the token
 mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 
 
-parseError :: ([Token], [String]) -> ErrorList a
+-- | Handles parse errors in a gcc like model. Goes through the file again using
+-- unsafePerfomIO (which has no impact on the program as it is used only once 
+-- and the only thing that could make it unpure would be a removal of the file
+-- which doesn't matter as it's for error reporting) to get the corresponding
+-- error lines and prints them in pretty colors
+parseError :: ([Token], [String]) -- ^ Next tokens to read, internal string
+           -> ErrorList a -- ^ Returned Error monad to handle error reporting
 parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
 parseError (ts@((PT (Pn _ l c) t) : _), _) =
   die ParserStage pos (str) 100
@@ -492,7 +505,11 @@ parseError (ts@((PT (Pn _ l c) t) : _), _) =
         file : [] -> readFile file >>= printParseError strToken pos
         _ -> return ""
 
-printParseError :: String -> (Int, Int) -> String -> IO String
+-- | Prints the lines containing the errors
+printParseError :: String -- ^ Unexpected token
+                -> (Int, Int) -- ^ Position of the error
+                -> String -- ^ Program string 
+                -> IO String
 printParseError t (l, c) s = do 
   setSGR [SetColor Foreground Vivid Red]
   putStrLn ("Found unexpected token " ++ t ++ " in:")
@@ -504,9 +521,13 @@ printParseError t (l, c) s = do
     fileLines = map ("\t" ++ ) $ lines s
     carret = "\t" ++ (take (c - 1) (repeat ' ') ++ take (length t) (repeat '^'))
 
-printAround :: [String] -> String -> Int -> IO String
+-- | When the program has a minimum of a line above and below the error, then
+-- prints the adjacent line to the error
+printAround :: [String] -- ^ List of lines of the file
+            -> String  -- ^ Indented line of carrets for underlining error
+            -> Int -- ^ line number of the error
+            -> IO String -- ^ Returned with finishing string 
 printAround fileLines carretLine l = do 
-  setSGR [Reset]
   putStrLn (surroundingLines!!0 ++ "\n"  ++ surroundingLines!!1)
   setSGR [SetColor Foreground Vivid Red]
   putStrLn carretLine
@@ -516,7 +537,11 @@ printAround fileLines carretLine l = do
   where
     surroundingLines = drop (l - 2) (take (l +1) fileLines)
 
-printUnique :: [String] -> String -> Int -> IO String
+-- | When the program doesn't have enough lines, prints only the relevant line
+printUnique :: [String] -- ^ List of lines of the file
+            -> String  -- ^ Indented line of carrets for underlining error
+            -> Int -- ^ line number of the error
+            -> IO String -- ^ Returned with finishing string 
 printUnique fileLines carretLine l = do 
   putStrLn (fileLines!!(l - 1))
   setSGR [SetColor Foreground Vivid Red]
@@ -543,6 +568,6 @@ lowerBound = 2147483648
 upperBound :: Integer -- ^ @ 2^31 - 1 @ 32 bit signed int
 upperBound = 2147483647
 
-myLexer = tokens
+myLexer = tokens -- ^ Name of the tokenizing function defined in the lexer
 }
 

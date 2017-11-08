@@ -15,9 +15,11 @@ parsing.
 -}
 {
 {-# OPTIONS_GHC -fno-warn-incomplete-patterns -fno-warn-overlapping-patterns #-}
+{-# FlexibleContexts #-}
 module Happy.Waskell where
 
-import System.Environment(getArgs)
+import System.Console.ANSI
+import System.Environment (getArgs)
 import System.IO.Unsafe (unsafePerformIO)
 
 import Alex.Waskell
@@ -492,14 +494,31 @@ mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 
 parseError :: ([Token], [String]) -> ErrorList a
 parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
-parseError (ts@((PT (Pn _ l c) t) : ts'), _) =
-  die ParserStage (l, c) ("error on " ++ (prToken t) ++ " " ++ str) 100
+parseError (ts@((PT (Pn _ l c) t) : _), _) =
+  die ParserStage (l, c) ("found unexpected token " ++ strToken ++ str) 100
   where 
-  str = case ts of
-        [] -> []
-        _ -> unwords (map (prToken . (\(PT _ t) -> t)) (take 4 ts))
-
-
+    strToken = prToken t
+    tokLength = length strToken
+    arrangeLines [a, b, c] d = [a, b, d, c]
+    arrangeLines _ _ = ["Compiler can't display the lines"]
+    errorMessage f = arrangeLines (surroundingLines f) carretLine
+    printU :: String -> String
+    printU f = foldr (\a b -> a ++ "\n" ++ b) "" (errorMessage f)
+    printError f = do 
+      let surroundingLines = drop (l) $ take (l) (lines f) in
+      let carretLine = (take (c - 1) (repeat ' ')) ++ (take tokLength (repeat '^')) in
+      setSGR [SetColor Background Vivid Blue]
+      setSGR [Reset]
+      putStrLn surroundingLines
+      setSGR [SetColor Foreground Vivid Red]
+      putStrLn carretLine
+    str = unsafePerformIO (\r -> do
+      args <- getArgs 
+      case args of
+        ("-v" : f) -> printError . head $ f
+        f -> printError . head $ f
+        _ -> return
+    )
 
 -- | Create digit safely create a digit checking for overflow
 checkOverflow :: (String, Position) -- ^ IntDigit to be checked for overflow

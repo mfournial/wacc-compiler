@@ -86,7 +86,7 @@ showError ed = "*** " ++ show (level ed) ++ ": in stage " ++ show (stage ed) ++
 
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing
-safeHead (x : xs) = Just x
+safeHead (x : _) = Just x
 
 displayResult :: Show a => ErrorList a -> IO ()
 displayResult (ErrorList b []) = putStrLn (show b)

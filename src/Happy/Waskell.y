@@ -567,6 +567,7 @@ lowerBound = 2147483648
 upperBound :: Integer -- ^ @ 2^31 - 1 @ 32 bit signed int
 upperBound = 2147483647
 
-myLexer = tokens -- ^ Name of the tokenizing function defined in the lexer
+-- | Name of the tokenizing function defined in the lexer
+myLexer = tokens
 }
 

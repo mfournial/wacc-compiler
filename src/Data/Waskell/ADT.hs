@@ -1,7 +1,5 @@
 {-|
-= WACC Compiler
-
-ADT Structure
+ADT Structure for the WACC language
 
 Group 26 -- Waskell
 Module      : ADT

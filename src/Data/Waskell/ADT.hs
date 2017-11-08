@@ -83,7 +83,7 @@ data AssignRhs
     | AssignArrayLit ArrayLiteral
     | AssignPair (Pos Expression) (Pos Expression)
     | AssignPairElem (Pos PairElem)
-    | AssignFunctionCall Identifier [Pos Expression]
+    | AssignCall Identifier [Pos Expression]
   deriving (Eq, Show)
 
 type PairElem = Either (Pos Expression) (Pos Expression)

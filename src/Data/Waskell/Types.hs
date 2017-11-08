@@ -158,7 +158,7 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
 
   --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
-  getType (Scop ((AssignFunctionCall i@(sid, pid) exps), scp)) = do
+  getType (Scop ((AssignCall i@(sid, pid) exps), scp)) = do
     (Function ret _ ps _) <- lookupFunction i scp
     when (length ps /= length exps) $ throwTypeError () pid ("Function with identifier " ++ sid ++ " called with wrong number of arguments")
     _ <- sequence $ zipWith3 (checker ret) exps ps [1..] 

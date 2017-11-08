@@ -41,11 +41,11 @@ AssignToPair     . AssignLhs ::= PairElem ;
 
 
 -- | Assign Right hand side (RHS)
-AssignExp          . AssignRhs ::= Expression ;
-AssignArrayLit     . AssignRhs ::= ArrayLiteral ;
-AssignPair         . AssignRhs ::= NewpairT LParenT Expression "," Expression RParenT ;
-AssignPairElem     . AssignRhs ::= PairElem ;
-AssignFunctionCall . AssignRhs ::= CallT Identifier LParenT [ArgumentList] RParenT ;
+AssignExp      . AssignRhs ::= Expression ;
+AssignArrayLit . AssignRhs ::= ArrayLiteral ;
+AssignPair     . AssignRhs ::= NewpairT LParenT Expression "," Expression RParenT ;
+AssignPairElem . AssignRhs ::= PairElem ;
+AssignCall     . AssignRhs ::= CallT Identifier LParenT [ArgumentList] RParenT ;
 
 
 -- | Argument list for calling function

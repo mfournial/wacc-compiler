@@ -40,7 +40,7 @@ import Data.Waskell.Scope
 %name pListStatement ListStatement
 %name pAssignLhs AssignLhs
 %name pAssignRhs AssignRhs
-%name pListArgument ListArgument
+%name pListExpression ListExpression
 %name pPairElem PairElem
 %name pType Type
 %name pBaseType BaseType
@@ -49,7 +49,6 @@ import Data.Waskell.Scope
 %name pArrayAccess ArrayAccess
 %name pListArrayAccess ListArrayAccess
 %name pArrayLiteral ArrayLiteral
-%name pListArrayLiteralElem ListArrayLiteralElem
 %name pPairElemType PairElemType
 %name pExpression Expression
 %name pUnaryOperator UnaryOperator
@@ -59,7 +58,7 @@ import Data.Waskell.Scope
 %error { parseError }      -- ^ Use monadic error function
 %errorhandlertype explist
 
-%expect 0 -- ^ shift/reduce or r/r conflicts (to the price of code repetition)
+%expect 0 -- ^ shift/reduce or r/r conflicts
 
 %tokentype { Token } -- ^ Declare type of tokens returned by lexer
 
@@ -155,7 +154,7 @@ L_ChrT { PT _ (T_ChrT) }
 %nonassoc '<' '>' '<=' '>=' -- ^ @ %nonassoc @ means @a < b < c@ is meaningless
 %left '+' '-'
 %left '*' '/' '%'
-%left UNARY
+%left UNA
 
 %%
 
@@ -240,13 +239,7 @@ EndFunListStatement : ReturnT Expression { statOp (StatReturn $2, $1) }
                     | 'begin' FunListStatement 'end' { StatScope (mkSB $2) }
                     | ExitT Expression { statOp (StatExit $2, $1) }
 LimitedStatement :: { Statement } -- ^ No @ return @ or @ exit @
-LimitedStatement : 'skip' { StatSkip }
-                 | AssignStatement { $1 }
-                 | DecAssignStatement { $1 }
-                 | ReadStatement { $1 }
-                 | FreeStatement { $1 }
-                 | PrintStatement { $1 }
-                 | PrintlnStatement { $1 }
+LimitedStatement : StdStatement { $1 }
                  | 'if' Expression 
                      'then' FunListStatement 
                      'else' LimitedListStatement 
@@ -268,29 +261,20 @@ LimitedListStatement : LimitedStatement { (:[]) $1 }
                      | LimitedStatement ';' LimitedListStatement {(:) $1 $3}
 
 -- | Shared statements accros multiple branch of the bnf
-ReadStatement :: { Statement }
-ReadStatement : ReadT AssignLhs { statOp (StatRead $2, $1) }
-FreeStatement :: { Statement }
-FreeStatement : FreeT Expression { statOp (StatFree $2, $1) }
-PrintStatement :: { Statement }
-PrintStatement : PrintT Expression { statOp (StatPrint $2, $1) }
-PrintlnStatement  :: { Statement }
-PrintlnStatement : PrintLnT Expression { statOp (StatPrintLn $2, $1) }
-AssignStatement :: { Statement }
-AssignStatement : AssignLhs EqualT AssignRhs { statOp (StatAss $1 $3, $2) }
-DecAssignStatement :: { Statement }
-DecAssignStatement : Type Identifier EqualT AssignRhs 
-                     { statOp (StatDecAss $1 $2 $4, $3) }
+StdStatement :: { Statement }
+StdStatement : ReadT AssignLhs { statOp (StatRead $2, $1) }
+             | FreeT Expression { statOp (StatFree $2, $1) }
+             | PrintT Expression { statOp (StatPrint $2, $1) }
+             | PrintLnT Expression { statOp (StatPrintLn $2, $1) }
+             | AssignLhs EqualT AssignRhs { statOp (StatAss $1 $3, $2) }
+             | Type Identifier EqualT AssignRhs 
+               { statOp (StatDecAss $1 $2 $4, $3) }
+             | 'skip' { StatSkip }
 
 Statement :: { Statement } -- ^ allow all statement except return for main
-Statement : 'skip' { StatSkip }
-          | DecAssignStatement { $1 }
-          | AssignStatement { $1 }
-          | ReadStatement { $1 }
-          | FreeStatement { $1 }
-          | ReturnT Expression { % die ParserStage $1 "Found unexpected return statement in program main body" 200 }
-          | PrintStatement { $1 }
-          | PrintlnStatement { $1 }
+Statement : StdStement { $1 }
+          | ReturnT Expression { % die ParserStage $1 "Found unexpected return \
+                                           statement in program main body" 200 }
           | ExitT Expression { statOp (StatExit $2, $1) }
           | 'if' Expression 
               'then' ListStatement 
@@ -313,12 +297,12 @@ AssignRhs : Expression { AssignExp $1 }
           | ArrayLiteral { AssignArrayLit $1 }
           | 'newpair' '(' Expression ',' Expression ')' { AssignPair $3 $5 }
           | PairElem { AssignPairElem $1 }
-          | 'call' Identifier '(' ListArgument ')' { AssignFunctionCall $2 $4 }
+          | 'call' Identifier '(' ListExpression ')' { AssignCall $2 $4 }
 
-ListArgument :: { [Pos Expression] }
-ListArgument : {- empty -} { [] }
+ListExpression :: { [Pos Expression] } --^ Comma separated list of arguments
+ListExpression : {- empty -} { [] }
              | Expression { (:[]) $1 }
-             | Expression ',' ListArgument { (:) $1 $3 }
+             | Expression ',' ListExpression { (:) $1 $3 }
 PairElem :: { Pos PairElem }
 PairElem : FstT Expression { (Left  $2, $1) }
          | SndT Expression { (Right $2, $1) }
@@ -341,11 +325,7 @@ ListArrayAccess :: { [Pos Expression] }
 ListArrayAccess : ArrayAccess { (:[]) $1 }
                 | ArrayAccess ListArrayAccess { (:) $1 $2 }
 ArrayLiteral :: { ArrayLiteral }
-ArrayLiteral : '[' ListArrayLiteralElem ']' { ArrayLiteral $2 }
-ListArrayLiteralElem :: { [Pos Expression] }
-ListArrayLiteralElem : {- empty -} { [] }
-                     | Expression { (:[]) $1 }
-                     | Expression ',' ListArrayLiteralElem { (:) $1 $3 }
+ArrayLiteral : '[' ListExpression ']' { ArrayLiteral $2 }
 PairElemType :: { Type }
 PairElemType : BaseType { Pairable (BaseType $1) }
              | ArrayDeclarationLiteral { Pairable $1 }
@@ -389,8 +369,9 @@ Expression : Expression '||' Expression
            | Identifier { (IdentExpr $1, getPos $1) }
            | ArrayElem { (ArrayExpr $1, getPos $1) }
            | '(' Expression ')' { (BracketExp $2, mkPosToken $1) }
-           | UnaryOperator Expression %prec UNARY { (UExpr $1 $2, getPos $1) }
-           | '-' PureExpression %prec UNARY { (UExpr (UMinus, mkPosToken $1) $2, mkPosToken $1) }
+           | UnaryOperator Expression %prec UNA { (UExpr $1 $2, getPos $1) }
+           | '-' PureExpression %prec UNA
+             { (UExpr (UMinus, mkPosToken $1) $2, mkPosToken $1) }
 UnaryOperator :: { Pos UnaryOperator }
 UnaryOperator : NotT { (UBang, $1) }
               | LenT { (ULength, $1) }
@@ -459,19 +440,22 @@ PureExpression : PureExpression '||' PureExpression
            | Identifier { (IdentExpr $1, getPos $1) }
            | ArrayElem { (ArrayExpr $1, getPos $1) }
            | '(' PureExpression ')' { (BracketExp $2, mkPosToken $1) }
-           | UnaryOperator PureExpression %prec UNARY { (UExpr $1 $2, getPos $1) }
+           | UnaryOperator PureExpression %prec UNA { (UExpr $1 $2, getPos $1) }
 {
 
--- | Shortens the parser code
+-- | Shortens the parser code.
 statOp :: Pos StatementOperator -> Statement
 statOp = StatementOperator
 
+--| Generates a new scope block.
 mkSB :: [Statement] -> ScopeBlock
 mkSB sts = (sts, emptyScope)
 
+--| Strips char token of surrounding quotes.
 mkChar :: (String, Position) -> Char
 mkChar = (!!2) . fst
 
+--| Strip string token of surrounding quotes
 mkString :: (String, Position) -> String
 mkString = tail . init . fst
 

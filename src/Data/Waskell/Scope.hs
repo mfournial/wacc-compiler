@@ -14,11 +14,13 @@ to check for semantic errors.
 -}
 
 
-module Data.Waskell.Scope where
+module Data.Waskell.Scope (genSymbols, emptyScope) where
 
 import Data.Waskell.ADT
 import Data.Waskell.Error
 import Data.Waskell.Types
+import Data.Waskell.Types.Util
+
 import Control.Monad
 
 import qualified Data.HashMap.Lazy as M

@@ -29,13 +29,14 @@ library
   ghc-options:       -O2
   hs-source-dirs:    src
   build-tools:       alex, happy
-  exposed-modules:   Data.Waskell.Error
-                   , Data.Waskell.Scope
-                   , Data.Waskell.ADT
-                   , Data.Waskell.Types
-                   , Alex.Tokens
+  exposed-modules:   Alex.Tokens
                    , Alex.Waskell
                    , Happy.Waskell
+                   , Data.Waskell.ADT
+                   , Data.Waskell.Error
+                   , Data.Waskell.Types
+                   , Data.Waskell.Types.Util
+                   , Data.Waskell.Types.WaccType
   build-tools:       alex, happy
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11

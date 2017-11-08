@@ -495,8 +495,8 @@ mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 -- so it's not on LabTS yet, maybe next year...?
 parseError :: [Token] -- ^ List of the current tokens
            -> ErrorList a -- ^ Returned Error monad to handle error reporting
-parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
-parseError (ts@((PT (Pn _ l c) t) : _), _) =
+parseError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
+parseError ts@((PT (Pn _ l c) t) : _) =
   die ParserStage pos (str) 100
   where 
     pos = (l, c)

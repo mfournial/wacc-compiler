@@ -172,7 +172,7 @@ tokens str = sequence $ go (alexStartPos, '\n', [], str)
                case alexScan inp 0 of
                  AlexEOF                   -> []
                  AlexError ((Pn _ l c), chr, _, s)  -> [die LexorStage (l, c) 
-                                                        ([chr] ++ " on " ++ s)
+                                                        ([chr] ++ " unknown: " ++ s)
                                                         100]
                  AlexSkip  inp' len        -> go inp'
                  AlexToken inp' len act    -> (return 

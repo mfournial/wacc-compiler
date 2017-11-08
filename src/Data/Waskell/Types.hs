@@ -72,10 +72,10 @@ instance WaccTypeable BinaryOperator where
   getWType BModulus   = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
   getWType BPlus      = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
   getWType BMinus     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BMore      = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLess      = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BMoreEqual = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLessEqual = (wplus IntType CharType, TypeID "a") :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BMore      = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLess      = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BMoreEqual = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
+  getWType BLessEqual = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BEqual     = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BNotEqual  = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
   getWType BAnd       = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
@@ -139,11 +139,6 @@ instance Typeable (Scop AssignLhs) where
   getType (Scop (AssignToIdent iden, scp)) =  lookupType iden scp
   getType (Scop (AssignToArrayElem (ArrayElem _ [], _), _)) = fail "Parser error (empty array index) passed to semantic checker"
   getType (Scop (AssignToArrayElem (ArrayElem i (e : exps), pos), scp)) = getArrayElemType i (e : exps) pos scp
-    {-t <- lookupType i scp
-    case t of
-      (Pairable (ArrayType t')) -> return t'
-      _ -> die TypeStage pos ("Attempting to index into non array type " ++ show t) 200
-      -}
   getType (Scop (AssignToPair (Left (e, pos), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
   getType (Scop (AssignToPair (Right (e, pos), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
 
@@ -157,7 +152,6 @@ instance Typeable (Scop AssignRhs) where
 
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
 
-  --Note this behaviour is incorrect we need to add function to our type structure with a list of type arguments
   getType (Scop ((AssignFunctionCall i@(sid, pid) exps), scp)) = do
     (Function ret _ ps _) <- lookupFunction i scp
     when (length ps /= length exps) $ throwTypeError () pid ("Function with identifier " ++ sid ++ " called with wrong number of arguments")
@@ -191,6 +185,7 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
                                                             (Pairable (ArrayType _)) -> return IOUnit
                                                             (PairType _ _) -> return IOUnit
                                                             _ -> throwTypeError IOUnit pos "Attempting to free non pair/array type"  
+
   getType (Scop (o@((StatRead alhs), pos), scp))          = do 
                                                           tlhs <- getType  (Scop (alhs, scp))
                                                           subType o [tlhs]

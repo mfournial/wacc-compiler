@@ -180,11 +180,18 @@ checkTypes given@(Scop (e, _)) required = do
     then return ()
     else expError b a e >> return ()
 
-subType :: (WaccTypeable a, Referenceable a) => Pos a -> [Type] -> ErrorList Type
+-- | Return the type of an operator evaluated with parameters
+subType :: (WaccTypeable a, Referenceable a) 
+        => Pos a -- ^ the operator
+        -> [Type] -- ^ types of parameters
+        -> ErrorList Type -- ^ return type or IOUnit if it is a statement
 subType op ts = do
   (t, ts') <- subType' (getWType op) ts [] op (getWType op) 1 (getPos op)
-  if ts' == [] then return t else fail "Too many elements when attempting to do a type substitution"
+  if ts' == [] 
+    then return t 
+    else fail "Too many elements when attempting to do a type substitution"
 
+-- NO stop reading.......
 subType' :: Referenceable a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
 subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
   | tw == t'  = subType' ws ts ((s, tw)  : tids) op opW (succ track) pos

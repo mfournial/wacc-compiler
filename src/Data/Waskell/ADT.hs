@@ -13,19 +13,24 @@ to check for semantic errors.
 
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
+
 module Data.Waskell.ADT where
+
 
 import qualified Data.HashMap.Lazy as M
 
-type Position = (Int, Int)
-type Pos a = (a, Position)
 
+type Position = (Int, Int) -- ^ Position token as of (line, column)
+type Pos a = (a, Position) -- ^ Wraps ADT elements with a position token
+
+-- | An ADT element that has a know position in the program file
 class Positionable a where
-  getPos :: a -> Position
+  getPos :: a -> Position -- ^ Extracts the position of an ADT element
 
 instance Positionable (Pos a) where
   getPos = snd
 
+-- | An ADT structure that has can be named in an error
 class Referenceable a where
   getName :: a -> String
   getClass :: a -> String
@@ -34,8 +39,11 @@ instance Referenceable a => Referenceable (Pos a) where
   getName (a, _) = getName a
   getClass (a, _) = getClass a
 
+-- | List of statements happening in a scope context
 type ScopeBlock = ([Statement], NewScope)
 
+-- | A hashmash of element to their types that doesn't treat functions as a 
+-- first level element (int x != f(x))
 type Scope = M.HashMap String (Either Type Function)
 
 newtype NewScope = NewScope Scope
@@ -103,6 +111,7 @@ type PairElem = Either (Pos Expression) (Pos Expression)
 
 data Type = Pairable Pairable | PairType Type Type | IOUnit
 
+-- | == Merges Haskell type system with WACC's grammar
 instance Eq Type where
   (==) (Pairable (BaseType StringType)) (Pairable (ArrayType (Pairable (BaseType CharType)))) = True
   (==) (Pairable (ArrayType (Pairable (BaseType CharType)))) (Pairable (BaseType StringType)) = True

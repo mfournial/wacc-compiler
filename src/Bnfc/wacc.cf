@@ -76,7 +76,7 @@ ArrayDeclarationLiteral . ArrayDeclarationLiteral ::= Type LBracketT RBracketT ;
 ArrayElem   .  ArrayElem    ::= Identifier [ArrayAccess] ;
 ArrayAccess .  ArrayAccess  ::= LBracketT Expression RBracketT ;
 (:[])       . [ArrayAccess] ::= ArrayAccess ;
-(:)   		  . [ArrayAccess] ::= ArrayAccess [ArrayAccess] ;
+(:)   		. [ArrayAccess] ::= ArrayAccess [ArrayAccess] ;
 
 ArrayLiteral     . ArrayLiteral     ::= LBracketT [ArrayLiteralElem] RBracketT ;
 ArrayLiteralElem . ArrayLiteralElem ::= Expression ;

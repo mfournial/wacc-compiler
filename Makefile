@@ -10,6 +10,9 @@ build:
 test:
 	stack test --coverage
 
+doc:
+	stack haddock
+
 clean:
 	rm -f compile
 	rm -f src-exe/compiler-exe

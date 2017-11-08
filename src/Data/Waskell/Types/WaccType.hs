@@ -1,3 +1,23 @@
+{-|
+
+WaccType Domain Specific Language
+
+
+
+Group 26 -- Waskell
+Module      : ADT
+Maintainer  : kc1616@ic.ac.uk
+Portability : POSIX
+
+This module specifies the WaccType DSL used by the group 26 WACC compiler.
+By use of the :->, :=>, :+> and ::> constructors we create representations of the types
+of operators and some statements in the WACC language.
+
+-}
+
+
+
+
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
@@ -6,10 +26,10 @@ module Data.Waskell.Types.WaccType where
 import Data.Waskell.ADT
 import Data.Waskell.Types.Util
 
-infixr :->
-infixr :=>
-infixr :+>
-infixr ::>
+infixr :-> -- ^ Joins types (as specified in Data.Waskell.ADT) to other WaccTypes 
+infixr :=> -- ^ Joins type ID's to other WaccTypes. The first instance of a TypeID tells the typchecking engine to accept any type, repeated instances of the same TypeID force the type passed to match the first TypeID
+infixr :+> -- ^ Specifies that the type may be one of two options, the TypeID then acts as specified in :=>.
+infixr ::> -- ^ Joins an array to a WaccType, N.B the inner WaccType isn't yet implemented properly, and may only be TypeID :=> RetWT for any array type, or Type :-> RetWT for a specific array type. Any other inner type reference is unimplented, and will lead to an error.
 
 data WaccType = Type :-> WaccType
               | TypeID :=> WaccType
@@ -47,7 +67,7 @@ class WaccTypeable a where
 instance WaccTypeable StatementOperator where
   getWType (StatDecAss typ _ _)  = typ :-> typ :-> IOUnit :-> RetWT
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
-  getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
+  getWType (StatFree _)          = undefined -- ^ Because of the unimplemented behaviour mentioned earlier, this is left undefined and dealt with further up in the chain of execution.
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
   getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatExit _)          = (liftType IntType) :-> IOUnit :-> RetWT

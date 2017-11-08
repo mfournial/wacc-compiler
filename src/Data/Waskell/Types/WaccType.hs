@@ -26,15 +26,15 @@ module Data.Waskell.Types.WaccType where
 import Data.Waskell.ADT
 import Data.Waskell.Types.Util
 
-infixr :-> -- ^ Joins types (as specified in Data.Waskell.ADT) to other WaccTypes 
-infixr :=> -- ^ Joins type ID's to other WaccTypes. The first instance of a TypeID tells the typchecking engine to accept any type, repeated instances of the same TypeID force the type passed to match the first TypeID
-infixr :+> -- ^ Specifies that the type may be one of two options, the TypeID then acts as specified in :=>.
-infixr ::> -- ^ Joins an array to a WaccType, N.B the inner WaccType isn't yet implemented properly, and may only be TypeID :=> RetWT for any array type, or Type :-> RetWT for a specific array type. Any other inner type reference is unimplented, and will lead to an error.
+infixr :->
+infixr :=>
+infixr :+> 
+infixr ::>
 
-data WaccType = Type :-> WaccType
-              | TypeID :=> WaccType
-              | ((Type, Type), TypeID) :+> WaccType
-              | ArrayWaccType ::> WaccType
+data WaccType = Type :-> WaccType -- ^ Joins types as specified in Data.Waskell.ADT to other WaccTypes
+              | TypeID :=> WaccType -- ^ Joins type ID's to other WaccTypes. The first instance of a TypeID tells the typchecking engine to accept any type, repeated instances of the same TypeID force the type passed to match the first TypeID
+              | ((Type, Type), TypeID) :+> WaccType -- ^ Specifies that the type may be one of two options, the TypeID then acts as specified in :=>.
+              | ArrayWaccType ::> WaccType -- ^ Joins an array to a WaccType, N.B the inner WaccType isn't yet implemented properly, and may only be TypeID :=> RetWT for any array type, or Type :-> RetWT for a specific array type. Any other inner type reference is unimplented, and will lead to an error.
               | RetWT
   deriving (Eq)
 
@@ -62,12 +62,14 @@ class WaccTypeable a where
   getWType :: a -> WaccType
 
 
--- Instances
-
+-- | Instances
+-- We have undefined for free statements because of the unimplemented behaviour
+-- mentioned earlier this is left undefined and dealt with further up in the
+-- chain of execution.
 instance WaccTypeable StatementOperator where
   getWType (StatDecAss typ _ _)  = typ :-> typ :-> IOUnit :-> RetWT
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
-  getWType (StatFree _)          = undefined -- ^ Because of the unimplemented behaviour mentioned earlier, this is left undefined and dealt with further up in the chain of execution.
+  getWType (StatFree _)          = undefined
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
   getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatExit _)          = (liftType IntType) :-> IOUnit :-> RetWT
@@ -75,19 +77,19 @@ instance WaccTypeable StatementOperator where
   getWType (StatPrintLn _)       = (TypeID "a") :=> IOUnit :-> RetWT
 
 instance WaccTypeable BinaryOperator where
-  getWType BTimes     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BDivide    = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BModulus   = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BPlus      = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BMinus     = liftType IntType                         :-> liftType IntType      :-> liftType IntType  :-> RetWT
-  getWType BMore      = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLess      = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BMoreEqual = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BLessEqual = (wplus IntType CharType, TypeID "a")     :+> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BEqual     = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BNotEqual  = TypeID "a"                               :=> TypeID "a"            :=> liftType BoolType :-> RetWT
-  getWType BAnd       = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
-  getWType BOr        = liftType BoolType                        :-> liftType BoolType     :-> liftType BoolType :-> RetWT
+  getWType BTimes     = liftType IntType                      :-> liftType IntType  :-> liftType IntType  :-> RetWT
+  getWType BDivide    = liftType IntType                      :-> liftType IntType  :-> liftType IntType  :-> RetWT
+  getWType BModulus   = liftType IntType                      :-> liftType IntType  :-> liftType IntType  :-> RetWT
+  getWType BPlus      = liftType IntType                      :-> liftType IntType  :-> liftType IntType  :-> RetWT
+  getWType BMinus     = liftType IntType                      :-> liftType IntType  :-> liftType IntType  :-> RetWT
+  getWType BMore      = (wplus IntType CharType, TypeID "a")  :+> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BLess      = (wplus IntType CharType, TypeID "a")  :+> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BMoreEqual = (wplus IntType CharType, TypeID "a")  :+> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BLessEqual = (wplus IntType CharType, TypeID "a")  :+> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BEqual     = TypeID "a"                            :=> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BNotEqual  = TypeID "a"                            :=> TypeID "a"        :=> liftType BoolType :-> RetWT
+  getWType BAnd       = liftType BoolType                     :-> liftType BoolType :-> liftType BoolType :-> RetWT
+  getWType BOr        = liftType BoolType                     :-> liftType BoolType :-> liftType BoolType :-> RetWT
 
 instance WaccTypeable UnaryOperator where
   getWType UBang    = liftType BoolType                     :-> liftType BoolType :-> RetWT

@@ -268,7 +268,7 @@ instance Tree AssignRhs where
   printTreeHelper n (AssignPairElem pe) fp b = do
     appendLn n "RHS" fp b
     printTreeHelper (n+1) pe fp b
-  printTreeHelper n (AssignFunctionCall _ i _ as _) fp b = do
+  printTreeHelper n (AssignCall _ i _ as _) fp b = do
     appendLn n "RHS" fp b
     printTreeHelper (n+1) i fp b
     printTrees n as fp b

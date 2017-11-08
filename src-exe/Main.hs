@@ -33,12 +33,6 @@ type ParseFunction a = [Token] -> ErrorList a
 -- | The Expected erbosity of the output
 type Verbosity = Int
 
--- | putStrV == putStr if verbosity is superior to 1
-{-putStrV :: Verbosity -- ^ The desired verbosity
-        -> String -- ^ The string to print
-        -> IO ()
-putStrV v s = when (v > 1) $ putStrLn s
--}
 -- | runFile will call run on the content of the passed in file
 runFile :: Verbosity -- ^ The desired level of verbosity
         -> ParseFunction WaccTree -- ^ The desired parse function to use
@@ -52,24 +46,9 @@ run :: Verbosity -- ^ the desired verbosity
     -> ParseFunction WaccTree -- ^ the parse function to use
     -> String -- ^ the input to compiler
     -> IO ()
-    {-
-run v parser input = showTree v parseErr >> displayErrorsAndExit parseErr
-  where
-   parseErr :: ErrorList WaccTree
-   parseErr = myLexer input >>= parser 
-   -}
-run _ parser input = displayErrorsAndExit $ myLexer input >>= parser >>= genSymbols
+run v parser input = 
+  displayErrorsAndExit v (myLexer input >>= parser >>= genSymbols)
 
--- | showTree will output the AST and a prettier version of the internal 
--- representation of the program
-{-showTree :: Verbosity -- ^ desired verbosity
-         -> ErrorList WaccTree -- ^ the tree to parse
-         -> IO ()
-showTree v (ErrorList (Just tree) _) = do
-  putStrV v $ "\n[Abstract Syntax]\n\n" ++ show tree
--- putStrV v $ "\n[Linearized tree]\n\n" ++ printTree tree
-showTree _ (ErrorList Nothing _) = return ()
--}
 -- | usage displays usage of the program CLI interface
 usage :: IO ()
 usage = do

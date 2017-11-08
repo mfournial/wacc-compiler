@@ -311,7 +311,7 @@ instance Print AssignRhs where
     AssignArrayLit arrayliteral -> prPrec i 0 (concatD [prt 0 arrayliteral])
     AssignPair newpairt lparent expression1 expression2 rparent -> prPrec i 0 (concatD [prt 0 newpairt, prt 0 lparent, prt 0 expression1, doc (showString ","), prt 0 expression2, prt 0 rparent])
     AssignPairElem pairelem -> prPrec i 0 (concatD [prt 0 pairelem])
-    AssignFunctionCall callt identifier lparent argumentlists rparent -> prPrec i 0 (concatD [prt 0 callt, prt 0 identifier, prt 0 lparent, prt 0 argumentlists, prt 0 rparent])
+    AssignCall callt identifier lparent argumentlists rparent -> prPrec i 0 (concatD [prt 0 callt, prt 0 identifier, prt 0 lparent, prt 0 argumentlists, prt 0 rparent])
 
 instance Print ArgumentList where
   prt i e = case e of

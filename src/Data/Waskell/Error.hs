@@ -79,7 +79,9 @@ printError :: ErrorData -> IO ()
 printError = putStrLn . showError
 
 showError :: ErrorData -> String
-showError ed = show (level ed) ++ ": in stage " ++ show (stage ed) ++ " at position " ++ show (position ed) ++ " with error:\n" ++ message ed 
+showError ed = "*** " ++ show (level ed) ++ ": in stage " ++ show (stage ed) ++
+               " at position " ++ show (position ed) ++ " with error:\n" ++ 
+               message ed 
 
 
 safeHead :: [a] -> Maybe a

@@ -34,5 +34,5 @@ doc:
     - mv /builds/waskell/compiler/.stack-work/install/**/**/**/doc/* WaskellDocs
   artifacts:
     paths:
-      - "WaskelDocs/"
+      - "WaskellDocs/"
     expire_in: 30 days

@@ -22,7 +22,7 @@ test:
     - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* WaskellTestCoverage/
   artifacts:
     paths:
-      - "public/"
+      - "WaskellTestCoverage/"
     expire_in: 30 days
 
 doc:
@@ -32,3 +32,7 @@ doc:
     - stack haddock
     - mkdir WaskellDocs
     - mv /builds/waskell/compiler/.stack-work/install/**/**/**/doc/* WaskellDocs
+  artifacts:
+    paths:
+      - "WaskelDocs/"
+    expire_in: 30 days

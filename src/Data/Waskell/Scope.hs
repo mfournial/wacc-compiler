@@ -81,7 +81,7 @@ emptyScope = NewScope M.empty
 
 extendScope :: Identifier -> Either Type Function -> NewScope -> ErrorList NewScope
 extendScope (s,p) t m@(NewScope hmap)
-  | M.member s hmap = throwError m (ErrorData FatalLevel AnalStage p (" attempting to redifine already defined variable or function " ++ s) 200)
+  | M.member s hmap = throwError m (ErrorData FatalLevel AnalStage p (" attempting to redifine already defined variable or function " ++ s) semanticErrorCode)
   | otherwise = return $ NewScope (M.insert s t hmap)
 
 genParamScope :: [Parameter] -> ErrorList NewScope

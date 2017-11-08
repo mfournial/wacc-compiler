@@ -274,7 +274,7 @@ StdStatement : ReadT AssignLhs { statOp (StatRead $2, $1) }
 Statement :: { Statement } -- ^ allow all statement except return for main
 Statement : StdStatement { $1 }
           | ReturnT Expression { % die ParserStage $1 "Found unexpected return \
-                                           statement in program main body" 200 }
+                                           statement in program main body" semanticErrorCode }
           | ExitT Expression { statOp (StatExit $2, $1) }
           | 'if' Expression 
               'then' ListStatement 
@@ -470,7 +470,7 @@ throwFlow :: (String, Position)  -- ^ Token to throw
           -> ErrorList (Expression, Position) -- ^ Returned error
 throwFlow (s, p) msg = throwError 
                          (IntExp 0, p) 
-                         (ErrorData FatalLevel ParserStage p (msg ++ s) 100)
+                         (ErrorData FatalLevel ParserStage p (msg ++ s) syntaxErrorCode)
 
 -- | Strip Token from Tok attribute.
 mkPosToken :: Token -- ^ The token to strip
@@ -495,7 +495,7 @@ mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 -- so it's not on LabTS yet, maybe next year...?
 parseError :: [Token] -- ^ List of the current tokens
            -> ErrorList a -- ^ Returned Error monad to handle error reporting
-parseError [] = die ParserStage (0, 0) "File ended unexpectedly" 100
+parseError [] = die ParserStage (0, 0) "File ended unexpectedly" syntaxErrorCode
 parseError ts@((PT (Pn _ l c) t) : _) =
   die ParserStage pos (str) 100
   where 

@@ -24,7 +24,9 @@ module Data.Waskell.Error (
   displayErrorsAndExit,
   checkForFatals,
   unsafeErrorListToMaybe,
-  errorListToMaybe
+  errorListToMaybe,
+  syntaxErrorCode,
+  semanticErrorCode
   ) where
 
 
@@ -89,6 +91,12 @@ instance Monad ErrorList where
 
 instance Functor ErrorList where
   fmap = liftM
+
+syntaxErrorCode :: Int
+syntaxErrorCode = 100
+
+semanticErrorCode :: Int
+semanticErrorCode = 200
 
 checkForFatals :: ErrorList a -> ErrorList a
 checkForFatals e@(ErrorList _ es) = if any (\ed -> level ed == FatalLevel) es

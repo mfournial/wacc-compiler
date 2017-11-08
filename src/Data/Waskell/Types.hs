@@ -33,14 +33,14 @@ getPairElemTypeL s pos = do
   x <- getType s
   case x of
     (PairType t _) -> return t
-    _ -> die TypeStage pos "fst called on non-pair expression" 200
+    _ -> die TypeStage pos "fst called on non-pair expression" semanticErrorCode
 
 getPairElemTypeR :: Scop Expression -> Position -> ErrorList Type
 getPairElemTypeR s pos = do
   x <- getType s
   case x of
     (PairType _ t) -> return t
-    _ -> die TypeStage pos "fst called on non-pair expression" 200
+    _ -> die TypeStage pos "fst called on non-pair expression" semanticErrorCode
 
 getArrayElemType :: Identifier -> [Pos Expression] -> Position -> [NewScope] -> ErrorList Type
 getArrayElemType _ [] _ _ = fail "Parser error (empty array index) passed to semantic checker"
@@ -58,7 +58,7 @@ getArrayElemType i (e : exps) pos scp = do
       int <- getType (Scop (e', scp))
       _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
       return (liftType CharType)
-    getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") 200
+    getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") semanticErrorCode
 
 instance Typeable (Scop AssignLhs) where
   getType (Scop (AssignToIdent iden, scp)) =  lookupType iden scp
@@ -175,7 +175,7 @@ subType' :: Referenceable a => WaccType -> [Type] -> [(String, Type)]-> a -> Wac
 subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
   | tw == t'  = subType' ws ts ((s, tw)  : tids) op opW (succ track) pos
   | tw' == t' = subType' ws ts ((s, tw') : tids) op opW (succ track) pos
-  | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+  | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') semanticErrorCode
 
 
 
@@ -188,13 +188,13 @@ subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) t
   else
     if (ws /= RetWT)
       then subType' ws ts tids op opW track pos >>= \res -> throwTypeError res pos ("Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We required [" ++ show t' ++ "] but were given [" ++ show t ++ "]")
-      else die TypeStage pos ("Type Error: " ++ "Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We require [" ++ show t' ++ "] but were given [" ++ show t ++ "]") 200
+      else die TypeStage pos ("Type Error: " ++ "Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We require [" ++ show t' ++ "] but were given [" ++ show t ++ "]") semanticErrorCode
 
 
 subType' ((ArrayWaccType (t :-> RetWT)) ::> _) (t' : ts) _ op opW track pos = if t == t' then return (t, ts) else subError ts (Pairable (ArrayType t)) t' op opW track pos
 
 
-subType' (ArrayWaccType _ ::> _) (t' : _) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
+subType' (ArrayWaccType _ ::> _) (t' : _) _ op opW track pos = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires an array-type in argument " ++ show track ++ " but was actually given a type " ++ show t') semanticErrorCode
 
 
 subType' ((TypeID s) :=> RetWT) ts tids op opW _ _ = maybe (fail (getClass op ++ ": " ++ getName op ++ " doesn't have a concrete return type, in fact it has type (" ++ show opW ++ ")")) (\t -> return (t, ts)) (lookup s tids)
@@ -225,15 +225,15 @@ subError ts target given op waccT track pos = throwTypeError (target, ts) pos (g
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
-lookupType i@(name, p) ((NewScope hmap) : scps) = maybe (lookupType i scps) (either return (\_ -> die AnalStage p "Attempted to treat function as first class object" 200)) (M.lookup name hmap)
-lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
+lookupType i@(name, p) ((NewScope hmap) : scps) = maybe (lookupType i scps) (either return (\_ -> die AnalStage p "Attempted to treat function as first class object" semanticErrorCode)) (M.lookup name hmap)
+lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") semanticErrorCode
 
 lookupFunction :: Identifier -> [NewScope] -> ErrorList Function
-lookupFunction i@(name, p) ((NewScope hmap) : scps) = maybe (lookupFunction i scps) (either (\_ -> die AnalStage p "Attempted to treat value as function" 200) return) (M.lookup name hmap)
-lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") 200
+lookupFunction i@(name, p) ((NewScope hmap) : scps) = maybe (lookupFunction i scps) (either (\_ -> die AnalStage p "Attempted to treat value as function" semanticErrorCode) return) (M.lookup name hmap)
+lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") semanticErrorCode
 
 throwTypeError :: a -> Position -> String -> ErrorList a
-throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)
+throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) semanticErrorCode)
 
 expError :: Type -> Type -> Pos Expression -> ErrorList Type
 expError target given e =

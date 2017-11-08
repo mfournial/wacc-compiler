@@ -173,7 +173,7 @@ tokens str = sequence $ go (alexStartPos, '\n', [], str)
                  AlexEOF                   -> []
                  AlexError ((Pn _ l c), chr, _, s)  -> [die LexorStage (l, c) 
                                                         ([chr] ++ " unknown: " ++ s)
-                                                        100]
+                                                        syntaxErrorCode]
                  AlexSkip  inp' len        -> go inp'
                  AlexToken inp' len act    -> (return 
                                           (act pos (take len str))): (go inp')

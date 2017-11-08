@@ -488,7 +488,12 @@ mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 -- and the only thing that could make it unpure would be a removal of the file
 -- which doesn't matter as it's for error reporting) to get the corresponding
 -- error lines and prints them in pretty colors
-parseError :: ([Token], [String]) -- ^ Next tokens to read, internal string
+-- NB. We could have had a follow set that was computed automatically for that
+-- we just needed to add the @ %errorhandlertype explist @
+-- But this feature was only merged recently 
+-- (https://github.com/simonmar/happy/pull/46)
+-- so it's not on LabTS yet, maybe next year...?
+parseError :: [Token] -- ^ List of the current tokens
            -> ErrorList a -- ^ Returned Error monad to handle error reporting
 parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
 parseError (ts@((PT (Pn _ l c) t) : _), _) =

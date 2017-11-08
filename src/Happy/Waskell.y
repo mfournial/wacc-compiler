@@ -272,7 +272,7 @@ StdStatement : ReadT AssignLhs { statOp (StatRead $2, $1) }
              | 'skip' { StatSkip }
 
 Statement :: { Statement } -- ^ allow all statement except return for main
-Statement : StdStement { $1 }
+Statement : StdStatement { $1 }
           | ReturnT Expression { % die ParserStage $1 "Found unexpected return \
                                            statement in program main body" 200 }
           | ExitT Expression { statOp (StatExit $2, $1) }
@@ -447,15 +447,15 @@ PureExpression : PureExpression '||' PureExpression
 statOp :: Pos StatementOperator -> Statement
 statOp = StatementOperator
 
---| Generates a new scope block.
+-- | Generates a new scope block.
 mkSB :: [Statement] -> ScopeBlock
 mkSB sts = (sts, emptyScope)
 
---| Strips char token of surrounding quotes.
+-- | Strips char token of surrounding quotes.
 mkChar :: (String, Position) -> Char
 mkChar = (!!2) . fst
 
---| Strip string token of surrounding quotes
+-- | Strip string token of surrounding quotes
 mkString :: (String, Position) -> String
 mkString = tail . init . fst
 
@@ -479,23 +479,51 @@ mkPosStrToken (PT p t) = (prToken t, posLineCol p)
 parseError :: ([Token], [String]) -> ErrorList a
 parseError ([], _) = die ParserStage (0, 0) "File ended unexpectedly" 100
 parseError (ts@((PT (Pn _ l c) t) : _), _) =
-  die ParserStage (l, c) ("found unexpected token " ++ strToken ++ str) 100
+  die ParserStage pos (str) 100
   where 
+    pos = (l, c)
     strToken = prToken t
-    tokLength = length strToken
-    str = unsafePerformIO (getArgs >>= (\args -> eval args))
+    str :: String
+    str = unsafePerformIO (getArgs >>= eval) 
     eval args =
       case args of
-        "-v":f -> printError (head  f)
-        f -> printError (head  f)
+        "-v" : file : _  -> readFile file >>= printParseError strToken pos
+        file : [] -> readFile file >>= printParseError strToken pos
         _ -> return ""
-    printError f = do 
-      setSGR [SetColor Background Vivid Blue]
-      setSGR [Reset]
-      putStrLn $ head $ drop (l - 2) (take (l + 1) (lines f))
-      setSGR [SetColor Foreground Vivid Red]
-      putStrLn $ take (c - 1) (repeat ' ') ++ take tokLength (repeat '^')
-      return ""
+
+printParseError :: String -> (Int, Int) -> String -> IO String
+printParseError t (l, c) s = do 
+  setSGR [SetColor Foreground Vivid Red]
+  putStrLn ("Found unexpected token " ++ t ++ " in:")
+  setSGR [Reset]
+  if (l < length fileLines && l > 1) 
+    then printAround fileLines carret l
+    else printUnique fileLines carret l
+  where
+    fileLines = map ("\t" ++ ) $ lines s
+    carret = "\t" ++ (take (c - 1) (repeat ' ') ++ take (length t) (repeat '^'))
+
+printAround :: [String] -> String -> Int -> IO String
+printAround fileLines carretLine l = do 
+  setSGR [Reset]
+  putStrLn (surroundingLines!!0 ++ "\n"  ++ surroundingLines!!1)
+  setSGR [SetColor Foreground Vivid Red]
+  putStrLn carretLine
+  setSGR [Reset]
+  putStrLn (surroundingLines!!2)
+  return "Parsing aborted"
+  where
+    surroundingLines = drop (l - 2) (take (l +1) fileLines)
+
+printUnique :: [String] -> String -> Int -> IO String
+printUnique fileLines carretLine l = do 
+  putStrLn (fileLines!!(l - 1))
+  setSGR [SetColor Foreground Vivid Red]
+  putStrLn carretLine
+  setSGR [Reset]
+  return "Parsing aborted"
+
+{-# NOINLINE parseError #-}
 
 -- | Create digit safely create a digit checking for overflow
 checkOverflow :: (String, Position) -- ^ IntDigit to be checked for overflow

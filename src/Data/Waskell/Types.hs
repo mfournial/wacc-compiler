@@ -1,7 +1,22 @@
+{-|
+
+Type Checker
+
+Group 26 -- Waskell
+Module      : Error
+Maintainer  : kc1616@ic.ac.uk
+Portability : POSIX
+
+This module checks types in our abstract syntax tree. We define the typeclass typeable which provides a getType function on typeables, this function checks the type on the AST node and returns a resolved type.
+
+We also define subType which takes a WaccType and a list of concrete types, substituing the concrete types into the WaccType resolving a return type. If there is a mismatch a type error is thrown.
+
+-}
+
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Data.Waskell.Types where
+module Data.Waskell.Types (Typeable(getType), subType, Scop(Scop)) where
 
 import Data.Waskell.ADT
 import Data.Waskell.Error
@@ -26,40 +41,7 @@ instance Typeable Pairable where
 
 instance Typeable Type where
   getType a = return a
-
-
-getPairElemTypeL :: Scop Expression -> Position -> ErrorList Type
-getPairElemTypeL s pos = do
-  x <- getType s
-  case x of
-    (PairType t _) -> return t
-    _ -> die TypeStage pos "fst called on non-pair expression" semanticErrorCode
-
-getPairElemTypeR :: Scop Expression -> Position -> ErrorList Type
-getPairElemTypeR s pos = do
-  x <- getType s
-  case x of
-    (PairType _ t) -> return t
-    _ -> die TypeStage pos "fst called on non-pair expression" semanticErrorCode
-
-getArrayElemType :: Identifier -> [Pos Expression] -> Position -> [NewScope] -> ErrorList Type
-getArrayElemType _ [] _ _ = fail "Parser error (empty array index) passed to semantic checker"
-getArrayElemType i (e : exps) pos scp = do
-  t <- lookupType i scp
-  getType' (e : exps) t pos
-  where
-    getType' :: [Pos Expression] -> Type -> Position -> ErrorList Type
-    getType' [] t  _ = return t
-    getType' (e' : es') (Pairable (ArrayType t')) _ = do
-      int <- getType (Scop (e', scp))
-      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
-      getType' es' t' pos
-    getType' (e' : []) (Pairable (BaseType StringType)) _ = do
-      int <- getType (Scop (e', scp))
-      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
-      return (liftType CharType)
-    getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") semanticErrorCode
-
+  
 instance Typeable (Scop AssignLhs) where
   getType (Scop (AssignToIdent iden, scp)) =  lookupType iden scp
   getType (Scop (AssignToArrayElem (ArrayElem _ [], _), _)) = fail "Parser error (empty array index) passed to semantic checker"
@@ -126,11 +108,6 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
   getType (Scop (o@((StatPrintLn e), _), scp))          = do  
                                                           expr <- getType  (Scop (e, scp))
                                                           subType o [expr]
-checkSame :: [NewScope] -> Type -> Pos Expression -> ErrorList Type
-checkSame scp a' (b, pb) = do
-  b' <- getType (Scop (b, scp))
-  if (a' == b') then return a' else throwTypeError a' pb ("Array literal declared with multiple element types, in particular we expect a " ++ show a' ++ " but got a " ++ show b')
-
 instance Typeable Function where
   getType (Function t _ _ (sts, scp))
     = mapM_ (\e -> checkTypes (Scop (e, [scp])) t) returns >> getType t
@@ -151,6 +128,43 @@ instance Typeable (Scop Expression) where
   getType (Scop ((UExpr uop e), scp)) = handleOperator uop [Scop (e, scp)]
   getType (Scop ((BExp e bop e'), scp)) = handleOperator bop [Scop (e, scp), Scop (e', scp)]
   getType (Scop ((BracketExp e ), scp)) = getType (Scop (e, scp))
+
+getPairElemTypeL :: Scop Expression -> Position -> ErrorList Type
+getPairElemTypeL s pos = do
+  x <- getType s
+  case x of
+    (PairType t _) -> return t
+    _ -> die TypeStage pos "fst called on non-pair expression" semanticErrorCode
+
+getPairElemTypeR :: Scop Expression -> Position -> ErrorList Type
+getPairElemTypeR s pos = do
+  x <- getType s
+  case x of
+    (PairType _ t) -> return t
+    _ -> die TypeStage pos "snd called on non-pair expression" semanticErrorCode
+
+getArrayElemType :: Identifier -> [Pos Expression] -> Position -> [NewScope] -> ErrorList Type
+getArrayElemType _ [] _ _ = fail "Parser error (empty array index) passed to semantic checker"
+getArrayElemType i (e : exps) pos scp = do
+  t <- lookupType i scp
+  getType' (e : exps) t pos
+  where
+    getType' :: [Pos Expression] -> Type -> Position -> ErrorList Type
+    getType' [] t  _ = return t
+    getType' (e' : es') (Pairable (ArrayType t')) _ = do
+      int <- getType (Scop (e', scp))
+      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      getType' es' t' pos
+    getType' (e' : []) (Pairable (BaseType StringType)) _ = do
+      int <- getType (Scop (e', scp))
+      _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
+      return (liftType CharType)
+    getType' _ _ pos' = die TypeStage pos' ("Attempted to index too far into array") semanticErrorCode
+
+checkSame :: [NewScope] -> Type -> Pos Expression -> ErrorList Type
+checkSame scp a' (b, pb) = do
+  b' <- getType (Scop (b, scp))
+  if (a' == b') then return a' else throwTypeError a' pb ("Array literal declared with multiple element types, in particular we expect a " ++ show a' ++ " but got a " ++ show b')
 
 handleOperator :: (WaccTypeable a, Referenceable a) => Pos a -> [Scop (Pos Expression)] -> ErrorList Type
 handleOperator op sexprs = mapM getType sexprs >>= subType op
@@ -206,7 +220,7 @@ subType' (t :-> ws) (t' : ts) tids op opW track pos = subTypeCheck t' ws ts tids
 
 subType' (t :-> RetWT) ts _ _ _ _ _ = return (t, ts)
 
-subType' RetWT _ _ _ _ _ _ = fail "hope we don't get here (to reason about this later)"
+subType' RetWT _ _ _ _ _ _ = fail "Error: undefined WaccType input"
 
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 
@@ -214,16 +228,14 @@ subTypeCheck :: Referenceable a => Type -> WaccType -> [Type] -> [(String, Type)
 subTypeCheck giv ws ts tids op opW track pos tar
   = if tar == giv then subType' ws ts tids op opW (succ track) pos else subError ts tar giv op opW track pos >> subType' ws ts tids op opW (succ track) pos
 
-grabPairElem :: (Eq a) => a -> (a, a) -> Maybe a
-grabPairElem a (b, c)
-  | a == b = Just a
-  | a == c = Just c
-  | otherwise = Nothing
-
 subError :: Referenceable a => [Type] -> Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
 subError ts target given op waccT track pos = throwTypeError (target, ts) pos (getClass op ++ ": " ++ getName op ++ " has type (" ++ show waccT ++ ") but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given)
 
-
+-- These functions lookup types and functions in the scope, note we appreciate functions shouldn't
+-- be in the same scope as types, however we realised this near the end of the front end and
+-- had to hack an either into scopes in order to get the code to work.
+--
+-- The overhead isn't too bad as we are O(n) in scopes as opposed to O(1) (If we were treating functions differently)
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
 lookupType i@(name, p) ((NewScope hmap) : scps) = maybe (lookupType i scps) (either return (\_ -> die AnalStage p "Attempted to treat function as first class object" semanticErrorCode)) (M.lookup name hmap)
 lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") semanticErrorCode
@@ -232,8 +244,6 @@ lookupFunction :: Identifier -> [NewScope] -> ErrorList Function
 lookupFunction i@(name, p) ((NewScope hmap) : scps) = maybe (lookupFunction i scps) (either (\_ -> die AnalStage p "Attempted to treat value as function" semanticErrorCode) return) (M.lookup name hmap)
 lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") semanticErrorCode
 
-throwTypeError :: a -> Position -> String -> ErrorList a
-throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) semanticErrorCode)
 
 expError :: Type -> Type -> Pos Expression -> ErrorList Type
 expError target given e =

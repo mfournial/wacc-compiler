@@ -8,12 +8,24 @@ Module      : Error
 Maintainer  : kc1616@ic.ac.uk
 Portability : POSIX
 
-This module contains the Error Monad which is used to throw beautiful errors
+This module is the basis for handling errors in the group 26 WACC compiler. We consider that if we still have a value, we may continue computation.
+Bind is implemented in such a way that if die is called, rather than the throwError function (which requires a placeholder value) then computation will stop.
+Otherwise we continue with the placeholder value.
 
 -}
 
 
-module Data.Waskell.Error where
+module Data.Waskell.Error (
+  Level(..),
+  Stage(..),
+  ErrorData(..),
+  ErrorList,
+  throwError,
+  die,
+  displayResult,
+  displayErrorsAndExit,
+  checkForFatals
+  ) where
 
 import Control.Monad (liftM)
 import Data.List

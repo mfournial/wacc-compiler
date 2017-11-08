@@ -22,6 +22,7 @@ import System.Console.ANSI
 import System.Environment (getArgs)
 import System.IO.Unsafe (unsafePerformIO)
 
+import Alex.Tokens
 import Alex.Waskell
 import Data.Waskell.ADT
 import Data.Waskell.Error

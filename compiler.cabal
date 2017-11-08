@@ -30,6 +30,7 @@ library
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
                    , Data.Waskell.ADT
+                   , Alex.Tokens
                    , Alex.Waskell
                    , Happy.Waskell
                    , Data.Waskell.Scope

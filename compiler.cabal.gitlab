@@ -33,6 +33,7 @@ library
                    , Data.Waskell.Scope
                    , Data.Waskell.ADT
                    , Data.Waskell.Types
+                   , Alex.Tokens
                    , Alex.Waskell
                    , Happy.Waskell
   build-tools:       alex, happy

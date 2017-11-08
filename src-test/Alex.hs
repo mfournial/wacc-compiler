@@ -2,6 +2,7 @@ import Test.Tasty
 import Test.Tasty.HUnit
 import System.IO.Unsafe (unsafePerformIO)
 
+import Alex.Tokens
 import Alex.Waskell
 import Data.Waskell.Error
 

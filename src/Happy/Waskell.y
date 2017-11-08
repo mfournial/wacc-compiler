@@ -57,7 +57,6 @@ import Data.Waskell.Scope
 %monad { ErrorList } { (>>=) } { return } -- ^ Use monadic instance of parser
 
 %error { parseError }      -- ^ Use monadic error function
-%errorhandlertype explist
 
 %expect 0 -- ^ shift/reduce or r/r conflicts
 

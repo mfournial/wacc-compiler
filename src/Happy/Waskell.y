@@ -499,26 +499,19 @@ parseError (ts@((PT (Pn _ l c) t) : _), _) =
   where 
     strToken = prToken t
     tokLength = length strToken
-    arrangeLines [a, b, c] d = [a, b, d, c]
-    arrangeLines _ _ = ["Compiler can't display the lines"]
-    errorMessage f = arrangeLines (surroundingLines f) carretLine
-    printU :: String -> String
-    printU f = foldr (\a b -> a ++ "\n" ++ b) "" (errorMessage f)
+    str = unsafePerformIO (getArgs >>= (\args -> eval args))
+    eval args =
+      case args of
+        "-v":f -> printError (head  f)
+        f -> printError (head  f)
+        _ -> return ""
     printError f = do 
-      let surroundingLines = drop (l) $ take (l) (lines f) in
-      let carretLine = (take (c - 1) (repeat ' ')) ++ (take tokLength (repeat '^')) in
       setSGR [SetColor Background Vivid Blue]
       setSGR [Reset]
-      putStrLn surroundingLines
+      putStrLn $ head $ drop (l - 2) (take (l + 1) (lines f))
       setSGR [SetColor Foreground Vivid Red]
-      putStrLn carretLine
-    str = unsafePerformIO (\r -> do
-      args <- getArgs 
-      case args of
-        ("-v" : f) -> printError . head $ f
-        f -> printError . head $ f
-        _ -> return
-    )
+      putStrLn $ take (c - 1) (repeat ' ') ++ take tokLength (repeat '^')
+      return ""
 
 -- | Create digit safely create a digit checking for overflow
 checkOverflow :: (String, Position) -- ^ IntDigit to be checked for overflow

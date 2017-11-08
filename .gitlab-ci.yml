@@ -4,6 +4,7 @@ image: mfournial/waskell-env
 stages: 
   - build
   - test
+  - doc
 
 build:
   script:
@@ -17,9 +18,17 @@ test:
     - master
   script:
     - stack test --coverage
-    - mkdir public
-    - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* public/
+    - mkdir WaskellTestCoverage
+    - mv /builds/waskell/compiler/.stack-work/install/**/**/**/hpc/* WaskellTestCoverage/
   artifacts:
     paths:
       - "public/"
     expire_in: 30 days
+
+doc:
+  only:
+    - master
+  script:
+    - stack haddock
+    - mkdir WaskellDocs
+    - mv /builds/waskell/compiler/.stack-work/install/**/**/**/doc/* WaskellDocs

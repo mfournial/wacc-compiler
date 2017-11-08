@@ -30,20 +30,16 @@ import Data.Waskell.Error
 -- be able to send precise semantic errors
 
 -- List of tokens: 
-$d = [0-9]                              -- ^ digit
-$u = [\0-\255]                          -- ^ universal: any character
-$s = [a-z\222-\255] # [\247]            -- ^ lowercase letter
-$l = [a-zA-Z\192 - \255] # [\215 \247]  -- ^ letter
+$digit     = [0-9]                              -- ^ digit regex
+$universal = [\0-\255]                          -- ^ universal: any character
+$letter    = [a-zA-Z\192 - \255] # [\215 \247]  -- ^ letter regex
 
 
-@rsyms =    -- ^ symbols and non-identifier-like reserved words
-   \, | \;
-
-:-
-"#" [.]* ;  -- ^ Toss single line comments
+tokens :-
+"#" [.]*            ;  -- ^ Toss single line comments
 
 -- | These are all the keywords token generation code, wrapped in a position
-$white+ ;
+$white+             ;
 
 \,                  { (\p s -> PT p T_CoT) }
 \;                  { (\p s -> PT p T_SepT) }
@@ -56,7 +52,7 @@ p r i n t           { (\p s -> PT p T_PrintT) }
 p r i n t l n       { (\p s -> PT p T_PrintLnT) }
 f r e e             { (\p s -> PT p T_FreeT) }
 e x i t             { (\p s -> PT p T_ExitT) }
-$d +                { (\p s -> PT p (T_IntDigit s))}
+$digit +            { (\p s -> PT p (T_IntDigit s))}
 \+                  { (\p s -> PT p T_PlusToken) } 
 \-                  { (\p s -> PT p T_MinusToken) } 
 t r u e             { (\p s -> PT p T_TrueToken) }
@@ -101,9 +97,9 @@ r e t u r n         { (\p s -> PT p T_ReturnT) }
 \!                  { (\p s -> PT p T_NotT) }
 
 -- | Special tokens matched with regualr exp
-\' ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) } -- ^ Char token
-\" ($u # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \"{ (\p s -> PT p ((T_StringLiteral ) s)) } -- ^ String token
-(\_ | $l)($l | $d | \_)*                          { (\p s -> PT p ((T_Identifier ) s)) } -- ^ Identifier token
+\' ($universal # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) }   -- ^ Char token
+\" ($universal # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \"{ (\p s -> PT p ((T_StringLiteral ) s)) } -- ^ String token
+(\_ | $letter)($letter | $digit | \_)*                    { (\p s -> PT p ((T_Identifier ) s)) }    -- ^ Identifier token
 
 {
 {- | Create digit safely create a digit checking for overflow

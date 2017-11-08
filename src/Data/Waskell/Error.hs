@@ -1,3 +1,18 @@
+{-|
+= WACC Compiler
+
+Error Monad
+
+Group 26 -- Waskell
+Module      : Error
+Maintainer  : kc1616@ic.ac.uk
+Portability : POSIX
+
+This module contains the Error Monad which is used to throw beautiful errors
+
+-}
+
+
 module Data.Waskell.Error where
 
 import Control.Monad (liftM)
@@ -31,8 +46,8 @@ data ErrorData = ErrorData {
 } deriving (Eq)
 
 instance Ord ErrorData where
-  (<=) a b = if (level a == level b) 
-               then if (stage a == stage b) 
+  (<=) a b = if (level a == level b)
+               then if (stage a == stage b)
                  then (message a <= message b)
                else (stage a < stage b)
              else (level a < level b)
@@ -41,22 +56,22 @@ instance (Show a) => Show (ErrorList a) where
   show (ErrorList (Just a) es) = show a ++ "\n" ++ concatMap showError es
   show (ErrorList Nothing _) = "Fatal Error"
 
-data ErrorList a = ErrorList (Maybe a) [ErrorData] 
+data ErrorList a = ErrorList (Maybe a) [ErrorData]
   deriving (Eq, Ord)
 
 instance Applicative ErrorList where
-  pure a = ErrorList (Just a) [] 
+  pure a = ErrorList (Just a) []
   (<*>) (ErrorList (Just f) efunc) (ErrorList (Just a) es) = ErrorList (Just (f a)) (efunc ++ es)
   (<*>) (ErrorList _ efunc) (ErrorList _ es) = ErrorList Nothing (efunc ++ es)
 
 instance Monad ErrorList where
-  return = pure  
+  return = pure
   fail s = ErrorList Nothing [(ErrorData FatalLevel UnknownStage (0,0) ("Internal Compiler Error: " ++ s) 255)]
   ErrorList (Just a) es >>= f = case f a of
     ErrorList (Just b) es' -> ErrorList (Just b) (es ++ es')
     ErrorList Nothing es'  -> ErrorList Nothing (es ++ es')
   ErrorList Nothing es >>= _ = ErrorList Nothing es
-    
+
 
 instance Functor ErrorList where
   fmap = liftM
@@ -82,7 +97,6 @@ showError :: ErrorData -> String
 showError ed = "*** " ++ show (level ed) ++ ": in stage " ++ show (stage ed) ++
                " at position " ++ show (position ed) ++ " with error:\n" ++ 
                message ed 
-
 
 safeHead :: [a] -> Maybe a
 safeHead [] = Nothing

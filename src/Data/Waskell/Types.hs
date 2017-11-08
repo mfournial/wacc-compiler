@@ -2,7 +2,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 module Data.Waskell.Types where
-  
+
 import Data.Waskell.ADT
 import Data.Waskell.Error
 import Control.Monad
@@ -14,10 +14,10 @@ infixr :=>
 infixr :+>
 infixr ::>
 
-data WaccType = Type :-> WaccType 
-              | TypeID :=> WaccType 
-              | ((Type, Type), TypeID) :+> WaccType 
-              | ArrayWaccType ::> WaccType 
+data WaccType = Type :-> WaccType
+              | TypeID :=> WaccType
+              | ((Type, Type), TypeID) :+> WaccType
+              | ArrayWaccType ::> WaccType
               | RetWT
   deriving (Eq)
 
@@ -27,7 +27,7 @@ newtype ArrayWaccType = ArrayWaccType WaccType
 liftType :: BaseType -> Type
 liftType = Pairable . BaseType
 
-wplus :: BaseType -> BaseType -> (Type, Type) 
+wplus :: BaseType -> BaseType -> (Type, Type)
 wplus a b = (liftType a, liftType b)
 
 newtype TypeID = TypeID String
@@ -46,7 +46,7 @@ instance Show WaccType where
   show (a :-> b) = show a ++ (" -> ") ++ show b
   show (tid :=> b) = show tid ++ " -> " ++ show b
   show ((p, tid) :+> b) = show tid ++ " elem of " ++ show p ++ " -> " ++ show b
-  show ((ArrayWaccType wt) ::> b) = "[" ++ show wt ++ "]" ++ " -> " ++ show b 
+  show ((ArrayWaccType wt) ::> b) = "[" ++ show wt ++ "]" ++ " -> " ++ show b
   show RetWT = ""
 
 class Typeable a where
@@ -60,9 +60,9 @@ instance WaccTypeable StatementOperator where
   getWType (StatAss _ _)         = (TypeID "a") :=> (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatFree _)          = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatRead _)          = ((wplus IntType CharType), (TypeID "a")) :+> IOUnit :-> RetWT
-  getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT 
+  getWType (StatReturn _)        = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatExit _)          = (liftType IntType) :-> IOUnit :-> RetWT
-  getWType (StatPrint _)         = (TypeID "a") :=> IOUnit :-> RetWT 
+  getWType (StatPrint _)         = (TypeID "a") :=> IOUnit :-> RetWT
   getWType (StatPrintLn _)       = (TypeID "a") :=> IOUnit :-> RetWT
 
 
@@ -125,7 +125,7 @@ getArrayElemType i (e : exps) pos scp = do
   where
     getType' :: [Pos Expression] -> Type -> Position -> ErrorList Type
     getType' [] t  _ = return t
-    getType' (e' : es') (Pairable (ArrayType t')) _ = do 
+    getType' (e' : es') (Pairable (ArrayType t')) _ = do
       int <- getType (Scop (e', scp))
       _ <- if int /= liftType IntType then throwTypeError int pos "Attempt to index array with non integer expression" else return int
       getType' es' t' pos
@@ -146,8 +146,8 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop (AssignExp e, scps)) = getType (Scop (e, scps))
   getType (Scop (AssignArrayLit (ArrayLiteral []), _)) = return (Pairable ArrayNull)
   getType (Scop (AssignArrayLit (ArrayLiteral (p : ps)), scp)) = do
-    t <- getType (Scop (p, scp)) 
-    _ <- foldM (checkSame scp) t ps 
+    t <- getType (Scop (p, scp))
+    _ <- foldM (checkSame scp) t ps
     return (Pairable (ArrayType t))
 
   getType (Scop ((AssignPair e e'), scp)) = PairType <$> getType (Scop (e, scp)) <*> getType (Scop (e', scp))
@@ -155,18 +155,18 @@ instance Typeable (Scop AssignRhs) where
   getType (Scop ((AssignFunctionCall i@(sid, pid) exps), scp)) = do
     (Function ret _ ps _) <- lookupFunction i scp
     when (length ps /= length exps) $ throwTypeError () pid ("Function with identifier " ++ sid ++ " called with wrong number of arguments")
-    _ <- sequence $ zipWith3 (checker ret) exps ps [1..] 
+    _ <- sequence $ zipWith3 (checker ret) exps ps [1..]
     return ret
     where
       checker :: Type -> Pos Expression -> Parameter -> Int -> ErrorList Type
       checker ret ep@(_, pos) (Param t _) track
         | getType (Scop (ep, scp)) == getType t = return ret
         | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ sid ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
-                        
-      
-    
-  getType (Scop (AssignPairElem ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos 
-  getType (Scop (AssignPairElem ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos 
+
+
+
+  getType (Scop (AssignPairElem ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
+  getType (Scop (AssignPairElem ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
 
 
 instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
@@ -184,7 +184,7 @@ instance {-# OVERLAPPING #-} Typeable (Scop (Pos StatementOperator)) where
                                                           case expr of
                                                             (Pairable (ArrayType _)) -> return IOUnit
                                                             (PairType _ _) -> return IOUnit
-                                                            _ -> throwTypeError IOUnit pos "Attempting to free non pair/array type"  
+                                                            _ -> throwTypeError IOUnit pos "Attempting to free non pair/array type"
 
   getType (Scop (o@((StatRead alhs), _), scp))          = do 
                                                           tlhs <- getType  (Scop (alhs, scp))
@@ -207,7 +207,7 @@ checkSame scp a' (b, pb) = do
   if (a' == b') then return a' else throwTypeError a' pb ("Array literal declared with multiple element types, in particular we expect a " ++ show a' ++ " but got a " ++ show b')
 
 instance Typeable Function where
-  getType (Function t _ _ (sts, scp)) 
+  getType (Function t _ _ (sts, scp))
     = mapM_ (\e -> checkTypes (Scop (e, [scp])) t) returns >> getType t
     where
       returns = [e | (StatementOperator (StatReturn e, _)) <- sts]
@@ -216,7 +216,7 @@ instance {-# OVERLAPPABLE #-} Typeable (Scop a) => Typeable (Scop (Pos a)) where
   getType (Scop ((a, _), scps)) = getType (Scop (a, scps))
 
 instance Typeable (Scop Expression) where
-  getType (Scop ((IntExp _), _)) = getType IntType 
+  getType (Scop ((IntExp _), _)) = getType IntType
   getType (Scop ((BoolExp _), _)) = getType BoolType
   getType (Scop ((CharExpr _), _)) = getType CharType
   getType (Scop ((StringExpr _), _)) = getType StringType
@@ -242,12 +242,12 @@ checkTypes given@(Scop (e, _)) required = do
     else expError b a e >> return ()
 
 subType :: (WaccTypeable a, Referenceable a) => Pos a -> [Type] -> ErrorList Type
-subType op ts = do 
+subType op ts = do
   (t, ts') <- subType' (getWType op) ts [] op (getWType op) 1 (getPos op)
   if ts' == [] then return t else fail "Too many elements when attempting to do a type substitution"
 
 subType' :: Referenceable a => WaccType -> [Type] -> [(String, Type)]-> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
-subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos 
+subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
   | tw == t'  = subType' ws ts ((s, tw)  : tids) op opW (succ track) pos
   | tw' == t' = subType' ws ts ((s, tw') : tids) op opW (succ track) pos
   | otherwise = die TypeStage pos ("Type Error: " ++ getName op ++ ": has type (" ++ show opW ++ ") and in particular requires either a " ++ show tw ++ " or a " ++ show tw' ++ " in argument " ++ show track ++ " but was actually given a type " ++ show t') 200
@@ -257,11 +257,11 @@ subType' (((tw, tw'), (TypeID s)) :+> ws) (t' : ts) tids op opW track pos
 subType' ((ArrayWaccType (TypeID _ :=> RetWT)) ::> ws) ((Pairable (ArrayType t)) : ts) tids op opW track pos = if (ws /= RetWT) then subType' ws ts tids op opW track pos else return (t, ts)
 
 
-subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) tids op opW track pos = if t == t' 
+subType' (ArrayWaccType (t :-> RetWT) ::> ws) ((Pairable (ArrayType t')) : ts) tids op opW track pos = if t == t'
   then
     if (ws /= RetWT) then subType' ws ts tids op opW track pos else return (t, ts)
   else
-    if (ws /= RetWT) 
+    if (ws /= RetWT)
       then subType' ws ts tids op opW track pos >>= \res -> throwTypeError res pos ("Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We required [" ++ show t' ++ "] but were given [" ++ show t ++ "]")
       else die TypeStage pos ("Type Error: " ++ "Failed to match array types in argument " ++ show track ++ " of operator " ++ getName op ++ " with type " ++ show opW ++ ". We require [" ++ show t' ++ "] but were given [" ++ show t ++ "]") 200
 
@@ -286,7 +286,7 @@ subType' RetWT _ _ _ _ _ _ = fail "hope we don't get here (to reason about this 
 subType' _ [] _ _ _ _ _= fail "Not enough elements when attempting to do a type substitution"
 
 subTypeCheck :: Referenceable a => Type -> WaccType -> [Type] -> [(String, Type)] -> a -> WaccType -> Int -> Position -> Type -> ErrorList (Type, [Type])
-subTypeCheck giv ws ts tids op opW track pos tar 
+subTypeCheck giv ws ts tids op opW track pos tar
   = if tar == giv then subType' ws ts tids op opW (succ track) pos else subError ts tar giv op opW track pos >> subType' ws ts tids op opW (succ track) pos
 
 grabPairElem :: (Eq a) => a -> (a, a) -> Maybe a
@@ -296,7 +296,7 @@ grabPairElem a (b, c)
   | otherwise = Nothing
 
 subError :: Referenceable a => [Type] -> Type -> Type -> a -> WaccType -> Int -> Position -> ErrorList (Type, [Type])
-subError ts target given op waccT track pos = throwTypeError (target, ts) pos (getClass op ++ ": " ++ getName op ++ " has type (" ++ show waccT ++ ") but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given) 
+subError ts target given op waccT track pos = throwTypeError (target, ts) pos (getClass op ++ ": " ++ getName op ++ " has type (" ++ show waccT ++ ") but encountered an error when subsituting argument " ++ show track ++ ". The operator requires a type of " ++ show target ++ " but was given a type of " ++ show given)
 
 
 lookupType :: Identifier -> [NewScope] -> ErrorList Type
@@ -311,5 +311,5 @@ throwTypeError :: a -> Position -> String -> ErrorList a
 throwTypeError t p str = throwError t (ErrorData FatalLevel TypeStage p ("Type Error: " ++ str) 200)
 
 expError :: Type -> Type -> Pos Expression -> ErrorList Type
-expError target given e = 
+expError target given e =
   throwTypeError target (getPos e) ("Expression: " ++ show e ++ " has type " ++ show target ++ " but needs type " ++ show given)

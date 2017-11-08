@@ -1,3 +1,18 @@
+{-|
+= WACC Compiler
+
+ADT Structure
+
+Group 26 -- Waskell
+Module      : ADT
+Maintainer  : mmf115@ic.ac.uk
+Portability : POSIX
+
+This module contains the ADT structure of wacc which is used
+to check for semantic errors. 
+
+-}
+
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
 module Data.Waskell.ADT where
@@ -33,7 +48,7 @@ type Identifier = Pos String
 newtype WaccTree = WaccTree Program
   deriving (Eq, Show)
 
-data Program = Program [Pos Function] ScopeBlock 
+data Program = Program [Pos Function] ScopeBlock
   deriving (Eq, Show)
 
 data Function = Function Type Identifier [Parameter] ScopeBlock
@@ -120,8 +135,8 @@ data Pairable = BaseType BaseType | ArrayType Type | ArrayNull | PairNull
 instance Eq Pairable where
   (==) ArrayNull (ArrayType _) = True
   (==) (ArrayType _) ArrayNull = True
-  (==) (BaseType b) (BaseType b') = b == b' 
-  (==) (ArrayType a) (ArrayType a') = a == a' 
+  (==) (BaseType b) (BaseType b') = b == b'
+  (==) (ArrayType a) (ArrayType a') = a == a'
   (==) PairNull PairNull = True
   (==) _ _ = False
 
@@ -133,7 +148,7 @@ newtype ArrayLiteral = ArrayLiteral [Pos Expression]
   deriving (Eq, Show)
 
 data Expression
-    = IntExp Int 
+    = IntExp Int
     | BoolExp Bool
     | CharExpr Char
     | StringExpr String
@@ -146,7 +161,7 @@ data Expression
   deriving (Eq, Show)
 
 data UnaryOperator
-    = UBang | UMinus | ULength | UOrd | UChr 
+    = UBang | UMinus | ULength | UOrd | UChr
   deriving (Eq, Show)
 
 instance Referenceable UnaryOperator where
@@ -158,7 +173,7 @@ instance Referenceable UnaryOperator where
   getName UChr               = "return"
 
 data BinaryOperator
-    = BTimes 
+    = BTimes
     | BDivide
     | BModulus
     | BPlus

@@ -1,3 +1,19 @@
+{-|
+= WACC Compiler
+
+ADT Structure
+
+Group 26 -- Waskell
+Module      : ADT
+Maintainer  : kc1616@ic.ac.uk
+Portability : POSIX
+
+This module contains the ADT structure of wacc which is used
+to check for semantic errors.
+
+-}
+
+
 module Data.Waskell.Scope where
 
 import Data.Waskell.ADT
@@ -19,11 +35,11 @@ addFuncToScope :: NewScope -> Function -> ErrorList NewScope
 addFuncToScope scp f@(Function _ i _ _) = extendScope i (Right f) scp
 
 fillScopeBlock :: ScopeBlock -> [NewScope] -> ErrorList ScopeBlock
-fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) ([], scp) sts 
+fillScopeBlock (sts, scp) parents = foldM (\x y -> addStmtToScope x y parents) ([], scp) sts
 
 addStmtToScope :: ScopeBlock -> Statement -> [NewScope] -> ErrorList ScopeBlock
 
-addStmtToScope (sts, scp) s@(StatementOperator so@((StatDecAss t i r), _)) parents = do
+addStmtToScope (sts, scp) s@(StatementOperator so@((StatDecAss t i _), _)) parents = do
   _ <- getType (Scop (so, scp : parents))
   scp' <- extendScope i (Left t) scp
   return (s : sts, scp')
@@ -62,7 +78,7 @@ emptyScope :: NewScope
 emptyScope = NewScope M.empty
 
 extendScope :: Identifier -> Either Type Function -> NewScope -> ErrorList NewScope
-extendScope (s,p) t m@(NewScope hmap) 
+extendScope (s,p) t m@(NewScope hmap)
   | M.member s hmap = throwError m (ErrorData FatalLevel AnalStage p (" attempting to redifine already defined variable or function " ++ s) 200)
   | otherwise = return $ NewScope (M.insert s t hmap)
 
@@ -71,4 +87,3 @@ genParamScope = foldM addParamToScope emptyScope
 
 addParamToScope :: NewScope -> Parameter -> ErrorList NewScope
 addParamToScope ns (Param t i) = extendScope i (Left t) ns
-

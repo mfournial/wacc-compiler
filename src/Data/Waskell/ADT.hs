@@ -115,9 +115,9 @@ data Type = Pairable Pairable | PairType Type Type | IOUnit
 instance Eq Type where
   (==) (Pairable (BaseType StringType)) (Pairable (ArrayType (Pairable (BaseType CharType)))) = True
   (==) (Pairable (ArrayType (Pairable (BaseType CharType)))) (Pairable (BaseType StringType)) = True
+  (==) (PairType a b) (PairType a' b') = (a == a') && (b == b')
   (==) (PairType _ _) (Pairable PairNull) = True
   (==) (Pairable PairNull) (PairType _ _) = True
-  (==) (PairType _ _) (PairType _ _) = True
   (==) (Pairable a) (Pairable b) = a == b
   (==) IOUnit IOUnit = True
   (==) _ _ = False

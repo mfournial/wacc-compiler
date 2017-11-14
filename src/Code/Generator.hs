@@ -16,7 +16,7 @@ genCode' :: ScopeBlock -> [Instr]
 genCode' = undefined
 
 genFuncCode :: Function -> [Instr]
-genFuncCode (Function _ id _ sb)  = Define (getVal id) : genCode' sb
+genFuncCode (Function _ fid _ sb)  = concat [[Define (getVal fid)], genCode' sb, [Section "ltorg"]]
 
 writeCode :: FilePath -> [Instr] -> IO ()
 writeCode f = (writeFile f) . unlines . (map show)

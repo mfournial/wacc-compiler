@@ -22,6 +22,9 @@ The [Haddock documentation](https://gitlab.doc.ic.ac.uk/waskell/compiler/-/jobs/
 is generated automatically by the pipeline, go check
 it out!
 
+Go checkout the [test coverage](https://gitlab.doc.ic.ac.uk/waskell/compiler/-/jobs/artifacts/master/download?job=test)
+too! 
+
 ## Communication
 
 We decided to use a variaty of tools for communication and sharing code, our

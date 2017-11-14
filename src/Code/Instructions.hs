@@ -3,7 +3,6 @@ module Code.Instructions where
 --genUniqueLabel a = unsafePerfomeIO(return $ a ++ getTime)
 
 data Instr = Define String
-           | Ret
            | MOV Condition Set Reg Op2
            | MVN Condition Set Reg Op2
            | B   Condition String
@@ -25,7 +24,6 @@ data Instr = Define String
            | STR Condition Mem Reg Address
            | PUSH Condition [Regs]
            | POP Condition [Regs]
-           | Label String
            deriving (Eq)
 
 data Set = T
@@ -66,7 +64,7 @@ data Mem = UB  -- ^ Transfer Byte
 
 data Address = StrExp String                -- ^ expression
              | IntExp Int                   -- ^ expression
-             | OffReg Reg Offset Bool  -- ^ offset (pre-index)
+             | OffReg Reg Offset Bool       -- ^ offset (pre-index)
              deriving (Eq)
 
 
@@ -94,7 +92,6 @@ data Condition = Eq   -- ^ Equal
 
 instance Show Instr where
  show (Define str)                   = str   ++ ":"
- show (Ret) = ""
  show (MOV  cond set reg op2)        = "MOV" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
  show (MVN  cond set reg op2)        = "MVN" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
  show (B    cond label)              = "B"   ++ show(cond) ++ " "  ++ label
@@ -114,6 +111,8 @@ instance Show Instr where
  show (MLA  cond set reg oReg oReg1) = "MLA" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
  show (LDR  cond mem reg address)    = "LDR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
  show (STR  cond mem reg address)    = "STR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
+ show (PUSH cond [])                 = "PUSH"
+ show (POP cond  [])                 = "POP"
  show (PUSH cond (r:regs))           = "PUSH"++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
  show (POP  cond (r:regs))           = "POP" ++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
 
@@ -161,14 +160,14 @@ instance Show Condition where
  show (HI)                            = "HI"
  show (LS)                            = "LS"
  show (GE)                            = "GE"
- show (LTh)                            = "LT"
- show (GTh)                            = "GT"
+ show (LTh)                           = "LT"
+ show (GTh)                           = "GT"
  show (LE)                            = "LE"
  show (AL)                            = ""
 
 instance Show Reg where
  show(GPRegister n)
-  | (n <= 10) && (n >= 0)             = "r" ++ show(n)
+  | (n <= 12) && (n >= 0)             = "r" ++ show(n)
   | otherwise                         = "error"
  show(StackPointer)                   = "sp"
  show(LinkRegister)                   = "lr"
@@ -182,12 +181,3 @@ instance Show Regs where
 instance Show Set where
  show(T) = "S"
  show(F) = ""
-
-
---            | LDM Condition AddressMode Reg Regs
---            | STM Condition AddressMode Reg Regs
--- data AddressMode = IA  -- ^ Increment After
---                  | IB  -- ^ Increment Before
---                  | DA  -- ^ Decrement After
---                  | DB  -- ^ Decrement Before
--- 								 deriving (Eq)

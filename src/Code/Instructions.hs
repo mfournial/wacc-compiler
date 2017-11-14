@@ -2,7 +2,11 @@ module Code.Instructions where
 
 --genUniqueLabel a = unsafePerfomeIO(return $ a ++ getTime)
 
-data Instr = Define String
+data Instr = Section String
+           | Word Int
+           | Ascii String
+           | Define String
+           | Global
            | MOV Condition Set Reg Op2
            | MVN Condition Set Reg Op2
            | B   Condition String
@@ -91,31 +95,35 @@ data Condition = Eq   -- ^ Equal
 
 
 instance Show Instr where
- show (Define str)                   = str   ++ ":"
- show (MOV  cond set reg op2)        = "MOV" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
- show (MVN  cond set reg op2)        = "MVN" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
- show (B    cond label)              = "B"   ++ show(cond) ++ " "  ++ label
- show (BL   cond label)              = "BL"  ++ show(cond) ++ " "  ++ label
- show (CMP  cond reg op2)            = "CMP" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
- show (CMN  cond reg op2)            = "CMN" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
- show (TEQ  cond reg op2)            = "TEQ" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
- show (TST  cond reg op2)            = "TST" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
- show (AND  cond set reg oReg op2)   = "AND" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (EOR  cond set reg oReg op2)   = "EOR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (BIC  cond set reg oReg op2)   = "BIC" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (ORR  cond set reg oReg op2)   = "ORR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (SUB  cond set reg oReg op2)   = "SUB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (RSB  cond set reg oReg op2)   = "RSB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (ADD  cond set reg oReg op2)   = "ADD" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
- show (MUL  cond set reg oReg oReg1) = "MUL" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
- show (MLA  cond set reg oReg oReg1) = "MLA" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
- show (LDR  cond mem reg address)    = "LDR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
- show (STR  cond mem reg address)    = "STR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
- show (PUSH cond [])                 = "PUSH"
- show (POP cond  [])                 = "POP"
- show (PUSH cond (r:regs))           = "PUSH"++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
- show (POP  cond (r:regs))           = "POP" ++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
-
+  show (Section str)                  = '.' : str  
+  show (Word i)                       = ".word " ++ show i
+  show (Ascii str)                    = ".ascii " ++ show str
+  show Global                         = ".global main"
+  show (Define str)                   = str   ++ ":"
+  show (MOV  cond set reg op2)        = "MOV" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
+  show (MVN  cond set reg op2)        = "MVN" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
+  show (B    cond label)              = "B"   ++ show(cond) ++ " "  ++ label
+  show (BL   cond label)              = "BL"  ++ show(cond) ++ " "  ++ label
+  show (CMP  cond reg op2)            = "CMP" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
+  show (CMN  cond reg op2)            = "CMN" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
+  show (TEQ  cond reg op2)            = "TEQ" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
+  show (TST  cond reg op2)            = "TST" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
+  show (AND  cond set reg oReg op2)   = "AND" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (EOR  cond set reg oReg op2)   = "EOR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (BIC  cond set reg oReg op2)   = "BIC" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (ORR  cond set reg oReg op2)   = "ORR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (SUB  cond set reg oReg op2)   = "SUB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (RSB  cond set reg oReg op2)   = "RSB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (ADD  cond set reg oReg op2)   = "ADD" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
+  show (MUL  cond set reg oReg oReg1) = "MUL" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
+  show (MLA  cond set reg oReg oReg1) = "MLA" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
+  show (LDR  cond mem reg address)    = "LDR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
+  show (STR  cond mem reg address)    = "STR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
+  show (PUSH _ [])                 = "PUSH"
+  show (POP _  [])                 = "POP"
+  show (PUSH cond (r:regs))           = "PUSH"++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
+  show (POP  cond (r:regs))           = "POP" ++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
+ 
 
 instance Show Op2 where
  show (ShiftReg reg shift)           = show (reg) ++ show (shift)
@@ -145,6 +153,7 @@ instance Show Address where
  show (OffReg reg offset False)        = "[" ++ show (reg) ++ show (offset) ++ "]"
 
 instance Show Offset where
+ show (Int 0)                         = ""
  show (Int int)                       = ", #" ++ show(int)
  show (RegShift reg shift)            = ", " ++ show(reg) ++ show (shift)
 
@@ -175,6 +184,7 @@ instance Show Reg where
 
 
 instance Show Regs where
+ show (Registers [])     = []
  show (Registers (r:rs)) = concat ((show r) : [", " ++ show reg | reg <- rs])
  show (RRange reg oReg)  = show(reg) ++ "-" ++ show(oReg)
 

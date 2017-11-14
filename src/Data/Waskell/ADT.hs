@@ -24,11 +24,11 @@ type Position = (Int, Int) -- ^ Position token as of (line, column)
 type Pos a = (a, Position) -- ^ Wraps ADT elements with a position token
 
 -- | An ADT element that has a know position in the program file
-class Positionable a where
-  getPos :: a -> Position -- ^ Extracts the position of an ADT element
+getVal :: Pos a -> a
+getVal = fst
 
-instance Positionable (Pos a) where
-  getPos = snd
+getPos :: Pos a -> Position
+getPos = snd
 
 -- | An ADT structure that has can be named in an error
 class Referenceable a where

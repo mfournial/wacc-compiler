@@ -33,6 +33,8 @@ library
                    , Alex.Tokens
                    , Alex.Waskell
                    , Happy.Waskell
+                   , Code.Instructions
+                   , Code.Generator
                    , Data.Waskell.Scope
                    , Data.Waskell.Types
                    , Data.Waskell.Types.Util

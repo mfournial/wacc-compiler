@@ -1,6 +1,8 @@
+{-# LANGUAGE FlexibleInstances #-}
 module Code.Instructions where
 
---genUniqueLabel a = unsafePerfomeIO(return $ a ++ getTime)
+class PrintARM a where
+  printARM :: a -> String
 
 data Instr = Section String
            | Word Int
@@ -26,24 +28,31 @@ data Instr = Section String
            | MLA Condition Set Reg Reg Reg
            | LDR Condition Mem Reg Address
            | STR Condition Mem Reg Address
-           | PUSH Condition [Regs]
-           | POP Condition [Regs]
+           | PUSH Condition [Reg]
+           | POP Condition [Reg]
            deriving (Eq)
 
 data Set = T
          | F
          deriving (Eq)
 
-data Reg = GPRegister Int
+data Reg = R0
+         | R1
+         | R2
+         | R3
+         | R4
+         | R5
+         | R6
+         | R7
+         | R8
+         | R9
+         | R10
+         | R11
+         | R12
          | StackPointer
          | LinkRegister
-         | ProgramCounter
-         deriving (Eq)
-
--- ^ (prob not needed for backend but maybe add to data struct {R0 - R4, LR})
-data Regs = Registers [Reg]
-          | RRange Reg Reg
-          deriving (Eq)
+         | PC
+         deriving (Eq, Enum)
 
 data Op2 = ShiftReg Reg Shift  -- ^  Shift Register
          | ImmOpInt Int        -- ^  #expression
@@ -66,8 +75,8 @@ data Mem = UB  -- ^ Transfer Byte
          | W   -- ^ Word
          deriving (Eq)
 
-data Address = StrExp String                -- ^ expression
-             | IntExp Int                   -- ^ expression
+data Address = Label String                -- ^ expression
+             | Const Int                   -- ^ expression
              | OffReg Reg Offset Bool       -- ^ offset (pre-index)
              deriving (Eq)
 
@@ -93,101 +102,110 @@ data Condition = Eq   -- ^ Equal
                | AL   -- ^ always
                deriving (Eq)
 
-
-instance Show Instr where
-  show (Section str)                  = '.' : str  
-  show (Word i)                       = ".word " ++ show i
-  show (Ascii str)                    = ".ascii " ++ show str
-  show Global                         = ".global main"
-  show (Define str)                   = str   ++ ":"
-  show (MOV  cond set reg op2)        = "MOV" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
-  show (MVN  cond set reg op2)        = "MVN" ++ show(cond) ++ show(set)  ++ " "  ++ show(reg) ++ ", " ++ show(op2)
-  show (B    cond label)              = "B"   ++ show(cond) ++ " "  ++ label
-  show (BL   cond label)              = "BL"  ++ show(cond) ++ " "  ++ label
-  show (CMP  cond reg op2)            = "CMP" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
-  show (CMN  cond reg op2)            = "CMN" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
-  show (TEQ  cond reg op2)            = "TEQ" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
-  show (TST  cond reg op2)            = "TST" ++ show(cond) ++ " " ++ show (reg) ++ ", " ++ show (op2)
-  show (AND  cond set reg oReg op2)   = "AND" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (EOR  cond set reg oReg op2)   = "EOR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (BIC  cond set reg oReg op2)   = "BIC" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (ORR  cond set reg oReg op2)   = "ORR" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (SUB  cond set reg oReg op2)   = "SUB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (RSB  cond set reg oReg op2)   = "RSB" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (ADD  cond set reg oReg op2)   = "ADD" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(op2)
-  show (MUL  cond set reg oReg oReg1) = "MUL" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
-  show (MLA  cond set reg oReg oReg1) = "MLA" ++ show(cond) ++ show (set) ++ " " ++ show (reg) ++ ", " ++ show(oReg) ++ ", " ++ show(oReg1)
-  show (LDR  cond mem reg address)    = "LDR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
-  show (STR  cond mem reg address)    = "STR" ++ show(cond) ++ show (mem) ++ " " ++ show (reg) ++ ", " ++ show(address)
-  show (PUSH _ [])                 = "PUSH"
-  show (POP _  [])                 = "POP"
-  show (PUSH cond (r:regs))           = "PUSH"++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
-  show (POP  cond (r:regs))           = "POP" ++ show(cond) ++ " {" ++ concat (show (r) : [", " ++ show(reg) | reg <- regs]) ++ "}"
+instance PrintARM Instr where
+  printARM (Section str)                  = '.' : str  
+  printARM (Word i)                       = ".word " ++ show i
+  printARM (Ascii str)                    = ".ascii " ++ show str
+  printARM Global                         = ".global main"
+  printARM (Define str)                   =  str  ++ ":"
+  printARM (MOV  cond set reg op2)        = "MOV" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
+  printARM (MVN  cond set reg op2)        = "MVN" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
+  printARM (B    cond label)              = "B"   ++ printARM(cond) ++ " "  ++ label
+  printARM (BL   cond label)              = "BL"  ++ printARM(cond) ++ " "  ++ label
+  printARM (CMP  cond reg op2)            = "CMP" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (CMN  cond reg op2)            = "CMN" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (TEQ  cond reg op2)            = "TEQ" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (TST  cond reg op2)            = "TST" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (AND  cond set reg oReg op2)   = "AND" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (EOR  cond set reg oReg op2)   = "EOR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (BIC  cond set reg oReg op2)   = "BIC" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (ORR  cond set reg oReg op2)   = "ORR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (SUB  cond set reg oReg op2)   = "SUB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (RSB  cond set reg oReg op2)   = "RSB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (ADD  cond set reg oReg op2)   = "ADD" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (MUL  cond set reg oReg oReg1) = "MUL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (MLA  cond set reg oReg oReg1) = "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (LDR  cond mem reg address)    = "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
+  printARM (STR  cond mem reg address)    = "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
+  printARM (PUSH cond regs)               = "PUSH"++ printARM(cond) ++ printARM regs
+  printARM (POP  cond regs)               = "POP" ++ printARM(cond) ++ printARM regs
  
 
-instance Show Op2 where
- show (ShiftReg reg shift)           = show (reg) ++ show (shift)
- show (ImmOpInt int)                 = "#" ++ show (int)
- show (ImmOpCh char)                 = "#" ++ show (char)
+instance PrintARM Op2 where
+ printARM (ShiftReg reg shift)           = printARM (reg) ++ printARM (shift)
+ printARM (ImmOpInt int)                 = "#" ++ show int
+ printARM (ImmOpCh char)                 = "#" ++ show char
 
-instance Show Shift where
- show (ASL int)                       = ", ASL #" ++ show (int)
- show (LSL int)                       = ", LSL #" ++ show (int)
- show (LSR int)                       = ", LSR #" ++ show (int)
- show (ASR int)                       = ", ASR #" ++ show (int)
- show (ROR int)                       = ", ROR #" ++ show (int)
- show (RRX)                           = ", RRX"
- show (NSH)                           = ""
+instance PrintARM Shift where
+ printARM (ASL i) = ", ASL #" ++ show i
+ printARM (LSL i) = ", LSL #" ++ show i
+ printARM (LSR i) = ", LSR #" ++ show i
+ printARM (ASR i) = ", ASR #" ++ show i
+ printARM (ROR i) = ", ROR #" ++ show i
+ printARM (RRX)   = ", RRX"
+ printARM (NSH)   = ""
 
-instance Show Mem where
- show (UB)                            = "B"
- show (SB)                            = "SB"
- show (H)                             = "H"
- show (SH)                            = "SH"
- show (W)                             = "W"
+instance PrintARM Mem where
+ printARM (UB) = "B"
+ printARM (SB) = "SB"
+ printARM (H)  = "H"
+ printARM (SH) = "SH"
+ printARM (W)  = ""
 
-instance Show Address where
- show (StrExp str)                    = "=" ++ str
- show (IntExp int)                    = "=" ++ show(int)
- show (OffReg reg offset True)        = "[" ++ show (reg) ++ show (offset) ++ "]" ++ "!"
- show (OffReg reg offset False)        = "[" ++ show (reg) ++ show (offset) ++ "]"
+instance PrintARM Address where
+ printARM (Label str)              = "=" ++ str
+ printARM (Const i)                = "=" ++ show i
+ printARM (OffReg reg offset True)  = "[" ++ printARM (reg) ++ printARM (offset) ++ "]" ++ "!"
+ printARM (OffReg reg offset False) = "[" ++ printARM (reg) ++ printARM (offset) ++ "]"
 
-instance Show Offset where
- show (Int 0)                         = ""
- show (Int int)                       = ", #" ++ show(int)
- show (RegShift reg shift)            = ", " ++ show(reg) ++ show (shift)
+instance PrintARM Offset where
+ printARM (Int 0)              = ""
+ printARM (Int i)              = ", #" ++ show i 
+ printARM (RegShift reg shift) = ", " ++ printARM(reg) ++ printARM (shift)
 
-instance Show Condition where
- show (Eq)                            = "EQ"
- show (Neq)                           = "NE"
- show (CS)                            = "CS"
- show (CC)                            = "CC"
- show (MI)                            = "MI"
- show (PL)                            = "PL"
- show (VS)                            = "VS"
- show (VC)                            = "VC"
- show (HI)                            = "HI"
- show (LS)                            = "LS"
- show (GE)                            = "GE"
- show (LTh)                           = "LT"
- show (GTh)                           = "GT"
- show (LE)                            = "LE"
- show (AL)                            = ""
+instance PrintARM Condition where
+   printARM (Eq) = "EQ"
+   printARM (Neq)= "NE"
+   printARM (CS) = "CS"
+   printARM (CC) = "CC"
+   printARM (MI) = "MI"
+   printARM (PL) = "PL"
+   printARM (VS) = "VS"
+   printARM (VC) = "VC"
+   printARM (HI) = "HI"
+   printARM (LS) = "LS"
+   printARM (GE) = "GE"
+   printARM (LTh)= "LT"
+   printARM (GTh)= "GT"
+   printARM (LE) = "LE"
+   printARM (AL) = ""
 
-instance Show Reg where
- show(GPRegister n)
-  | (n <= 12) && (n >= 0)             = "r" ++ show(n)
-  | otherwise                         = "error"
- show(StackPointer)                   = "sp"
- show(LinkRegister)                   = "lr"
- show(ProgramCounter)                 = "pc"
+instance PrintARM Reg where
+  printARM(R0)  = "r0"
+  printARM(R1)  = "r1"
+  printARM(R2)  = "r2"
+  printARM(R3)  = "r3"
+  printARM(R4)  = "r4"
+  printARM(R5)  = "r5"
+  printARM(R6)  = "r6"
+  printARM(R7)  = "r7"
+  printARM(R8)  = "r8"
+  printARM(R9)  = "r9"
+  printARM(R10) = "r10"
+  printARM(R11) = "r11"
+  printARM(R12) = "r12"
+  printARM(StackPointer) = "sp"
+  printARM(LinkRegister) = "lr"
+  printARM(PC)           = "pc"
 
+instance Bounded Reg where
+  minBound = R0
+  maxBound = R12
 
-instance Show Regs where
- show (Registers [])     = []
- show (Registers (r:rs)) = concat ((show r) : [", " ++ show reg | reg <- rs])
- show (RRange reg oReg)  = show(reg) ++ "-" ++ show(oReg)
+instance PrintARM [Reg] where
+ printARM ([])     = []
+ printARM (r:rs) = '{' : concat ((printARM r) : [", " ++ printARM reg | reg <- rs]) ++ "}"
 
-instance Show Set where
- show(T) = "S"
- show(F) = ""
+instance PrintARM Set where
+ printARM(T) = "S"
+ printARM(F) = ""

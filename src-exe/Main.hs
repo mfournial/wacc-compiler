@@ -18,9 +18,11 @@ user input
 import Control.Monad (when)
 import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 import System.Environment (getArgs, getProgName)
+import System.FilePath.Posix (replaceExtension)
 import System.IO (stdin, hGetContents)
 
 import Alex.Waskell
+import Code.Generator
 import Data.Waskell.ADT
 import Data.Waskell.Error
 import Data.Waskell.Scope
@@ -38,16 +40,16 @@ runFile :: Verbosity -- ^ The desired level of verbosity
         -> ParseFunction WaccTree -- ^ The desired parse function to use
         -> FilePath -- ^ The file path 
         -> IO ()
-runFile v p f = putStrLn f >> readFile f >>= run v p
+runFile v p f = putStrLn f >> readFile f >>= run v p (replaceExtension f ".s")
 
 -- | run will run the parser on the inputed string and output the result if 
 -- the verbosity requires it. Run will always ouput errors
 run :: Verbosity -- ^ the desired verbosity
     -> ParseFunction WaccTree -- ^ the parse function to use
+    -> FilePath -- ^ the name of the ouput file
     -> String -- ^ the input to compiler
     -> IO ()
-run v parser input = 
-  displayErrorsAndExit v (myLexer input >>= parser >>= genSymbols)
+run v parser outPath input = dieOnError v (myLexer input >>= parser >>= genSymbols) >>= (produceASM outPath)
 
 -- | usage displays usage of the program CLI interface
 usage :: IO ()
@@ -66,6 +68,6 @@ main = do
   args <- getArgs
   case args of
     ["--help"] -> usage
-    [] -> hGetContents stdin >>= run 2 pExp
+    [] -> hGetContents stdin >>= run 2 pExp "a.s"
     "-v":fs -> mapM_ (runFile 2 pExp) fs
     fs -> mapM_ (runFile 0 pExp) fs

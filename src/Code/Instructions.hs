@@ -106,9 +106,9 @@ data Condition = Eq   -- ^ Equal
 
 instance PrintARM Instr where
   printARM (Section str)                  = '.' : str  
-  printARM (FunSection str)               = '.' : str  
+  printARM (FunSection str)               = "\t\t" ++ '.' : str  
   printARM (Word i)                       = "\t\t" ++ ".word " ++ show i
-  printARM (Ascii str)                    = ".ascii " ++ show str
+  printARM (Ascii str)                    = "\t\t" ++ ".ascii " ++ show str
   printARM Global                         = ".global main"
   printARM (Define str)                   =  str  ++ ":"
   printARM (MOV  cond set reg op2)        = "\t\t" ++ "MOV" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)

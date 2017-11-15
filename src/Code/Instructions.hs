@@ -5,6 +5,7 @@ class PrintARM a where
   printARM :: a -> String
 
 data Instr = Section String
+           | FunSection String
            | Word Int
            | Ascii String
            | Define String
@@ -30,6 +31,7 @@ data Instr = Section String
            | STR Condition Mem Reg Address
            | PUSH Condition [Reg]
            | POP Condition [Reg]
+           | DIVIDER
            deriving (Eq)
 
 data Set = T
@@ -104,31 +106,33 @@ data Condition = Eq   -- ^ Equal
 
 instance PrintARM Instr where
   printARM (Section str)                  = '.' : str  
-  printARM (Word i)                       = ".word " ++ show i
+  printARM (FunSection str)               = '.' : str  
+  printARM (Word i)                       = "\t\t" ++ ".word " ++ show i
   printARM (Ascii str)                    = ".ascii " ++ show str
   printARM Global                         = ".global main"
   printARM (Define str)                   =  str  ++ ":"
-  printARM (MOV  cond set reg op2)        = "MOV" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
-  printARM (MVN  cond set reg op2)        = "MVN" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
-  printARM (B    cond label)              = "B"   ++ printARM(cond) ++ " "  ++ label
-  printARM (BL   cond label)              = "BL"  ++ printARM(cond) ++ " "  ++ label
-  printARM (CMP  cond reg op2)            = "CMP" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
-  printARM (CMN  cond reg op2)            = "CMN" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
-  printARM (TEQ  cond reg op2)            = "TEQ" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
-  printARM (TST  cond reg op2)            = "TST" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
-  printARM (AND  cond set reg oReg op2)   = "AND" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (EOR  cond set reg oReg op2)   = "EOR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (BIC  cond set reg oReg op2)   = "BIC" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (ORR  cond set reg oReg op2)   = "ORR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (SUB  cond set reg oReg op2)   = "SUB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (RSB  cond set reg oReg op2)   = "RSB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (ADD  cond set reg oReg op2)   = "ADD" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (MUL  cond set reg oReg oReg1) = "MUL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
-  printARM (MLA  cond set reg oReg oReg1) = "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
-  printARM (LDR  cond mem reg address)    = "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
-  printARM (STR  cond mem reg address)    = "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
-  printARM (PUSH cond regs)               = "PUSH"++ printARM(cond) ++ printARM regs
-  printARM (POP  cond regs)               = "POP" ++ printARM(cond) ++ printARM regs
+  printARM (MOV  cond set reg op2)        = "\t\t" ++ "MOV" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
+  printARM (MVN  cond set reg op2)        = "\t\t" ++ "MVN" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)
+  printARM (B    cond label)              = "\t\t" ++ "B"   ++ printARM(cond) ++ " "  ++ label
+  printARM (BL   cond label)              = "\t\t" ++ "BL"  ++ printARM(cond) ++ " "  ++ label
+  printARM (CMP  cond reg op2)            = "\t\t" ++ "CMP" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (CMN  cond reg op2)            = "\t\t" ++ "CMN" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (TEQ  cond reg op2)            = "\t\t" ++ "TEQ" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (TST  cond reg op2)            = "\t\t" ++ "TST" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
+  printARM (AND  cond set reg oReg op2)   = "\t\t" ++ "AND" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (EOR  cond set reg oReg op2)   = "\t\t" ++ "EOR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (BIC  cond set reg oReg op2)   = "\t\t" ++ "BIC" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (ORR  cond set reg oReg op2)   = "\t\t" ++ "ORR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (SUB  cond set reg oReg op2)   = "\t\t" ++ "SUB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (RSB  cond set reg oReg op2)   = "\t\t" ++ "RSB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (ADD  cond set reg oReg op2)   = "\t\t" ++ "ADD" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (MUL  cond set reg oReg oReg1) = "\t\t" ++ "MUL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (MLA  cond set reg oReg oReg1) = "\t\t" ++ "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (LDR  cond mem reg address)    = "\t\t" ++ "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
+  printARM (STR  cond mem reg address)    = "\t\t" ++ "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
+  printARM (PUSH cond regs)               = "\t\t" ++ "PUSH"++ printARM(cond) ++ printARM regs
+  printARM (POP  cond regs)               = "\t\t" ++ "POP" ++ printARM(cond) ++ printARM regs
+  printARM DIVIDER                        = "\n"
  
 
 instance PrintARM Op2 where

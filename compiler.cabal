@@ -26,7 +26,7 @@ source-repository head
 
 library
   default-language:  Haskell2010
-  ghc-options:       -Wall -Werror -O2
+  ghc-options:       -Wall -Werror -O2 -fno-warn-unused-top-binds
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
                    , Data.Waskell.ADT
@@ -54,6 +54,7 @@ executable compiler-exe
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11
                    , compiler
+                   , filepath >= 1.4.0.0 && < 1.5.0.0
 
 test-suite compiler-test
   type:              exitcode-stdio-1.0

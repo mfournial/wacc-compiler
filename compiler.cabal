@@ -26,7 +26,7 @@ source-repository head
 
 library
   default-language:  Haskell2010
-  ghc-options:       -Wall -Werror -O2 -fno-warn-unused-top-binds
+  ghc-options:       -Wall -Werror -O2 -fno-warn-unused-top-binds -fno-warn-unused-matches
   hs-source-dirs:    src
   exposed-modules:   Data.Waskell.Error
                    , Data.Waskell.ADT
@@ -45,6 +45,7 @@ library
                    , array >= 0.5 && < 0.6
                    , unordered-containers >= 0.2.8.0 && < 0.2.9.0
                    , ansi-terminal >= 0.5.1.1 && < 0.8.0.0
+                   , mtl >= 2.2.1 && < 3.0.0
 
 executable compiler-exe
   default-language:  Haskell2010

@@ -15,7 +15,7 @@ produceASM = (.genCode) . writeCode
 genCode :: WaccTree -> Seq Instr
 genCode t = dataSection (strLits st) >< instr
   where
-   (instr, st) = runState (genCode' t) (Junk empty newVarTable newVarTable 0) 
+   (instr, st) = runState (genCode' t) newState 
 
 genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do

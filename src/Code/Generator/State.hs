@@ -10,7 +10,13 @@ module Code.Generator.State (
   execState,
   dataSection,
   newStringLiteral,
-  newVarTable 
+  addToHeap,
+  getFromHeap,
+  push,
+  pop,
+  newState,
+  newEnv,
+  closeEnv
 )
 where
 
@@ -57,20 +63,43 @@ size :: String -> Int-> Int
 size [] i = i
 size (c : cs) i = size cs (i + 1)
 
-pushStackVar :: String -> ARM ()
-pushStackVar name = state(\junk -> ((), junk{stack = addToStack name (sp junk) (stack junk)})) >> incrementStack
+newEnv :: ARM ()
+newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+
+pop :: ARM ()
+pop = decrementStack
+
+closeEnv :: ARM ()
+closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk)}))
+
+removeFromTable :: String -> Int -> VarTable -> VarTable
+removeFromTable s addr (m : mps) = M.insert s addr m : mps
+
+push :: String -> ARM ()
+push name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack
+
+addToHeap :: String -> Int -> ARM ()
+addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
+
+getFromHeap :: String -> ARM(Int)
+getFromHeap name = state (\junk -> (varAddr name heap junk, junk))
 
 getStackVarOffset :: String -> ARM(Int)
-getStackVarOffset name = state (\junk -> (varAddr junk, junk))
-  where
-    varAddr :: Junk -> Int
-    varAddr = fromJust . M.lookup name . head . stack
+getStackVarOffset name = state (\junk -> (sp junk - varAddr name stack junk, junk))
+
+
+-- Needs to be changed to look into parent scopes
+varAddr :: String -> (Junk -> VarTable) -> Junk -> Int
+varAddr name = ((fromJust . M.lookup name . head) .)
 
 incrementStack :: ARM ()
-incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
+incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 4}))
 
-addToStack :: String -> Int -> VarTable -> VarTable
-addToStack s addr (m : mps) = M.insert s addr m : mps
+decrementStack :: ARM ()
+decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 4}))
 
-newVarTable :: VarTable
-newVarTable = [M.empty]
+addToTable :: String -> Int -> VarTable -> VarTable
+addToTable s addr (m : mps) = M.insert s addr m : mps
+
+newState :: Junk
+newState = Junk empty [M.empty] [M.empty] 0

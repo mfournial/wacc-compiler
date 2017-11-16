@@ -35,6 +35,8 @@ library
                    , Happy.Waskell
                    , Code.Instructions
                    , Code.Generator
+                   , Code.Generator.State
+                   , Code.Generator.Expression
                    , Data.Waskell.Scope
                    , Data.Waskell.Types
                    , Data.Waskell.Types.Util

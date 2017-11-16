@@ -31,6 +31,9 @@ library
   exposed-modules:   Alex.Tokens
                    , Alex.Waskell
                    , Happy.Waskell
+                   , Code.Generator
+                   , Code.Generator.State
+                   , Code.Generator.Expression
                    , Data.Waskell.ADT
                    , Data.Waskell.Error
                    , Data.Waskell.Scope

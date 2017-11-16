@@ -13,15 +13,15 @@ produceASM :: FilePath -> WaccTree -> IO ()
 produceASM = (.genCode) . writeCode
 
 genCode :: WaccTree -> Seq Instr
-genCode t = dataSection (strLits st) >< instr
+genCode t = (dataSection (strLits st) |> DIVIDER |> DIVIDER) >< instr
   where
-   (instr, st) = runState (genCode' t) newState 
+    (instr, st) = runState (genCode' t) newState 
 
 genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
   minstr <- genScopeBlock sb
-  return $ ((empty |> DIVIDER |> DIVIDER -- TODO put data section at the front
+  return $ ((empty -- TODO put data section at the front
            |> Section "text")
            >< (finstr
            |> Global |> Define "main" |> PUSH [LinkRegister]))
@@ -29,12 +29,13 @@ genCode' (WaccTree (Program fps sb)) = do
            |> LDR AL W R0 (Const 0) |> POP [PC] |> FunSection "ltorg")
   where
     genFuncsCode :: Seq Function -> ARM Instructions
-    genFuncsCode fs = fmap concat $ mapM genFuncCodeWithDiv fs
-    genFuncCodeWithDiv :: Function -> ARM Instructions
-    genFuncCodeWithDiv f = genFuncCode f >>= \k -> return (k |> DIVIDER)
+    genFuncsCode fs = fmap concat $ mapM genFuncCode fs
 
 genFuncCode :: Function -> ARM Instructions
-genFuncCode (Function _ iden params sb) = undefined
+genFuncCode (Function _ iden params sb) = do
+  mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
+  body <- genScopeBlock sb
+  return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
 
   --   (instr, state) = runState genInstrs []
   --   genFuncsCode :: ARM ([Function] -> Seq Instr)

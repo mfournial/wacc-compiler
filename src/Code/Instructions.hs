@@ -83,8 +83,8 @@ data Address = Label String                -- ^ expression
              deriving (Eq)
 
 
-data Offset = Int Int             -- ^
-            | RegShift Reg Shift  -- ^
+data Offset = Int Int             -- ^ value of the offset
+            | RegShift Reg Shift  -- ^ @ offset = [Reg] << shift
             deriving (Eq)
 
 data Condition = Eq   -- ^ Equal

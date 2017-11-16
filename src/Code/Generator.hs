@@ -9,7 +9,8 @@ import Code.Instructions
 import Data.Waskell.ADT 
 
 produceASM :: FilePath -> WaccTree -> IO ()
-produceASM f = writeCode f . genCode 
+-- produceASM f = writeCode f . genCode 
+produceASM = (.genCode) . writeCode
 
 genCode :: WaccTree -> Seq Instr
 genCode t = dataSection (strLits st) >< instr

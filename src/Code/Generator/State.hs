@@ -14,7 +14,7 @@ where
 import Data.Char(intToDigit)
 import Data.Sequence
 import Control.Monad.State.Lazy
-import qualified Prelude as P
+import Prelude hiding (concat, length, zipWith, null)
 
 import Code.Instructions
 -- import Data.Waskell.ADT 
@@ -22,30 +22,35 @@ import Code.Instructions
 type Instructions = Seq Instr
 type ARM = State Junk
 
-newStringLiteral :: P.String -> ARM ()
+newStringLiteral :: String -> ARM ()
 newStringLiteral str = state (\junk -> ((), junk{strLits = strLits junk |> str}))
 
 data Junk = Junk {
-  strLits:: Data
+  strLits :: Data
 }
 
-type Data = Seq P.String
+type Data = Seq String
 
 dataSection :: Data -> Instructions
 dataSection strs
   | null strs = empty
-  | P.otherwise = Section "data" <| concat (zipWith dataElem labels strs)
+  | otherwise = Section "data" <| concat (zipWith dataElem labels strs)
   where
-    dataElem label str = empty |> Define label |> Word (P.length str) |> Ascii str
-    labels = fromList (P.map (("msg_" P.++) P.. (P.pure P..intToDigit)) [0..])
+    dataElem label str = empty |> Define label |> Word (size 0 str) |> Ascii str
+    labels             = fromList (map (("msg_" ++) . (pure .intToDigit)) [0..])
 
 concat :: Seq (Seq a) -> Seq a
-concat = P.foldl (><) empty
+concat = foldl (><) empty
 
--- labels :: Seq P.String
--- labels = fromList (P.map (("msg_" P.++) P.. (P.pure P..intToDigit)) [0..])
--- P.map (fromList . ("msg_" P.++) P.. (pure intToDigit)) [0..]
+-- | Can't import length from prelude... because of conflicts
+size :: String -> Int-> Int
+size [] i = return i
+size (c : cs) i = size cs (i + 1)
 
--- dataElem :: P.String -> P.String -> Instructions
--- dataElem label str = empty |> Define label |> Word (P.length str) |> Ascii str
+-- labels :: Seq String
+-- labels = fromList (map (("msg_" ++) . (pure .intToDigit)) [0..])
+-- map (fromList . ("msg_" ++) . (pure intToDigit)) [0..]
+
+-- dataElem :: String -> String -> Instructions
+-- dataElem label str = empty |> Define label |> Word (length str) |> Ascii str
 

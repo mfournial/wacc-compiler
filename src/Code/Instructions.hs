@@ -157,8 +157,8 @@ instance PrintARM Mem where
  printARM (W)  = ""
 
 instance PrintARM Address where
- printARM (Label str)              = "=" ++ str
- printARM (Const i)                = "=" ++ show i
+ printARM (Label str)               = "=" ++ str
+ printARM (Const i)                 = "=" ++ show i
  printARM (OffReg reg offset True)  = "[" ++ printARM (reg) ++ printARM (offset) ++ "]" ++ "!"
  printARM (OffReg reg offset False) = "[" ++ printARM (reg) ++ printARM (offset) ++ "]"
 
@@ -168,36 +168,36 @@ instance PrintARM Offset where
  printARM (RegShift reg shift) = ", " ++ printARM(reg) ++ printARM (shift)
 
 instance PrintARM Condition where
-   printARM (Eq) = "EQ"
-   printARM (Neq)= "NE"
-   printARM (CS) = "CS"
-   printARM (CC) = "CC"
-   printARM (MI) = "MI"
-   printARM (PL) = "PL"
-   printARM (VS) = "VS"
-   printARM (VC) = "VC"
-   printARM (HI) = "HI"
-   printARM (LS) = "LS"
-   printARM (GE) = "GE"
-   printARM (LTh)= "LT"
-   printARM (GTh)= "GT"
-   printARM (LE) = "LE"
-   printARM (AL) = ""
+   printARM (Eq)  = "EQ"
+   printARM (Neq) = "NE"
+   printARM (CS)  = "CS"
+   printARM (CC)  = "CC"
+   printARM (MI)  = "MI"
+   printARM (PL)  = "PL"
+   printARM (VS)  = "VS"
+   printARM (VC)  = "VC"
+   printARM (HI)  = "HI"
+   printARM (LS)  = "LS"
+   printARM (GE)  = "GE"
+   printARM (LTh) = "LT"
+   printARM (GTh) = "GT"
+   printARM (LE)  = "LE"
+   printARM (AL)  = ""
 
 instance PrintARM Reg where
-  printARM(R0)  = "r0"
-  printARM(R1)  = "r1"
-  printARM(R2)  = "r2"
-  printARM(R3)  = "r3"
-  printARM(R4)  = "r4"
-  printARM(R5)  = "r5"
-  printARM(R6)  = "r6"
-  printARM(R7)  = "r7"
-  printARM(R8)  = "r8"
-  printARM(R9)  = "r9"
-  printARM(R10) = "r10"
-  printARM(R11) = "r11"
-  printARM(R12) = "r12"
+  printARM(R0)           = "r0"
+  printARM(R1)           = "r1"
+  printARM(R2)           = "r2"
+  printARM(R3)           = "r3"
+  printARM(R4)           = "r4"
+  printARM(R5)           = "r5"
+  printARM(R6)           = "r6"
+  printARM(R7)           = "r7"
+  printARM(R8)           = "r8"
+  printARM(R9)           = "r9"
+  printARM(R10)          = "r10"
+  printARM(R11)          = "r11"
+  printARM(R12)          = "r12"
   printARM(StackPointer) = "sp"
   printARM(LinkRegister) = "lr"
   printARM(PC)           = "pc"
@@ -207,7 +207,7 @@ instance Bounded Reg where
   maxBound = R12
 
 instance PrintARM [Reg] where
- printARM ([])     = []
+ printARM ([])   = []
  printARM (r:rs) = '{' : concat ((printARM r) : [", " ++ printARM reg | reg <- rs]) ++ "}"
 
 instance PrintARM Set where

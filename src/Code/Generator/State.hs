@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-incomplete-patterns #-}
+
 module Code.Generator.State (
   Data,
   Junk(..),
@@ -7,17 +9,21 @@ module Code.Generator.State (
   runState,
   execState,
   dataSection,
-  newStringLiteral
+  newStringLiteral,
+  newVarTable 
 )
 where
 
 import Data.Char(intToDigit)
+import Data.Maybe(fromJust)
 import Data.Sequence
 import Control.Monad.State.Lazy
 import Prelude hiding (concat, length, zipWith, null)
 
+import qualified Data.HashMap.Strict as M
+
 import Code.Instructions
--- import Data.Waskell.ADT 
+--import Data.Waskell.ADT 
 
 type Instructions = Seq Instr
 type ARM = State Junk
@@ -26,9 +32,13 @@ newStringLiteral :: String -> ARM ()
 newStringLiteral str = state (\junk -> ((), junk{strLits = strLits junk |> str}))
 
 data Junk = Junk {
-  strLits :: Data
+  strLits :: Data,
+  stack :: VarTable,
+  heap :: VarTable,
+  sp :: Int
 }
 
+type VarTable = [M.HashMap String Int]
 type Data = Seq String
 
 dataSection :: Data -> Instructions
@@ -47,10 +57,20 @@ size :: String -> Int-> Int
 size [] i = i
 size (c : cs) i = size cs (i + 1)
 
--- labels :: Seq String
--- labels = fromList (map (("msg_" ++) . (pure .intToDigit)) [0..])
--- map (fromList . ("msg_" ++) . (pure intToDigit)) [0..]
+pushStackVar :: String -> ARM ()
+pushStackVar name = state(\junk -> ((), junk{stack = addToStack name (sp junk) (stack junk)})) >> incrementStack
 
--- dataElem :: String -> String -> Instructions
--- dataElem label str = empty |> Define label |> Word (length str) |> Ascii str
+getStackVarOffset :: String -> ARM(Int)
+getStackVarOffset name = state (\junk -> (varAddr junk, junk))
+  where
+    varAddr :: Junk -> Int
+    varAddr = fromJust . M.lookup name . head . stack
 
+incrementStack :: ARM ()
+incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
+
+addToStack :: String -> Int -> VarTable -> VarTable
+addToStack s addr (m : mps) = M.insert s addr m : mps
+
+newVarTable :: VarTable
+newVarTable = [M.empty]

@@ -28,27 +28,35 @@ produceASM :: FilePath -> WaccTree -> IO ()
 produceASM f = writeCode f . genCode 
 
 genCode :: WaccTree -> [Instr]
-genCode t = evalState (genCode' t) (Junk [])
+genCode t = dataSection (strLits st) ++ instr
+  where
+   (instr, st) = runState (genCode' t) (Junk []) 
 
 genCode' :: WaccTree -> Ass [Instr]
-genCode' (WaccTree (Program fs sb)) = undefined
-  -- concat 
-  -- [ data 
-  -- , [DIVIDER, DIVIDER]
-  -- , [Section "text"]
-  -- , concatMap (++[DIVIDER]) 
-  -- , [Global, Define "main", PUSH AL [LinkRegister]]]
-  -- , genCode'  sb
-  -- , [LDR AL W R0 (Const 0), POP AL [PC], FunSection "ltorg"]
-  -- ] 
-  -- where
+genCode' (WaccTree (Program fps sb)) = do
+  finstr <- genFuncsCode (map getVal fps)
+  minstr <- genScopeBlock sb
+  return $ concat [ [DIVIDER, DIVIDER],
+                    [Section "text"],
+                    finstr,
+                    [Global, Define "main", PUSH [LinkRegister]],
+                    minstr,
+                    [LDR AL W R0 (Const 0), POP [PC], FunSection "ltorg"] ] 
+  where
+    genFuncsCode :: [Function] -> Ass [Instr]
+    genFuncsCode fs = fmap concat $ mapM genFuncCodeWithDiv fs
+    genFuncCodeWithDiv :: Function -> Ass [Instr]
+    genFuncCodeWithDiv f = genFuncCode f >>= \k -> return (k ++ [DIVIDER])
+
+genFuncCode :: Function -> Ass [Instr]
+genFuncCode = undefined
 
   --   (instr, state) = runState genInstrs []
   --   genFuncsCode :: Ass ([Function] -> [Instr])
   --   genFuncsCode = undefined
   --   concatMap ((genFuncCode state) . getVal) fs
 
-genScopeBlock :: Ass (ScopeBlock -> [Instr])
+genScopeBlock :: ScopeBlock -> Ass [Instr]
 genScopeBlock = undefined
 
 -- genFuncCode :: Ass (Function -> [Instr])

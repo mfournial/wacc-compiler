@@ -29,8 +29,8 @@ data Instr = Section String
            | MLA Condition Set Reg Reg Reg
            | LDR Condition Mem Reg Address
            | STR Condition Mem Reg Address
-           | PUSH Condition [Reg]
-           | POP Condition [Reg]
+           | PUSH [Reg]
+           | POP [Reg]
            | DIVIDER
            deriving (Eq)
 
@@ -130,8 +130,8 @@ instance PrintARM Instr where
   printARM (MLA  cond set reg oReg oReg1) = "\t\t" ++ "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
   printARM (LDR  cond mem reg address)    = "\t\t" ++ "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
   printARM (STR  cond mem reg address)    = "\t\t" ++ "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
-  printARM (PUSH cond regs)               = "\t\t" ++ "PUSH"++ printARM(cond) ++ printARM regs
-  printARM (POP  cond regs)               = "\t\t" ++ "POP" ++ printARM(cond) ++ printARM regs
+  printARM (PUSH regs)                    = "\t\t" ++ "PUSH"++ printARM regs
+  printARM (POP  regs)                    = "\t\t" ++ "POP" ++ printARM regs
   printARM DIVIDER                        = "\n"
  
 

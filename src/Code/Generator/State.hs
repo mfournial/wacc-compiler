@@ -15,6 +15,7 @@ module Code.Generator.State (
   push,
   pop,
   newState,
+  nextLabel,
   newEnv,
   closeEnv,
   getStringLiterals
@@ -46,7 +47,8 @@ data Junk = Junk {
   strLits :: Data,
   stack :: VarTable,
   heap :: VarTable,
-  sp :: Int
+  sp :: Int,
+  ref :: Int
 }
 
 type VarTable = [M.HashMap String Int]
@@ -109,5 +111,8 @@ decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 4}))
 addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps
 
+nextLabel :: String -> ARM (String)
+nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ s), junk{ref = ref junk + 1}))
+
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0
+newState = Junk empty [M.empty] [M.empty] 0 0

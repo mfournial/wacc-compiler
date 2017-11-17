@@ -1,9 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Code.Instructions where
 
+import Data.Sequence
+
 class PrintARM a where
   printARM :: a -> String
 
+type Instructions = Seq Instr
 data Instr = Section String
            | FunSection String
            | Word Int

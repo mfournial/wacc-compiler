@@ -4,5 +4,5 @@ import Code.Instructions()
 import Code.Generator.State
 import Data.Waskell.ADT
 
-expression :: Expression -> ARM Instructions
-expression = undefined
+expression :: Expression -> ARM (Instructions, RetLoc)
+expression e = undefined

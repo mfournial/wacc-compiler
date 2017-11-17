@@ -5,7 +5,7 @@ import Data.Sequence
 import Prelude hiding (null, concat)
 
 import Code.Generator.State
-import qualified Code.Generator.Statement as StatementARM
+import Code.Generator.Statement
 import Code.Instructions
 import Data.Waskell.ADT 
 
@@ -39,13 +39,6 @@ genFuncCode (Function _ iden params sb) = do
   mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
   body <- genScopeBlock sb
   return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
-
-genScopeBlock :: ScopeBlock -> ARM Instructions
-genScopeBlock (sts, (NewScope scp)) = do
-  newEnv
-  instructions <- mapM (StatementARM.generate) (fromList sts)
-  closeEnv
-  return $ concat instructions
 
 writeCode :: FilePath -> Instructions -> IO ()
 writeCode = (. (unlines . toList . fmap printARM)) . writeFile

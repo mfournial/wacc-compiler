@@ -1,5 +1,6 @@
 module Code.Generator.Statement (
-  generate
+  generate,
+  genScopeBlock
 )
 where
 
@@ -14,4 +15,13 @@ import Code.Generator.State
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
+
+generate (StatIf (posexp) sb sb') = undefined
 generate _ = error "How end up here ???"
+
+genScopeBlock :: ScopeBlock -> ARM Instructions
+genScopeBlock (sts, (NewScope scp)) = do
+  newEnv
+  instructions <- mapM generate (fromList sts)
+  closeEnv
+  return $ concat instructions

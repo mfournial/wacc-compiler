@@ -38,11 +38,6 @@ genFuncCode (Function _ iden params sb) = do
   body <- genScopeBlock sb
   return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
 
-  --   (instr, state) = runState genInstrs []
-  --   genFuncsCode :: ARM ([Function] -> Seq Instr)
-  --   genFuncsCode = undefined
-  --   concatMap ((genFuncCode state) . getVal) fs
-
 genScopeBlock :: ScopeBlock -> ARM Instructions
 genScopeBlock (sts, (NewScope scp)) = do
   newEnv

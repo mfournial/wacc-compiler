@@ -17,8 +17,7 @@ module Code.Generator.State (
   newState,
   newEnv,
   closeEnv,
-  getStringLiterals,
-  RetLoc(..)
+  getStringLiterals
 )
 where
 
@@ -32,12 +31,11 @@ import qualified Prelude as P
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
+import Code.Generator.RetLoc
 --import Data.Waskell.ADT 
 
 type Instructions = Seq Instr
 type ARM = State Junk
-
-data RetLoc = HeapAddr Int | StackOffset Int | StringLit String
 
 newStringLiteral :: String -> ARM RetLoc
 newStringLiteral str = state (\junk -> (StringLit (listPosToLabel (length (strLits junk))), junk{strLits = strLits junk |> str}))

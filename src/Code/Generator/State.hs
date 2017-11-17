@@ -34,7 +34,6 @@ import Code.Instructions
 import Code.Generator.RetLoc
 --import Data.Waskell.ADT 
 
-type Instructions = Seq Instr
 type ARM = State Junk
 
 newStringLiteral :: String -> ARM RetLoc

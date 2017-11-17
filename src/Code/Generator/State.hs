@@ -16,7 +16,8 @@ module Code.Generator.State (
   pop,
   newState,
   newEnv,
-  closeEnv
+  closeEnv,
+  getStringLiterals
 )
 where
 
@@ -24,7 +25,8 @@ import Data.Char(intToDigit)
 import Data.Maybe(fromJust)
 import Data.Sequence
 import Control.Monad.State.Lazy
-import Prelude hiding (concat, length, zipWith, null)
+import Prelude hiding (concat, length, zipWith, null, take)
+import qualified Prelude as P
 
 import qualified Data.HashMap.Strict as M
 
@@ -36,6 +38,9 @@ type ARM = State Junk
 
 newStringLiteral :: String -> ARM ()
 newStringLiteral str = state (\junk -> ((), junk{strLits = strLits junk |> str}))
+
+getStringLiterals :: ARM Data
+getStringLiterals = state (\junk -> (strLits junk, junk))
 
 data Junk = Junk {
   strLits :: Data,
@@ -53,7 +58,7 @@ dataSection strs
   | otherwise = Section "data" <| concat (zipWith dataElem labels strs)
   where
     dataElem label str = empty |> Define label |> Word (size str 0) |> Ascii str
-    labels             = fromList (map (("msg_" ++) . (pure .intToDigit)) [0..])
+    labels = fromList $ P.take (length strs) (map (("msg_" ++) . (pure .intToDigit)) [0..])
 
 concat :: Seq (Seq a) -> Seq a
 concat = foldl (><) empty

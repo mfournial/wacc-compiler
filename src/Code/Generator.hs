@@ -2,7 +2,7 @@ module Code.Generator (produceASM) where
 
 import Data.Foldable (toList)
 import Data.Sequence
-import Prelude hiding (concat)
+import Prelude hiding (null, concat)
 
 import Code.Generator.State
 import qualified Code.Generator.Statement as StatementARM
@@ -14,8 +14,10 @@ produceASM :: FilePath -> WaccTree -> IO ()
 produceASM = (.genCode) . writeCode
 
 genCode :: WaccTree -> Seq Instr
-genCode t = (dataSection (strLits st) |> DIVIDER |> DIVIDER) >< instr
+genCode t =  dataSec' >< instr
   where
+    dataSec = dataSection (strLits st)
+    dataSec' = if null dataSec then empty else dataSec |> DIVIDER |> DIVIDER
     (instr, st) = runState (genCode' t) newState 
 
 genCode' :: WaccTree -> ARM Instructions
@@ -23,7 +25,7 @@ genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
   minstr <- genScopeBlock sb
   return $ ((empty
-           |> Section "text")
+           |> Section "text" |> DIVIDER)
            >< (finstr
            |> Global |> Define "main" |> PUSH [LinkRegister]))
            >< (minstr

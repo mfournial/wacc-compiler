@@ -3,9 +3,15 @@ module Code.Generator.Statement (
 )
 where
 
+
+import Data.Sequence
+import Prelude hiding(concat)
+
 import Data.Waskell.ADT
 import Code.Instructions()
 import Code.Generator.State
 
+
 generate :: Statement -> ARM Instructions
-generate = undefined
+generate StatSkip = return empty
+generate _ = error "How end up here ???"

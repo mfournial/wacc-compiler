@@ -17,7 +17,8 @@ module Code.Generator.State (
   newState,
   newEnv,
   closeEnv,
-  getStringLiterals
+  getStringLiterals,
+  RetLoc(..)
 )
 where
 
@@ -36,8 +37,10 @@ import Code.Instructions
 type Instructions = Seq Instr
 type ARM = State Junk
 
-newStringLiteral :: String -> ARM ()
-newStringLiteral str = state (\junk -> ((), junk{strLits = strLits junk |> str}))
+data RetLoc = HeapAddr Int | StackOffset Int | StringLit String
+
+newStringLiteral :: String -> ARM RetLoc
+newStringLiteral str = state (\junk -> (StringLit (listPosToLabel (length (strLits junk))), junk{strLits = strLits junk |> str}))
 
 getStringLiterals :: ARM Data
 getStringLiterals = state (\junk -> (strLits junk, junk))
@@ -58,7 +61,10 @@ dataSection strs
   | otherwise = Section "data" <| concat (zipWith dataElem labels strs)
   where
     dataElem label str = empty |> Define label |> Word (size str 0) |> Ascii str
-    labels = fromList $ P.take (length strs) (map (("msg_" ++) . (pure .intToDigit)) [0..])
+    labels = fromList $ P.take (length strs) (map listPosToLabel [0..])
+
+listPosToLabel :: Int -> String
+listPosToLabel = ("msg_" ++) . pure . intToDigit
 
 concat :: Seq (Seq a) -> Seq a
 concat = foldl (><) empty
@@ -86,11 +92,11 @@ push name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack j
 addToHeap :: String -> Int -> ARM ()
 addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
 
-getFromHeap :: String -> ARM(Int)
-getFromHeap name = state (\junk -> (varAddr name heap junk, junk))
+getFromHeap :: String -> ARM RetLoc
+getFromHeap name = state (\junk -> (HeapAddr $ varAddr name heap junk, junk))
 
-getStackVarOffset :: String -> ARM(Int)
-getStackVarOffset name = state (\junk -> (sp junk - varAddr name stack junk, junk))
+getStackVarOffset :: String -> ARM RetLoc
+getStackVarOffset name = state (\junk -> (StackOffset $ sp junk - varAddr name stack junk, junk))
 
 
 -- Needs to be changed to look into parent scopes

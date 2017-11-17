@@ -5,6 +5,7 @@ import Data.Sequence
 import Prelude hiding (concat)
 
 import Code.Generator.State
+import qualified Code.Generator.Statement as StatementARM
 import Code.Instructions
 import Data.Waskell.ADT 
 
@@ -21,7 +22,7 @@ genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
   minstr <- genScopeBlock sb
-  return $ ((empty -- TODO put data section at the front
+  return $ ((empty
            |> Section "text")
            >< (finstr
            |> Global |> Define "main" |> PUSH [LinkRegister]))
@@ -43,14 +44,11 @@ genFuncCode (Function _ iden params sb) = do
   --   concatMap ((genFuncCode state) . getVal) fs
 
 genScopeBlock :: ScopeBlock -> ARM Instructions
-genScopeBlock = undefined
-
--- genFuncCode :: ARM (Function -> Seq Instr)
--- genFuncCode state (Function _ fid _ sb)  = 
---   concat 
---   [ [Define (getVal fid)]
---   , genCode' state sb, [Section "ltorg"]
---   ]
+genScopeBlock (sts, (NewScope scp)) = do
+  newEnv
+  instructions <- mapM (StatementARM.generate) (fromList sts)
+  closeEnv
+  return $ concat instructions
 
 writeCode :: FilePath -> Instructions -> IO ()
 writeCode = (. (unlines . toList . fmap printARM)) . writeFile

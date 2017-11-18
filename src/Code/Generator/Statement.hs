@@ -15,16 +15,18 @@ import Code.Generator.Expression
 import Code.Generator.State
 import Code.Generator.RetLoc
 import Code.Generator.StateInstructions
+import Code.Generator.Runtime
 
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
 generate (StatementOperator (StatReturn (e, _), _)) = (|>) <$> expressionReg e PC <*> pop [PC]
 
-{-generate (StatementOperator ((StatPrint (StringExp s, _)), _)) = do
+generate (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
   strloc <- newStringLiteral s
-  return $ (storeToRegister R0 strloc
--}
+  printrt <- branchRuntime generatePrintStrRuntime
+  return $ (storeToRegister R0 strloc |> printrt)
+
 generate (StatIf (posexp) sb sb') = do
   (expInstr, stackOff) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"

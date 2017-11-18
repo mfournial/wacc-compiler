@@ -17,7 +17,7 @@ Register the runner: `$ gitlab-runner register`
  2. https://gitlab.doc.ic.ac.uk/
  3. j8GsNfxPCgkXzszkRsBV
  4. "Kyle's-XPS-runner"
- 5. nothing(press enter don't write nothing you idiot)
+ 5. nothing (press enter don't write nothing you idiot)
  6. false
  7. (false) optional? check if it asks for stuff
  8. docker

@@ -47,7 +47,7 @@ only take it as a coherence *guideline*.
 This tool was used to get us started quickly on semantic analysis and have an ADT to use. 
 However, it cluttered the tree with too much information, and was cherry picking in the analysis.  
 (The file is available [here](https://www.gitlab.doc.ic.ac.uk/waskell/compiler/blob/master/STYLE.md)
-for legacy purposes.) Starting quickly enabled us to share the workload; each
+for legacy purposes). Starting quickly enabled us to share the workload; each
 team could work on implementing the semantic analysis and improving the parser
 separatly. The merge was made on the weekend of the 4th of November.
 

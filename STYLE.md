@@ -35,7 +35,7 @@ enforce up to date documentation, make it clearer for everyone and as a quicker
 way to fix small development objectives inside a module.  
 
 ### Files
-Files must be `.hs` non-literate begining with haddock documentation:  
+Files must be `.hs` (non-literate) begining with haddock documentation:  
 ```haskell
 {-|
 Module      : _._ (library name)
@@ -66,8 +66,7 @@ It is *allowed* to use qualified imports for standard library and internal
 libraries.
 
 ### Indentation
-  * Use only spaces, never tabs. Indentation level is 2 characters. For Emacs, 
-this means setting the variable haskell-indent-offset to 2.
+  * Use only spaces, never tabs. Indentation level is 2 characters. (For Emacs this means setting the variable haskell-indent-offset to 2).
   * Line length should be at most 80 chars long including comments.
   * Use indentation-based structure, and not braces/semicolons. 
 
@@ -222,19 +221,19 @@ Do **not** use exceptions, use maybes!
 ### Point Free
 E V E R Y T H I N G   P O I N T   F R E E  
 ```haskell
--- NO
+-- BAD
 let a x = f (g (h x))
--- MORE
+-- GOOD
 let a = f . g . h
 ```
 
 And function composition may follow the same concept:  
 ```haskell
--- bad
+-- BAD
 f (g (h x))
--- better
+-- BETTER
 f $ g $ h x
--- G O D 
+-- amazing:)
 f . g . h $ x
 ```
 

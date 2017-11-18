@@ -36,7 +36,8 @@ genCode' (WaccTree (Program fps sb)) = do
 
 genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
-  mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
+  --Commented out, caller should push parameters onto the stack.
+  --mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
   body <- genScopeBlock sb
   return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
 

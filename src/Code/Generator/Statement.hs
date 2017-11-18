@@ -25,7 +25,7 @@ generate (StatIf (posexp) sb sb') = do
   thenCode <- genScopeBlock sb
   elseCode <- genScopeBlock sb'
   return $ (expInstr
-        ><( storeToRegister stackOff R1
+        ><( storeToRegister R1 stackOff
         |> CMP AL R1 (ImmOpInt 1)
         |> B Eq elseLabel)
         >< ((thenCode |> B AL fiLabel)

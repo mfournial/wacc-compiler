@@ -1,5 +1,5 @@
 {-| 
-== Happy using parser for WACC
+== Parser for WACC using Happy
 
 Parser that generates ADT as defined in @ Data.Waskell.ADT @ from list of tokens
 

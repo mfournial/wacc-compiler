@@ -1,6 +1,6 @@
 {
 {-| 
-== Alex using Lexer for Wacc
+== Lexer for Wacc using Alex
 
 Lexer for WACC language
 

@@ -1,9 +1,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Code.Instructions where
 
+import Data.Sequence
+
 class PrintARM a where
   printARM :: a -> String
 
+type Instructions = Seq Instr
 data Instr = Section String
            | FunSection String
            | Word Int
@@ -130,8 +133,8 @@ instance PrintARM Instr where
   printARM (MLA  cond set reg oReg oReg1) = "\t\t" ++ "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
   printARM (LDR  cond mem reg address)    = "\t\t" ++ "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
   printARM (STR  cond mem reg address)    = "\t\t" ++ "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
-  printARM (PUSH regs)                    = "\t\t" ++ "PUSH"++ printARM regs
-  printARM (POP  regs)                    = "\t\t" ++ "POP" ++ printARM regs
+  printARM (PUSH regs)                    = "\t\t" ++ "PUSH "++ printARM regs
+  printARM (POP  regs)                    = "\t\t" ++ "POP " ++ printARM regs
   printARM DIVIDER                        = "\n"
  
 

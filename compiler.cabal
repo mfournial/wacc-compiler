@@ -36,11 +36,17 @@ library
                    , Code.Instructions
                    , Code.Generator
                    , Code.Generator.State
+                   , Code.Generator.Statement
                    , Code.Generator.Expression
+                   , Code.Generator.RetLoc
+                   , Code.Generator.StateInstructions
+                   , Code.Generator.Runtime
+                   , Data.Sequence.Util
                    , Data.Waskell.Scope
                    , Data.Waskell.Types
                    , Data.Waskell.Types.Util
                    , Data.Waskell.Types.WaccType
+  other-modules:     Code.Generator.Runtime.Internal
   build-tools:       alex, happy
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11

@@ -35,7 +35,7 @@ import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 import Code.Generator.RetLoc
-import Code.Generator.Runtime
+import Code.Generator.Runtime.Internal(RuntimeComponent)
 --import Data.Waskell.ADT 
 
 type ARM = State Junk

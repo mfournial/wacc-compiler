@@ -5,6 +5,7 @@ module Code.Generator.Expression (expression, expressionReg) where
 import Code.Instructions
 import Code.Generator.State
 import Code.Generator.RetLoc
+import Code.Generator.RetLoc.Internal
 import Data.Waskell.ADT
 
 import Data.Sequence((><), empty)
@@ -17,13 +18,13 @@ expression (BoolExp False)  = intToReg 0       R0
 expression (CharExpr c)     = intToReg (ord c) R0
 expression PairExpr         = intToReg 0       R0
 
-expression (StringExpr str) = fmap (empty,) $ newStringLiteral str
+expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
 
 expression _ = error "Expression pattern not matched"
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
-intToReg i r = return (pure (LDR AL W r (Const i)), Register r)
+intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))
 
 expressionReg :: Expression -> Reg -> ARM Instructions
 expressionReg e r = do

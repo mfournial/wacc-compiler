@@ -25,7 +25,7 @@ generatePrintStrRuntime = do
                      (storeToRegister R0 sloc ><
                      (ADD AL F R0 R0 (ImmOpInt 4) <|
                      (BL AL "printf" <|
-                     (MOV AL F R0 (ImmOpInt 4) <|
+                     (MOV AL F R0 (ImmOpInt 0) <|
                      (BL AL "fflush" <|
                      (POP [PC] <| empty)))))))))), "runtime_print_string")
 

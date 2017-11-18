@@ -20,7 +20,7 @@ module Code.Generator.State (
   closeEnv,
   getStringLiterals,
   addToRuntime,
-  getOffsetFromStackPtr
+  getVar
 )
 where
 

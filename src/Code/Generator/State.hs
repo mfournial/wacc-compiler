@@ -19,7 +19,8 @@ module Code.Generator.State (
   newEnv,
   closeEnv,
   getStringLiterals,
-  addToRuntime
+  addToRuntime,
+  getVar
 )
 where
 

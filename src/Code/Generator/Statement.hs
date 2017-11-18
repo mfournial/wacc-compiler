@@ -13,10 +13,15 @@ import Code.Instructions
 import Code.Generator.Expression
 import Code.Generator.State
 import Code.Generator.RetLoc
+import Code.Generator.StateInstructions
 
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
+generate (StatementOperator (StatReturn (e, _), _)) = do
+  is <- expressionReg e PC
+  p <- pop [PC]
+  return (is |> p)
 
 generate (StatIf (posexp) sb sb') = do
   (expInstr, stackOff) <- expression (getVal posexp)

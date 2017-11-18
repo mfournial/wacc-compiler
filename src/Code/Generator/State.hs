@@ -95,8 +95,10 @@ getStackVarOffset :: String -> ARM RetLoc
 getStackVarOffset name = state (\junk -> (StackOffset $ sp junk - varAddr name stack junk, junk))
 
 addToRuntime :: RuntimeComponent -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = r : runtime junk}))
-    
+addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))
+  where
+    tryAdd :: RuntimeComponent -> [RuntimeComponent] -> [RuntimeComponent]
+    tryAdd rc rs = if rc `elem` rs then rs else rc : rs
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Int

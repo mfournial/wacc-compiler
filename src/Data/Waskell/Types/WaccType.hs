@@ -39,15 +39,15 @@ data WaccType = Type :-> WaccType -- ^ Joins types as specified in Data.Waskell.
   deriving (Eq)
 
 instance Show WaccType where
-  show (a :-> RetWT) = show a
-  show (a :=> RetWT) = show a
-  show ((p, tid) :+> RetWT) = show tid ++ " elem of " ++ show p
+  show (a :-> RetWT)                  = show a
+  show (a :=> RetWT)                  = show a
+  show ((p, tid) :+> RetWT)           = show tid ++ " elem of " ++ show p
   show ((ArrayWaccType wt) ::> RetWT) = "[" ++ show wt ++ "]"
-  show (a :-> b) = show a ++ (" -> ") ++ show b
-  show (tid :=> b) = show tid ++ " -> " ++ show b
-  show ((p, tid) :+> b) = show tid ++ " elem of " ++ show p ++ " -> " ++ show b
-  show ((ArrayWaccType wt) ::> b) = "[" ++ show wt ++ "]" ++ " -> " ++ show b
-  show RetWT = ""
+  show (a :-> b)                      = show a ++ (" -> ") ++ show b
+  show (tid :=> b)                    = show tid ++ " -> " ++ show b
+  show ((p, tid) :+> b)               = show tid ++ " elem of " ++ show p ++ " -> " ++ show b
+  show ((ArrayWaccType wt) ::> b)     = "[" ++ show wt ++ "]" ++ " -> " ++ show b
+  show RetWT                          = ""
 
 newtype ArrayWaccType = ArrayWaccType WaccType
   deriving (Eq)

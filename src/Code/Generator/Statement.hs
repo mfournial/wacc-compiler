@@ -34,11 +34,23 @@ generate (StatIf (posexp) sb sb') = do
   thenCode <- genScopeBlock sb
   elseCode <- genScopeBlock sb'
   return $ (expInstr
-        ><( storeToRegister R1 stackOff
-        |> CMP AL R1 (ImmOpInt 1)
+        ><( storeToRegister stackOff R4
+        |> CMP AL R4 (ImmOpInt 1)
         |> B Eq elseLabel)
         >< ((thenCode |> B AL fiLabel)
         >< ((Define elseLabel <| elseCode) |> Define fiLabel)))
+
+generate (StatWhile (posexp) sb) = do
+  (expInstr, stackOff) <- expression (getVal posexp)
+  doLabel <- nextLabel "do"
+  conditionLabel <- nextLabel "whileCond"
+  bodyCode <- genScopeBlock sb
+  return $ (B Eq conditionLabel <| Define doLabel <| bodyCode)
+         >< (Define conditionLabel <| expInstr) 
+         >< (storeToRegister stackOff R4 
+         |> CMP AL R4 (ImmOpInt 1)
+         |> B Eq doLabel)
+
 generate _ = error "How end up here ???"
 
 {- Will Jones God code

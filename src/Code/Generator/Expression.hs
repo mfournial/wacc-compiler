@@ -1,4 +1,4 @@
-module Code.Generator.Expression (expression) where
+module Code.Generator.Expression (expression, expressionReg) where
 
 import Code.Instructions(Reg)
 import Code.Generator.State

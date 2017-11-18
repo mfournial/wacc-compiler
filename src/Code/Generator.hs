@@ -6,6 +6,7 @@ import Prelude hiding (null, concat)
 
 import Code.Generator.State
 import Code.Generator.Statement
+import Code.Generator.Runtime
 import Code.Instructions
 import Data.Waskell.ADT 
 
@@ -14,7 +15,7 @@ produceASM :: FilePath -> WaccTree -> IO ()
 produceASM = (.genCode) . writeCode
 
 genCode :: WaccTree -> Seq Instr
-genCode t =  dataSec' >< instr
+genCode t =  dataSec' >< instr >< generateRuntime (runtime st)
   where
     dataSec = dataSection (strLits st)
     dataSec' = if null dataSec then empty else dataSec |> DIVIDER |> DIVIDER

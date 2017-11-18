@@ -18,7 +18,8 @@ module Code.Generator.State (
   nextLabel,
   newEnv,
   closeEnv,
-  getStringLiterals
+  getStringLiterals,
+  addToRuntime
 )
 where
 

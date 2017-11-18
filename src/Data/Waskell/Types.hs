@@ -70,8 +70,6 @@ instance Typeable (Scop AssignRhs) where
         | getType (Scop (ep, scp)) == getType t = return ret
         | otherwise = throwTypeError ret pos ("Type mismatch when attempting to call function " ++ sid ++ " argument " ++ show track ++ " requires a type of " ++ show t ++ " but was given a type of " ++ show (getType (Scop (ep, scp))))
 
-
-
   getType (Scop (AssignPairElem ((Left (e, pos)), _),  scps)) = getPairElemTypeL (Scop (e, scps)) pos
   getType (Scop (AssignPairElem ((Right (e, pos)), _),  scps)) = getPairElemTypeR (Scop (e, scps)) pos
 
@@ -250,7 +248,6 @@ lookupType (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name +
 lookupFunction :: Identifier -> [NewScope] -> ErrorList Function
 lookupFunction i@(name, p) ((NewScope hmap) : scps) = maybe (lookupFunction i scps) (either (\_ -> die AnalStage p "Attempted to treat value as function" semanticErrorCode) return) (M.lookup name hmap)
 lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ name ++ " is used but never defined") semanticErrorCode
-
 
 expError :: Type -> Type -> Pos Expression -> ErrorList Type
 expError target given e =

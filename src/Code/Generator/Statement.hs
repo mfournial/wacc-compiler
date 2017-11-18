@@ -6,6 +6,7 @@ where
 
 
 import Data.Sequence
+import Data.Sequence.Util
 import Prelude hiding(concat)
 
 import Data.Waskell.ADT

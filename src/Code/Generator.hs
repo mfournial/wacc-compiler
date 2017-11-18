@@ -2,6 +2,7 @@ module Code.Generator (produceASM) where
 
 import Data.Foldable (toList)
 import Data.Sequence
+import Data.Sequence.Util
 import Prelude hiding (null, concat)
 
 import Code.Generator.State

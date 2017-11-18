@@ -5,7 +5,6 @@ module Code.Generator.State (
   Junk(..),
   Instructions,
   ARM,
-  concat,
   runState,
   execState,
   dataSection,
@@ -52,7 +51,7 @@ data Junk = Junk {
   heap :: VarTable,
   sp :: Int,
   ref :: Int,
-  runtime :: Seq RuntimeComponent
+  runtime :: [RuntimeComponent]
 } 
 
 type VarTable = [M.HashMap String Int]
@@ -96,7 +95,8 @@ getStackVarOffset :: String -> ARM RetLoc
 getStackVarOffset name = state (\junk -> (StackOffset $ sp junk - varAddr name stack junk, junk))
 
 addToRuntime :: RuntimeComponent -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = runtime junk |> r}))
+addToRuntime r = state (\junk -> ((), junk{runtime = r : runtime junk}))
+    
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Int
@@ -115,4 +115,4 @@ nextLabel :: String -> ARM (String)
 nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ s), junk{ref = ref junk + 1}))
 
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0 0 empty
+newState = Junk empty [M.empty] [M.empty] 0 0 []

@@ -1,9 +1,8 @@
 module Code.Generator.Runtime(RuntimeComponent, generateRuntime) where
 
-import Prelude hiding (concat)
+import Prelude
 
 import Data.Sequence
-import Data.Sequence.Util
 
 import Code.Instructions
 import Code.Generator.State
@@ -28,5 +27,5 @@ generatePrintStrRuntime = do
              (BL AL "fflush" <|
              (POP [PC] <| empty))))))))))
 
-generateRuntime :: Seq RuntimeComponent -> Instructions
-generateRuntime s = concat (fmap (\(RC ins) -> ins) s)
+generateRuntime :: [RuntimeComponent] -> Instructions
+generateRuntime s = mconcat (fmap (\(RC ins) -> ins) s)

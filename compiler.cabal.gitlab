@@ -35,6 +35,7 @@ library
                    , Code.Generator.State
                    , Code.Generator.Expression
                    , Code.Generator.RetLoc
+                   , Code.Generator.StateInstructions
                    , Data.Waskell.ADT
                    , Data.Waskell.Error
                    , Data.Waskell.Scope

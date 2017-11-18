@@ -39,6 +39,7 @@ library
                    , Code.Generator.Statement
                    , Code.Generator.Expression
                    , Code.Generator.RetLoc
+                   , Code.Generator.StateInstructions
                    , Data.Waskell.Scope
                    , Data.Waskell.Types
                    , Data.Waskell.Types.Util

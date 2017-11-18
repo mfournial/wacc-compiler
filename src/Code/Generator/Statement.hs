@@ -18,10 +18,7 @@ import Code.Generator.StateInstructions
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
-generate (StatementOperator (StatReturn (e, _), _)) = do
-  is <- expressionReg e PC
-  p <- pop [PC]
-  return (is |> p)
+generate (StatementOperator (StatReturn (e, _), _)) = (|>) <$> expressionReg e PC <*> pop [PC]
 
 generate (StatIf (posexp) sb sb') = do
   (expInstr, stackOff) <- expression (getVal posexp)

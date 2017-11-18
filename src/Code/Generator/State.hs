@@ -26,6 +26,7 @@ where
 import Data.Char(intToDigit)
 import Data.Maybe(fromJust)
 import Data.Sequence
+import Data.Sequence.Util
 import Control.Monad.State.Lazy
 import Prelude hiding (concat, length, zipWith, null, take)
 import qualified Prelude as P
@@ -34,6 +35,7 @@ import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 import Code.Generator.RetLoc
+import Code.Generator.Runtime
 --import Data.Waskell.ADT 
 
 type ARM = State Junk
@@ -49,7 +51,8 @@ data Junk = Junk {
   stack :: VarTable,
   heap :: VarTable,
   sp :: Int,
-  ref :: Int
+  ref :: Int,
+  runtime :: Seq RuntimeComponent
 } 
 
 type VarTable = [M.HashMap String Int]
@@ -65,9 +68,6 @@ dataSection strs
 
 listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . pure . intToDigit
-
-concat :: Seq (Seq a) -> Seq a
-concat = foldl (><) empty
 
 -- | Can't import length from prelude... because of conflicts
 size :: String -> Int-> Int
@@ -95,6 +95,8 @@ getFromHeap name = state (\junk -> (HeapAddr $ varAddr name heap junk, junk))
 getStackVarOffset :: String -> ARM RetLoc
 getStackVarOffset name = state (\junk -> (StackOffset $ sp junk - varAddr name stack junk, junk))
 
+addToRuntime :: RuntimeComponent -> ARM ()
+addToRuntime r = state (\junk -> ((), junk{runtime = runtime junk |> r}))
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Int
@@ -113,4 +115,4 @@ nextLabel :: String -> ARM (String)
 nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ s), junk{ref = ref junk + 1}))
 
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0 0
+newState = Junk empty [M.empty] [M.empty] 0 0 empty

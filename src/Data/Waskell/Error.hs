@@ -88,7 +88,6 @@ instance Monad ErrorList where
     ErrorList Nothing es'  -> ErrorList Nothing (es ++ es')
   ErrorList Nothing es >>= _ = ErrorList Nothing es
 
-
 instance Functor ErrorList where
   fmap = liftM
 

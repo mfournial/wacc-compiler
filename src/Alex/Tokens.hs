@@ -1,7 +1,7 @@
 {-| 
 = WACC Compiler 
 
-This is used by the Lexer and Parser
+Tokens used by the Lexer and Parser
 
 Group 26 -- Waskell
 Module      : Tokens
@@ -14,66 +14,65 @@ This module contains the list of tokens and the function to print the tokens whe
 module Alex.Tokens where
 
 -- | Data type declaration for all the tokens used in WACC
-data Tok
- = T_CoT
- | T_SepT
- | T_EndT
- | T_BeginT 
- | T_SkipT 
- | T_ReadT 
- | T_PrintT 
- | T_PrintLnT 
- | T_FreeT 
- | T_ExitT 
- | T_IntDigit !String 
- | T_PlusToken 
- | T_MinusToken 
- | T_TrueToken
- | T_FalseToken 
- | T_IntT 
- | T_BoolT 
- | T_CharT 
- | T_StringT 
- | T_TimesT 
- | T_DivideT 
- | T_ModuloT 
- | T_GreaterT 
- | T_LessT 
- | T_GreaterEqT 
- | T_LessEqT 
- | T_EqT 
- | T_NotEqT 
- | T_AndT 
- | T_OrT 
- | T_LParenT 
- | T_RParenT 
- | T_LBracketT 
- | T_RBracketT 
- | T_IsT 
- | T_WhileT 
- | T_DoT 
- | T_DoneT 
- | T_IfT 
- | T_FiT 
- | T_ThenT 
- | T_ElseT 
- | T_PairT 
- | T_NewpairT 
- | T_CallT 
- | T_FstT 
- | T_SndT 
- | T_EqualT 
- | T_LenT 
- | T_OrdT 
- | T_ChrT 
- | T_ReturnT 
- | T_NotT 
- | T_NullT
- | T_CharLiteral !String
- | T_StringLiteral !String
- | T_Identifier !String
-
- deriving (Eq,Show,Ord)
+data Tok =
+      T_CoT
+    | T_SepT
+    | T_EndT
+    | T_BeginT 
+    | T_SkipT 
+    | T_ReadT 
+    | T_PrintT 
+    | T_PrintLnT 
+    | T_FreeT 
+    | T_ExitT 
+    | T_IntDigit !String 
+    | T_PlusToken 
+    | T_MinusToken 
+    | T_TrueToken
+    | T_FalseToken 
+    | T_IntT 
+    | T_BoolT 
+    | T_CharT 
+    | T_StringT 
+    | T_TimesT 
+    | T_DivideT 
+    | T_ModuloT 
+    | T_GreaterT 
+    | T_LessT 
+    | T_GreaterEqT 
+    | T_LessEqT 
+    | T_EqT 
+    | T_NotEqT 
+    | T_AndT 
+    | T_OrT 
+    | T_LParenT 
+    | T_RParenT 
+    | T_LBracketT 
+    | T_RBracketT 
+    | T_IsT 
+    | T_WhileT 
+    | T_DoT 
+    | T_DoneT 
+    | T_IfT 
+    | T_FiT 
+    | T_ThenT 
+    | T_ElseT 
+    | T_PairT 
+    | T_NewpairT 
+    | T_CallT 
+    | T_FstT 
+    | T_SndT 
+    | T_EqualT 
+    | T_LenT 
+    | T_OrdT 
+    | T_ChrT 
+    | T_ReturnT 
+    | T_NotT 
+    | T_NullT
+    | T_CharLiteral !String
+    | T_StringLiteral !String
+    | T_Identifier !String
+  deriving (Eq,Show,Ord)
 
 -- | Print Token
 -- When parsing is not successfull it prints the token converting them back to
@@ -138,5 +137,3 @@ prToken t = case t of
   (T_CharLiteral s) -> s
   (T_StringLiteral s) -> s
   (T_Identifier s) -> s
-
-

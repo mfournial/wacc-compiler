@@ -15,8 +15,10 @@ expression (IntExp i)       = intToReg i       R0
 expression (BoolExp True)   = intToReg 1       R0
 expression (BoolExp False)  = intToReg 0       R0
 expression (CharExpr c)     = intToReg (ord c) R0
+expression PairExpr         = intToReg 0       R0
 
 expression (StringExpr str) = fmap (empty,) $ newStringLiteral str
+
 
 expression _ = error "Expression pattern not matched"
 

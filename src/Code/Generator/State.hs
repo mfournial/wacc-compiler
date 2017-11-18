@@ -12,8 +12,9 @@ module Code.Generator.State (
   newStringLiteral,
   addToHeap,
   getFromHeap,
-  push,
-  pop,
+  pushVar,
+  incrementStack,
+  decrementStack,
   newState,
   nextLabel,
   newEnv,
@@ -49,7 +50,7 @@ data Junk = Junk {
   heap :: VarTable,
   sp :: Int,
   ref :: Int
-}
+} 
 
 type VarTable = [M.HashMap String Int]
 type Data = Seq String
@@ -76,17 +77,14 @@ size (c : cs) i = size cs (i + 1)
 newEnv :: ARM ()
 newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
 
-pop :: ARM ()
-pop = decrementStack
-
 closeEnv :: ARM ()
 closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk)}))
 
 removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
 
-push :: String -> ARM ()
-push name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack
+pushVar :: String -> ARM ()
+pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack
 
 addToHeap :: String -> Int -> ARM ()
 addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
@@ -103,10 +101,10 @@ varAddr :: String -> (Junk -> VarTable) -> Junk -> Int
 varAddr name = ((fromJust . M.lookup name . head) .)
 
 incrementStack :: ARM ()
-incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 4}))
+incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
 
 decrementStack :: ARM ()
-decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 4}))
+decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 1}))
 
 addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps

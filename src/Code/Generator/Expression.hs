@@ -12,15 +12,18 @@ import Data.Sequence((><), empty)
 import Data.Char(ord)
 
 expression :: Expression -> ARM (Instructions, RetLoc)
-expression (IntExp i)       = intToReg i       R0
-expression (BoolExp True)   = intToReg 1       R0
-expression (BoolExp False)  = intToReg 0       R0
-expression (CharExpr c)     = intToReg (ord c) R0
-expression PairExpr         = intToReg 0       R0
+expression (IntExp i)         = intToReg i       R0
+expression (BoolExp True)     = intToReg 1       R0
+expression (BoolExp False)    = intToReg 0       R0
+expression (CharExpr c)       = intToReg (ord c) R0
+expression PairExpr           = intToReg 0       R0
+
+expression (IdentExpr (s, _)) = fmap (empty,) $ getVar s
+
+--expression (UExpr (UBang, _) (e, _)) = do
+--  (ins, (Register r)) <- expression e
 
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
-
-
 expression _ = error "Expression pattern not matched"
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)

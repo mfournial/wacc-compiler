@@ -19,6 +19,7 @@ module Code.Generator.State (
   newEnv,
   closeEnv,
   getStringLiterals,
+  getOffsetFromStackPtr,
   addToRuntime,
   getVar
 )

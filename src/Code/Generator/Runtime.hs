@@ -17,7 +17,7 @@ generateExitRuntime = undefined
 
 generatePrintStrRuntime :: RuntimeGenerator
 generatePrintStrRuntime = do
- sloc <- newStringLiteral "%.*s\0" 
+ sloc <- newStringLiteral "%.*s\\0" 
  return (RC PrintStr (Define "runtime_print_string" <| 
                      (PUSH [LinkRegister] <|
                      (storeToRegister R1 (RegLoc R0) ><

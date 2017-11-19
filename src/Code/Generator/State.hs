@@ -21,7 +21,8 @@ module Code.Generator.State (
   getStringLiterals,
   getOffsetFromStackPtr,
   addToRuntime,
-  getVar
+  getVar,
+  getSP
 )
 where
 
@@ -120,6 +121,9 @@ incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
 
 decrementStack :: ARM ()
 decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 1}))
+
+getSP :: ARM Int
+getSP = fmap sp get 
 
 addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps

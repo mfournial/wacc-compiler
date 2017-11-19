@@ -26,12 +26,25 @@ expression (UExpr (uexp, _) (e, _)) = do
   strRegIns           <- storeToRegister R0 loc
   return $ (sub >< strRegIns >< evalUExp uexp, (PRL (Register R0)))
 
+expression (BExp (e, _) (bop, _) (e', _)) = do
+  (saveReg, saveloc)  <- push [R1]
+  (left, lloc)        <- expression e
+  strLeft             <- storeToRegister R0 lloc
+  (right, rloc)       <- expression e'
+  strRight            <- storeToRegister R1 rloc
+  resReg              <- pop [R1]
+  return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
+
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 expression _ = error "Expression pattern not matched"
 
 evalUExp :: UnaryOperator -> Instructions
 evalUExp UMinus = singleton (RSB AL F R0 R0 (ImmOpInt 0))
 evalUExp _ = error "UExp pattern not matched"
+
+evalBExp :: BinaryOperator -> Instructions
+evalBExp BTimes = singleton (MUL AL F R0 R0 R1)
+evalBExp _ = error "BExp pattern not matched"
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
 intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))

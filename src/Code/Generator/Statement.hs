@@ -25,29 +25,31 @@ generate (StatementOperator (StatReturn (e, _), _)) = (|>) <$> expressionReg e P
 generate (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
   strloc <- newStringLiteral s
   printrt <- branchRuntime generatePrintStrRuntime
-  return $ (storeToRegister R0 strloc |> printrt)
+  return $ (storeToRegisterPure R0 strloc |> printrt)
 
 generate (StatIf (posexp) sb sb') = do
-  (expInstr, stackOff) <- expression (getVal posexp)
+  (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
+  storeIns <- storeToRegister R4 loc
   thenCode <- genScopeBlock sb
   elseCode <- genScopeBlock sb'
   return $ (expInstr
-        ><( storeToRegister stackOff R4
+        >< (storeIns
         |> CMP AL R4 (ImmOpInt 1)
         |> B Eq elseLabel)
         >< ((thenCode |> B AL fiLabel)
         >< ((Define elseLabel <| elseCode) |> Define fiLabel)))
 
 generate (StatWhile (posexp) sb) = do
-  (expInstr, stackOff) <- expression (getVal posexp)
+  (expInstr, loc) <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
+  storeIns <- storeToRegister R4 loc
   bodyCode <- genScopeBlock sb
   return $ (B Eq conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
-         >< (storeToRegister stackOff R4 
+         >< (storeIns
          |> CMP AL R4 (ImmOpInt 1)
          |> B Eq doLabel)
 

@@ -1,23 +1,32 @@
-module Code.Generator.RetLoc(RetLoc(..), storeToRegister) where
+module Code.Generator.RetLoc(RetLoc, PureRetLoc(..), storeToRegister, storeToRegisterPure) where
+
+import Code.Generator.RetLoc.Internal
 
 import Code.Instructions
+import Code.Generator.State
 
 import Data.Sequence
 
-data RetLoc = HeapAddr Int | StackOffset Int | StringLit String | RegLoc Reg | Register Reg
+storeToRegister :: Reg -> RetLoc -> ARM Instructions
+storeToRegister r (StackPtr i) = do
+  off <- getOffsetFromStackPtr i
+  return $ storeToRegister' r (OffReg StackPointer (offsetToARMOffset off) False)   
 
-storeToRegister :: Reg -> RetLoc -> Instructions
-storeToRegister r (HeapAddr i)    = storeToRegister' r (Const i) >< storeToRegister r (RegLoc r)
-storeToRegister r (StackOffset i) = storeToRegister' r (OffReg StackPointer (addrToOffset i) False)   
-storeToRegister r (StringLit str) = storeToRegister' r (Label str)
-storeToRegister r' (RegLoc r) = storeToRegister' r' (OffReg r (addrToOffset 0) False)
-storeToRegister r' (Register r)
+storeToRegister r (PRL k) = return $ storeToRegisterPure r k
+
+storeToRegisterPure :: Reg -> PureRetLoc -> Instructions
+storeToRegisterPure r (HeapAddr i) = storeToRegister' r (Const i) >< storeToRegisterPure r (RegLoc r)
+
+storeToRegisterPure r (StringLit str) = storeToRegister' r (Label str)
+storeToRegisterPure r' (RegLoc r) = storeToRegister' r' (OffReg r (offsetToARMOffset 0) False)
+
+storeToRegisterPure r' (Register r)
   | r' == r = empty
-  | otherwise = pure (MOV AL F r' (ShiftReg r NSH))
+  | otherwise = singleton (MOV AL F r' (ShiftReg r NSH))
 
 storeToRegister' :: Reg -> Address -> Instructions
-storeToRegister' r a = pure (LDR AL W r a)
+storeToRegister' r a = singleton (LDR AL W r a)
 
 --Note this is the incorrect behaviour TODO 
-addrToOffset :: Int -> Offset
-addrToOffset i = Int i
+offsetToARMOffset :: Int -> Offset
+offsetToARMOffset i = Int i

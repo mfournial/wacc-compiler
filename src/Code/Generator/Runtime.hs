@@ -20,9 +20,9 @@ generatePrintStrRuntime = do
  sloc <- newStringLiteral "%.*s\\0" 
  return (RC PrintStr (Define "runtime_print_string" <| 
                      (PUSH [LinkRegister] <|
-                     (storeToRegister R1 (RegLoc R0) ><
+                     (storeToRegisterPure R1 (RegLoc R0) ><
                      (ADD AL F R2 R0 (ImmOpInt 4) <|
-                     (storeToRegister R0 sloc ><
+                     (storeToRegisterPure R0 sloc ><
                      (ADD AL F R0 R0 (ImmOpInt 4) <|
                      (BL AL "printf" <|
                      (MOV AL F R0 (ImmOpInt 0) <|

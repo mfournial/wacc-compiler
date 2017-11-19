@@ -19,7 +19,8 @@ module Code.Generator.State (
   newEnv,
   closeEnv,
   getStringLiterals,
-  addToRuntime
+  addToRuntime,
+  getOffsetFromStackPtr
 )
 where
 
@@ -34,13 +35,13 @@ import qualified Prelude as P
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
-import Code.Generator.RetLoc
+import Code.Generator.RetLoc.Internal
 import Code.Generator.Runtime.Internal(RuntimeComponent)
 --import Data.Waskell.ADT 
 
 type ARM = State Junk
 
-newStringLiteral :: String -> ARM RetLoc
+newStringLiteral :: String -> ARM PureRetLoc
 newStringLiteral str = state (\junk -> (StringLit (listPosToLabel (length (strLits junk))), junk{strLits = strLits junk |> str}))
 
 getStringLiterals :: ARM Data
@@ -89,11 +90,14 @@ pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stac
 addToHeap :: String -> Int -> ARM ()
 addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
 
-getFromHeap :: String -> ARM RetLoc
+getFromHeap :: String -> ARM PureRetLoc
 getFromHeap name = state (\junk -> (HeapAddr $ varAddr name heap junk, junk))
 
-getStackVarOffset :: String -> ARM RetLoc
-getStackVarOffset name = state (\junk -> (StackOffset $ sp junk - varAddr name stack junk, junk))
+getStackVarPtr :: String -> ARM RetLoc
+getStackVarPtr name = state (\junk -> (StackPtr $ varAddr name stack junk, junk))
+
+getOffsetFromStackPtr :: Int -> ARM Int
+getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
 
 addToRuntime :: RuntimeComponent -> ARM ()
 addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))

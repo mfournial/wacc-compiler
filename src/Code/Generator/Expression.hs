@@ -13,4 +13,5 @@ expression e = undefined
 expressionReg :: Expression -> Reg -> ARM Instructions
 expressionReg e r = do
   (is, rl) <- expression e
-  return (is >< storeToRegister r rl)
+  iStore <- storeToRegister r rl
+  return (is >< iStore)

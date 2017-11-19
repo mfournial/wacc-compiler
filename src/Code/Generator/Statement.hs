@@ -27,6 +27,9 @@ generate (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
   printrt <- branchRuntime generatePrintStrRuntime
   return $ (storeToRegisterPure R0 strloc |> printrt)
 
+generate (StatementOperator ((StatPrintLn (StringExpr s, pos)), pos')) =
+  generate (StatementOperator ((StatPrint (StringExpr s ++ "\n", pos)), pos'))
+
 generate (StatIf (posexp) sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"

@@ -19,6 +19,8 @@ storeToRegisterPure r (HeapAddr i) = storeToRegister' r (Const i) >< storeToRegi
 
 storeToRegisterPure r (StringLit str) = storeToRegister' r (Label str)
 storeToRegisterPure r' (RegLoc r) = storeToRegister' r' (OffReg r (offsetToARMOffset 0) False)
+storeToRegisterPure r (ImmInt x) = singleton (MOV AL F r (ImmOpInt x))
+storeToRegisterPure r (ImmChar c) = singleton (MOV AL F r (ImmOpCh c))
 
 storeToRegisterPure r' (Register r)
   | r' == r = empty

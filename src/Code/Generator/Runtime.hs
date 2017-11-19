@@ -1,4 +1,11 @@
-module Code.Generator.Runtime(generatePrintStrRuntime, generateRuntime, RuntimeGenerator) where
+module Code.Generator.Runtime(
+  generatePrintStrRuntime,
+  generatePrintIntRuntime,
+  generateReadCharRuntime,
+  generateReadIntRuntime,
+  generateRuntime,
+  RuntimeGenerator
+) where
 
 import Prelude
 
@@ -11,13 +18,6 @@ import Code.Generator.RetLoc
 import Code.Generator.Runtime.Internal
 
 type RuntimeGenerator = ARM (RuntimeComponent, String)
-
-generateExitRuntime :: RuntimeGenerator 
-generateExitRuntime = undefined
-
--- | Print char isn't a function - just put the char in R0 and call it
-generatePrintChrRuntime :: Instr -- ^ 
-generatePrintChrRuntime = BL AL "putchar"
 
 generatePrintIntRuntime :: RuntimeGenerator
 generatePrintIntRuntime = do

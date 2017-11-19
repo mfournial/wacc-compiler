@@ -35,17 +35,17 @@ generatePrintIntRuntime = do
 
 generatePrintStrRuntime :: RuntimeGenerator
 generatePrintStrRuntime = do
- sloc <- newStringLiteral "%.*s\\0" 
- return (RC PrintStr (Define "runtime_print_string" <| 
-                     (PUSH [LinkRegister] <|
-                     (storeToRegisterPure R1 (RegLoc R0) ><
-                     (ADD AL F R2 R0 (ImmOpInt 4) <|
-                     (storeToRegisterPure R0 sloc ><
-                     (ADD AL F R0 R0 (ImmOpInt 4) <|
-                     (BL AL "printf" <|
-                     (MOV AL F R0 (ImmOpInt 0) <|
-                     (BL AL "fflush" <|
-                     (POP [PC] <| empty)))))))))), "runtime_print_string") -- Why is there 2 of that instruction? l24 and l26
+ sloc <- newStringLiteral "%.*s\\0"
+ let fname = "runtime_print_string" in 
+  return (RC PrintStr ((Define fname 
+                    <| PUSH [LinkRegister] 
+                    <| storeToRegisterPure R1 (RegLoc R0))
+                    >< (ADD AL F R2 R0 (ImmOpInt 4) 
+                    <| storeToRegisterPure R0 sloc) 
+                    >< (ADD AL F R0 R0 (ImmOpInt 4) <| BL AL "printf" 
+                    <| MOV AL F R0 (ImmOpInt 0) <| BL AL "fflush"
+                    <| POP [PC] <| empty)), fname) 
+                   -- Why is there 2 of that instruction? l24 and l26
 
 generateReadCharRuntime :: RuntimeGenerator
 generateReadCharRuntime = do

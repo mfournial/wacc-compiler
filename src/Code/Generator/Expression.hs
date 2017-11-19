@@ -12,7 +12,11 @@ import Data.Waskell.ADT
 import Data.Sequence((><), (<|), (|>), empty, singleton)
 import Data.Char(ord)
 
+import Control.Monad
+
 expression :: Expression -> ARM (Instructions, RetLoc)
+expression (BracketExp (e, _)) = expression e
+
 expression (IntExp i)         = intToReg i       R0
 expression (BoolExp True)     = intToReg 1       R0
 expression (BoolExp False)    = intToReg 0       R0
@@ -27,16 +31,30 @@ expression (UExpr (uexp, _) (e, _)) = do
   return $ (sub >< strRegIns >< evalUExp uexp, (PRL (Register R0)))
 
 expression (BExp (e, _) (bop, _) (e', _)) = do
-  (saveReg, saveloc)  <- push [R1]
+  (saveReg, _)  <- push [R1]
   (left, lloc)        <- expression e
-  strLeft             <- storeToRegister R0 lloc
+  strLeft             <- storeToRegister R1 lloc
   (right, rloc)       <- expression e'
-  strRight            <- storeToRegister R1 rloc
+  strRight            <- storeToRegister R0 rloc
   resReg              <- pop [R1]
   return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
 
+expression (ArrayExpr (ArrayElem i indexps, _)) = do
+  pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
+  ins    <- foldM arrayExp' empty $ reverse pushed
+  return (ins, (PRL (Register R0)))
+  where
+    pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
+    pusher (ins, loc) = do
+      str <- storeToRegister R0 loc
+      (pushins, pushlocs) <- push [R0]
+      return ((ins >< str) |> pushins, head pushlocs)
+    arrayExp' :: Instructions -> (Instructions, RetLoc) -> ARM Instructions
+    arrayExp' is (is', loc) = do
+      str <- storeToRegister R0 loc
+      return (is >< is' >< str >< storeToRegisterPure R0 (RegLoc R0)) 
+
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
-expression _ = error "Expression pattern not matched"
 
 evalUExp :: UnaryOperator -> Instructions
 evalUExp UMinus = singleton (RSB AL F R0 R0 (ImmOpInt 0))

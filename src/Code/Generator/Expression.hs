@@ -23,11 +23,8 @@ expression (IdentExpr (s, _)) = fmap (empty,) $ getVar s
 
 expression (UExpr (uexp, _) (e, _)) = do
   (sub, loc)          <- expression e
-  (savIns, [saveLoc]) <- push [R0]
   strRegIns           <- storeToRegister R0 loc
-  (retIns, [retLoc])  <- push [R0]
-  restoreReg          <- storeToRegister R0 saveLoc
-  return $ ((sub >< (savIns <| (strRegIns >< ((evalUExp uexp |> retIns) >< restoreReg)))), retLoc)
+  return $ (sub >< strRegIns >< evalUExp uexp, (PRL (Register R0)))
 
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 expression _ = error "Expression pattern not matched"

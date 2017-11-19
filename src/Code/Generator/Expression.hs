@@ -11,6 +11,7 @@ import Data.Waskell.ADT
 
 import Data.Sequence((><), (<|), (|>), empty, singleton)
 import Data.Char(ord)
+import Data.Maybe
 
 import Control.Monad
 
@@ -40,8 +41,9 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
 
 expression (ArrayExpr (ArrayElem i indexps, _)) = do
+  arrLoc <- fmap fromJust $ (getFromHeap . getVal) i
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
-  ins    <- foldM arrayExp' empty $ reverse pushed
+  ins    <- foldM arrayExp' (storeToRegisterPure R0 arrLoc) $ reverse pushed
   return (ins, (PRL (Register R0)))
   where
     pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)

@@ -67,8 +67,6 @@ evalUExp ULength = storeToRegisterPure R0 (RegLoc R0)
 evalUExp UOrd    = empty
 evalUExp UChr    = empty
 
-evalUExp _ = error "UExp pattern not matched"
-
 evalBExp :: BinaryOperator -> Instructions
 evalBExp BTimes   = singleton (MUL AL F R0 R0 R1)
 --Todo check div by zero
@@ -85,8 +83,6 @@ evalBExp BMoreEqual = evalBBoolExp GE  LTh
 evalBExp BLessEqual = evalBBoolExp LE  GTh
 evalBExp BEqual     = evalBBoolExp Eq  Neq
 evalBExp BNotEqual  = evalBBoolExp Neq Eq
-
-evalBExp _ = error "BExp pattern not matched"
 
 evalBBoolExp :: Condition -> Condition -> Instructions
 evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))

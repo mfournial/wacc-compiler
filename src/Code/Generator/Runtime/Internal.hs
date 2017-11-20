@@ -15,4 +15,5 @@ data RCID = PrintStr
           | FreePair
           | PrintRef
           | ArrayCheck
+          | Checkdbz
           deriving (Eq)

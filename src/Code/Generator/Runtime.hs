@@ -114,17 +114,17 @@ generateReadCharRuntime = do
   let fname = "runtime_read_char" in
     return (RC ReadChar (Define fname <| scanfCall chloc), fname)
 
-generateDivideByZeroRuntume :: RuntimeGenerator
+generateDivideByZeroRuntime :: RuntimeGenerator
 generateDivideByZeroRuntime = do
   zloc <- newStringLiteral "%d\0"
   let fname = "runtime_dbz" in 
-    return (RC Checkdbz ( Define fname
-                       <| PUSH [LinkRegister]
-                       <| CMP AL R1 (ImmOpInt 0)
-                       <| LDR Eq W R0 (Label (label zloc))
-                       <| BL AL "runtime_throw_runtime_error"
-                       <| POP [PC]
-                       <| empty)), fname)
+    return (RC Checkdbz (Define fname
+                      <| PUSH [LinkRegister]
+                      <| CMP AL R1 (ImmOpInt 0)
+                      <| LDR Eq W R0 (Label (label zloc))
+                      <| BL AL "runtime_throw_runtime_error"
+                      <| POP [PC]
+                      <| empty), fname)
 
 generateReadIntRuntime :: RuntimeGenerator
 generateReadIntRuntime = do

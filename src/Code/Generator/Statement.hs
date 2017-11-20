@@ -19,7 +19,6 @@ import Code.Generator.Runtime
 
 import Data.Waskell.Types(unsfType)
 
-
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
 
@@ -44,8 +43,12 @@ generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   printnl     <- branchTo PrintStr
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
-generate _ (StatementOperator (StatRead (AssignToIdent _), _)) = do
-  return $ empty
+generate ns (StatementOperator ((StatRead (AssignToIdent i)), _)) = do
+--  identype <- unsfType (IdentExpr i) ns
+  return $ ((singleton(ADD AL F R4 StackPointer (ImmOpInt 0))
+            >< (storeToRegisterPure R0 (Register R4)))
+            |> BL AL "readchar")
+
   -- TODO check if int or char and call relevant generate functions
 
 --This is slightly inefficient but avoids heavy code duplication TODO: Change implementation from declare then assign to all in one go

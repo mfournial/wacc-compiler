@@ -18,61 +18,61 @@ import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
 
-generate :: Statement -> ARM Instructions
-generate StatSkip = return empty
+generate :: [NewScope] -> Statement -> ARM Instructions
+generate _ StatSkip = return empty
 
-generate (StatementOperator (StatExit (IntExp i, _), _)) = do
+generate _ (StatementOperator (StatExit (IntExp i, _), _)) = do
   return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
 
-generate (StatementOperator (StatReturn (e, _), _)) 
+generate _ (StatementOperator (StatReturn (e, _), _)) 
   = (|>) <$> expressionReg e PC <*> pop [PC]
 
-generate (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
+generate _ (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
   strloc <- newStringLiteral s
   printrt <- branchRuntime generatePrintStrRuntime
   return $ (storeToRegisterPure R0 strloc |> printrt)
 
-generate (StatementOperator ((StatPrint (CharExpr c, _)), _)) = do
+generate _ (StatementOperator ((StatPrint (CharExpr c, _)), _)) = do
   return $ storeToRegisterPure R0 (ImmChar c) |> BL AL "putchar"
 
-generate (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
+generate _ (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
   printrt <- branchRuntime generatePrintIntRuntime
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
 --Incorrect behaviour whoops! We threw type information away.
-generate (StatementOperator ((StatPrint (e, _)), _)) = do
+generate _ (StatementOperator ((StatPrint (e, _)), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
   printrt     <- branchRuntime generatePrintIntRuntime
   return $ (ins >< strIns) |> printrt  
 
-generate (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
-  = generate (StatementOperator ((StatPrint (StringExpr (s ++ "\n"), p)), p'))
-generate (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
+generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
+  = generate ns (StatementOperator ((StatPrint (StringExpr (s ++ "\n"), p)), p'))
+generate _ (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
   printrt <- branchRuntime generatePrintIntRuntime
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
-generate (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
+generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
   return $ empty
   -- TODO check if int or char and call relevant generate functions
 
-generate (StatementOperator ((StatDecAss (Pairable (BaseType StringType)) _ _), _)) = undefined
-generate (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _))), _)) = do
+generate _ (StatementOperator ((StatDecAss (Pairable (BaseType StringType)) _ _), _)) = undefined
+generate _ (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _))), _)) = do
   (ins, eloc)    <- expression e
   strIns         <- storeToRegister R0 eloc
   strExp         <- referencedPush [R0] [iid]
   return $ (ins >< strIns) |> strExp
 
-generate (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = undefined
+generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = undefined
   
 
-generate (StatIf (posexp) sb sb') = do
+generate ns (StatIf (posexp) sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  thenCode <- genScopeBlock sb
-  elseCode <- genScopeBlock sb'
+  thenCode <- genScopeBlock sb ns
+  elseCode <- genScopeBlock sb' ns
   return $ (expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 1)
@@ -80,19 +80,19 @@ generate (StatIf (posexp) sb sb') = do
         >< ((thenCode |> B AL fiLabel)
         >< ((Define elseLabel <| elseCode) |> Define fiLabel)))
 
-generate (StatWhile (posexp) sb) = do
+generate ns (StatWhile (posexp) sb) = do
   (expInstr, loc) <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  bodyCode <- genScopeBlock sb
+  bodyCode <- genScopeBlock sb ns
   return $ (B Eq conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
          |> CMP AL R4 (ImmOpInt 1)
          |> B Eq doLabel)
 
-generate _ = error "How end up here ???"
+generate _ _ = error "How end up here ???"
 
 {- Will Jones God code
 genScopeBlock' :: ScopeBlock -> ARM Instructions
@@ -101,9 +101,9 @@ genScopeBlock'  (sts, NewScope scp)
       traverse (generate env) (fromList sts)
 -}
 
-genScopeBlock :: ScopeBlock -> ARM Instructions
-genScopeBlock (sts, (NewScope scp)) = do
+genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
+genScopeBlock (sts, (NewScope scp)) ns = do
   newEnv
-  instructions <- mapM generate (fromList sts)
+  instructions <- mapM (generate ((NewScope scp):ns)) (fromList sts)
   closeEnv
   return $ concat instructions

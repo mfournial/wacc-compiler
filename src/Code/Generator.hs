@@ -25,7 +25,7 @@ genCode t =  dataSec' >< instr >< generateRuntime (runtime st)
 genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
-  minstr <- genScopeBlock sb
+  minstr <- genScopeBlock sb []
   return $ ((empty
            |> Section "text" |> DIVIDER)
            >< (finstr
@@ -40,7 +40,7 @@ genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
   --Commented out, caller should push parameters onto the stack.
   --mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
-  body <- genScopeBlock sb
+  body <- genScopeBlock sb []
   return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
 
 writeCode :: FilePath -> Instructions -> IO ()

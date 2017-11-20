@@ -252,3 +252,23 @@ lookupFunction (name, p) [] = die AnalStage p ("Semantic Error: Variable " ++ na
 expError :: Type -> Type -> Pos Expression -> ErrorList Type
 expError target given e =
   throwTypeError target (getPos e) ("Expression: " ++ show e ++ " has type " ++ show target ++ " but needs type " ++ show given)
+
+--Note the following function is to be used ONLY when typechecking of the expression has already been
+--completed, and the types are guarenteed to be correct. Otherwise the function will return error.
+unsfType :: Expression -> [NewScope] -> Type
+unsfType (IntExp _)     _                     = liftType IntType
+unsfType (BoolExp _)    _                     = liftType BoolType
+unsfType (CharExpr _)   _                     = liftType CharType
+unsfType (StringExpr _) _                     = liftType CharType
+unsfType PairExpr   _                         = Pairable PairNull
+unsfType (IdentExpr i)  ns                    = unsafeGetErrorValue $ lookupType i ns
+unsfType (ArrayExpr ((ArrayElem i es), p)) ns = unsafeGetErrorValue $ getArrayElemType i es p ns
+unsfType (UExpr (UChr, _) _) _                = liftType CharType
+unsfType (UExpr _ _) _                        = liftType IntType
+unsfType (BExp _ (BTimes, _) _) _             = liftType IntType 
+unsfType (BExp _ (BDivide, _) _) _            = liftType IntType 
+unsfType (BExp _ (BModulus, _) _) _           = liftType IntType 
+unsfType (BExp _ (BPlus, _) _) _              = liftType IntType 
+unsfType (BExp _ (BMinus, _) _) _             = liftType IntType 
+unsfType (BExp _ _ _) _                       = liftType BoolType
+unsfType (BracketExp (e, _)) ns               = unsfType e ns

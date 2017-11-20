@@ -24,6 +24,7 @@ module Data.Waskell.Error (
   dieOnError,
   checkForFatals,
   unsafeErrorListToMaybe,
+  unsafeGetErrorValue,
   errorListToMaybe,
   syntaxErrorCode,
   semanticErrorCode
@@ -148,3 +149,8 @@ displayResult (ErrorList _ eds) = mapM_ printError (sort eds)
 dieOnError :: Show a => Int -> ErrorList a -> IO (a)
 dieOnError v (ErrorList (Just a) []) = if v > 1 then putStrLn "SUCCESS CHECKING VALIDITY" >> return a else return a
 dieOnError v (ErrorList _ eds) = mapM printError (sort eds) >> maybe (if v > 1 then putStrLn "SUCCESS" >> exitWith ExitSuccess else exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))
+
+--Do\ 
+unsafeGetErrorValue :: ErrorList a -> a
+unsafeGetErrorValue (ErrorList (Just v) _) = v
+unsafeGetErrorValue (ErrorList Nothing _)  = error "Called unsafe get error value on error monad with no value"

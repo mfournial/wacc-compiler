@@ -41,7 +41,8 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
 
 expression (ArrayExpr (ArrayElem i indexps, _)) = do
-  arrLoc <- fmap fromJust $ (getFromHeap . getVal) i
+  (HeapAddr arraddr) <- fmap fromJust $ (getFromHeap . getVal) i
+  let arrLoc = (HeapAddr (arraddr + 1)) -- Note the first word is the length of the array
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
   ins    <- foldM arrayExp' (storeToRegisterPure R0 arrLoc) $ reverse pushed
   return (ins, (PRL (Register R0)))
@@ -59,12 +60,39 @@ expression (ArrayExpr (ArrayElem i indexps, _)) = do
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
 evalUExp :: UnaryOperator -> Instructions
-evalUExp UMinus = singleton (RSB AL F R0 R0 (ImmOpInt 0))
+evalUExp UMinus  = singleton (RSB AL F R0 R0 (ImmOpInt 0))
+evalUExp UBang   = singleton (MVN AL F R0 (ShiftReg R0 NSH))
+evalUExp ULength = storeToRegisterPure R0 (RegLoc R0)
+-- UOrd and UChr actually do nothing! They exist only for type safety.
+evalUExp UOrd    = empty
+evalUExp UChr    = empty
+
 evalUExp _ = error "UExp pattern not matched"
 
 evalBExp :: BinaryOperator -> Instructions
-evalBExp BTimes = singleton (MUL AL F R0 R0 R1)
+evalBExp BTimes   = singleton (MUL AL F R0 R0 R1)
+--Todo check div by zero
+evalBExp BDivide    = singleton (BL AL "__aeabi_idiv") 
+evalBExp BModulus   = singleton (BL AL "__aeabi_idivmod")
+evalBExp BPlus      = singleton (ADD AL F R0 R0 (ShiftReg R1 NSH))
+evalBExp BMinus     = singleton (SUB AL F R0 R0 (ShiftReg R1 NSH))
+evalBExp BAnd       = singleton (AND AL F R0 R0 (ShiftReg R1 NSH))
+evalBExp BOr        = singleton (ORR AL F R0 R0 (ShiftReg R1 NSH))
+
+evalBExp BMore      = evalBBoolExp GTh LE
+evalBExp BLess      = evalBBoolExp LTh GE
+evalBExp BMoreEqual = evalBBoolExp GE  LTh
+evalBExp BLessEqual = evalBBoolExp LE  GTh
+evalBExp BEqual     = evalBBoolExp Eq  Neq
+evalBExp BNotEqual  = evalBBoolExp Neq Eq
+
 evalBExp _ = error "BExp pattern not matched"
+
+evalBBoolExp :: Condition -> Condition -> Instructions
+evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))
+                  |> MOV a F R0 (ImmOpInt 1) 
+                  |> MOV b F R0 (ImmOpInt 0)
+
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
 intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))

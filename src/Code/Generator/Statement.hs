@@ -49,6 +49,16 @@ generate (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
   return $ empty
   -- TODO check if int or char and call relevant generate functions
 
+generate (StatementOperator ((StatDecAss (Pairable (BaseType StringType)) _ _), _)) = undefined
+generate (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _))), _)) = do
+  (ins, eloc)    <- expression e
+  strIns         <- storeToRegister R0 eloc
+  strExp         <- referencedPush [R0] [iid]
+  return $ (ins >< strIns) |> strExp
+
+generate (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = undefined
+  
+
 generate (StatIf (posexp) sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"

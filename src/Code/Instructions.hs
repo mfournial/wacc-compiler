@@ -57,7 +57,7 @@ data Reg = R0
          | StackPointer
          | LinkRegister
          | PC
-         deriving (Eq, Enum)
+         deriving (Eq, Enum, Show)
 
 data Op2 = ShiftReg Reg Shift  -- ^  Shift Register
          | ImmOpInt Int        -- ^  #expression

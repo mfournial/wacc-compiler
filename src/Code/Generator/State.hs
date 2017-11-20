@@ -19,13 +19,15 @@ module Code.Generator.State (
   newEnv,
   closeEnv,
   getStringLiterals,
+  getOffsetFromStackPtr,
   addToRuntime,
-  getOffsetFromStackPtr
+  getVar,
+  getSP
 )
 where
 
 import Data.Char(intToDigit)
-import Data.Maybe(fromJust)
+import Data.Maybe(fromJust, isJust)
 import Data.Sequence
 import Data.Sequence.Util
 import Control.Monad.State.Lazy
@@ -90,14 +92,14 @@ pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stac
 addToHeap :: String -> Int -> ARM ()
 addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
 
-getFromHeap :: String -> ARM PureRetLoc
-getFromHeap name = state (\junk -> (HeapAddr $ varAddr name heap junk, junk))
-
-getStackVarPtr :: String -> ARM RetLoc
-getStackVarPtr name = state (\junk -> (StackPtr $ varAddr name stack junk, junk))
-
 getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
+
+getFromHeap :: String -> ARM (Maybe PureRetLoc)
+getFromHeap name = state (\junk -> (fmap HeapAddr $ varAddr name heap junk, junk))
+
+getStackVarPtr :: String -> ARM (Maybe RetLoc)
+getStackVarPtr name = state (\junk -> (fmap StackPtr $ varAddr name stack junk, junk))
 
 addToRuntime :: RuntimeComponent -> ARM ()
 addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))
@@ -106,14 +108,22 @@ addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))
     tryAdd rc rs = if rc `elem` rs then rs else rc : rs
 
 -- Needs to be changed to look into parent scopes
-varAddr :: String -> (Junk -> VarTable) -> Junk -> Int
-varAddr name = ((fromJust . M.lookup name . head) .)
+varAddr :: String -> (Junk -> VarTable) -> Junk -> Maybe Int
+varAddr name = ((M.lookup name . head) .)
+
+getVar :: String -> ARM RetLoc
+getVar s = do
+  h <- getFromHeap s
+  fmap fromJust $ if isJust h then return (fmap PRL h) else getStackVarPtr s
 
 incrementStack :: ARM ()
 incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
 
 decrementStack :: ARM ()
 decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 1}))
+
+getSP :: ARM Int
+getSP = fmap sp get 
 
 addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps

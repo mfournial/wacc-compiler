@@ -9,6 +9,8 @@ instance Eq RuntimeComponent where
 
 data RCID = PrintStr
           | PrintInt
+          | PrintChar
+          | PrintBool
           | ReadInt
           | ReadChar
           | ThrowRuntimeErr

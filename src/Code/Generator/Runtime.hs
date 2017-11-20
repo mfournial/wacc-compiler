@@ -1,6 +1,8 @@
 module Code.Generator.Runtime(
   generatePrintStrRuntime,
   generatePrintIntRuntime,
+  generatePrintCharRuntime,
+  generatePrintBoolRuntime,
   generateReadCharRuntime,
   generateFreePairRuntime,
   generateRuntimeErrorRuntime,
@@ -50,6 +52,31 @@ generateFreePairRuntime = do
 label :: PureRetLoc -> String
 label (StringLit s) = s
 label _ = error "Kyyyyyyyyle"
+
+generatePrintBoolRuntime :: RuntimeGenerator
+generatePrintBoolRuntime = do
+  trueloc <- newStringLiteral "true"
+  falseloc <- newStringLiteral "false"
+  let fname = "runtime_print_bool" in
+    return (RC PrintBool (Define fname
+                       <| POP [LinkRegister]
+                       <| CMP AL R0 (ImmOpInt 0)
+                       <| LDR Neq W R0 (Label (label trueloc))
+                       <| LDR Eq W R0 (Label (label falseloc))
+                       <| ADD AL F R0 R0 (ImmOpInt 4)
+                       <| BL AL "printf"
+                       <| MOV AL F R0 (ImmOpInt 0)
+                       <| BL AL "fflush"
+                       <| POP [PC]
+                       <| empty), fname)
+
+generatePrintCharRuntime :: RuntimeGenerator
+generatePrintCharRuntime = do
+  let fname = "runtime_print_char" in
+    return (RC PrintChar (Define fname
+                       <| PUSH [LinkRegister]
+                       <| BL AL "putchar"
+                       <| POP [PC] <| empty), fname)
 
 generatePrintRefRuntime :: RuntimeGenerator
 generatePrintRefRuntime = do

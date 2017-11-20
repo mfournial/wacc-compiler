@@ -8,6 +8,7 @@ module Code.Generator.Runtime(
   freePair,
   readInt,
   generateRuntime,
+  branchRuntime,
   RuntimeGenerator
 ) where
 
@@ -24,12 +25,12 @@ import Code.Generator.Runtime.Internal
 type RuntimeGenerator = ARM (RuntimeComponent, String)
 
 throwRuntimeErr :: RuntimeGenerator
-throwRuntimeErr =
+throwRuntimeErr = do
+  _ <- branchRuntime printStr
+  let fname = label ThrowRuntimeErr
   return (RC ThrowRuntimeErr (Define fname
                              <| BL AL (label PrintStr)
                              <| BL AL "exit" <| empty), fname)
-  where
-    fname = label ThrowRuntimeErr
 
 freePair :: RuntimeGenerator
 freePair = do
@@ -96,6 +97,7 @@ arrayCheck :: RuntimeGenerator
 arrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
+  _ <- branchRuntime throwRuntimeErr
   let fname = label ArrayCheck in
     return (RC ArrayCheck (Define fname
                         <| CMP AL R0 (ImmOpInt 0)
@@ -169,3 +171,9 @@ scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (Register R0))
 
 generateRuntime :: [RuntimeComponent] -> Instructions
 generateRuntime s = mconcat (fmap (\(RC _ ins) -> ins) s)
+
+branchRuntime :: RuntimeGenerator -> ARM Instr
+branchRuntime rg = do
+  (cpt, lab) <- rg
+  addToRuntime cpt
+  return (BL AL lab)

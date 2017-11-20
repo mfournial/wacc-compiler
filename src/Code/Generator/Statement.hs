@@ -64,7 +64,7 @@ generate _ (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (Ass
   strExp         <- referencedPush [R0] [iid]
   return $ (ins >< strIns) |> strExp
 
-generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = undefined
+generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = return empty
   
 
 generate ns (StatIf (posexp) sb sb') = do

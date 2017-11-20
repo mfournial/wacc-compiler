@@ -259,7 +259,7 @@ unsfType :: Expression -> [NewScope] -> Type
 unsfType (IntExp _)     _                     = liftType IntType
 unsfType (BoolExp _)    _                     = liftType BoolType
 unsfType (CharExpr _)   _                     = liftType CharType
-unsfType (StringExpr _) _                     = liftType CharType
+unsfType (StringExpr _) _                     = liftType StringType
 unsfType PairExpr   _                         = Pairable PairNull
 unsfType (IdentExpr i)  ns                    = unsafeGetErrorValue $ lookupType i ns
 unsfType (ArrayExpr ((ArrayElem i es), p)) ns = unsafeGetErrorValue $ getArrayElemType i es p ns

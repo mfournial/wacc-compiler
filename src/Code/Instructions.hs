@@ -82,7 +82,7 @@ data Mem = UB  -- ^ Transfer Byte
 
 data Address = Label String                -- ^ expression
              | Const Int                   -- ^ expression
-             | OffReg Reg Offset Bool       -- ^ offset (pre-index)
+             | OffReg Reg Offset Bool      -- ^ offset (pre-index)
              deriving (Eq)
 
 

@@ -30,10 +30,24 @@ generateFreePairRuntime :: RuntimeGenerator
 generateFreePairRuntime = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   let fname = "runtime_free_pair" in
-    return (RC FreePair (Define fname
+    return (RC FreePair (((Define fname
                       <| PUSH [LinkRegister]
-                      <| LDR Eq F R0 sloc
-                      ), fname)
+                      <| CMP AL R0 (ImmOpInt 0)
+                      <| LDR Eq W R0 (Label (label sloc))
+                      <| B Eq "runtime_throw_runtime_error"
+                      <| PUSH [R0]
+                      <| storeToRegisterPure R0 (RegLoc R0))
+                      >< BL AL "free"
+                      <| storeToRegisterPure R0 (RegLoc StackPointer))
+                      |> LDR Eq W R0 (OffReg R0 (Int 4) False)
+                      |> BL AL "free"
+                      |> POP [R0]
+                      |> BL AL "free"
+                      |> POP [PC]), fname)
+  where
+    label (StringLit s) = s
+    label _ = error "Kyyyyyyyyle"
+
 
 generatePrintIntRuntime :: RuntimeGenerator
 generatePrintIntRuntime = do
@@ -42,6 +56,7 @@ generatePrintIntRuntime = do
     return (RC PrintInt ( Define fname
                        <| PUSH [LinkRegister]
                        <| storeToRegisterPure R1 (RegLoc R0) 
+                       >< storeToRegisterPure R0 intloc
                        >< (ADD AL F R0 R0 (ImmOpInt 4)
                        <| BL AL "printf"
                        <| MOV AL F R0 (ImmOpInt 0)

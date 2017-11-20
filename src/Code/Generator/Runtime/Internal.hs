@@ -14,4 +14,5 @@ data RCID = PrintStr
           | ThrowRuntimeErr
           | FreePair
           | PrintRef
+          | ArrayCheck
           deriving (Eq)

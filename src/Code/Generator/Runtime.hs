@@ -2,6 +2,8 @@ module Code.Generator.Runtime(
   generatePrintStrRuntime,
   generatePrintIntRuntime,
   generateReadCharRuntime,
+  generateFreePairRuntime,
+  generateRuntimeErrorRuntime,
   generateReadIntRuntime,
   generateRuntime,
   RuntimeGenerator
@@ -44,9 +46,10 @@ generateFreePairRuntime = do
                         |> POP [R0]
                         |> BL AL "free"
                         |> POP [PC]), fname)
-  where
-    label (StringLit s) = s
-    label _ = error "Kyyyyyyyyle"
+
+label :: PureRetLoc -> String
+label (StringLit s) = s
+label _ = error "Kyyyyyyyyle"
 
 generatePrintRefRuntime :: RuntimeGenerator
 generatePrintRefRuntime = do
@@ -60,6 +63,21 @@ generatePrintRefRuntime = do
                       >< (storeToRegisterPure R0 (ImmInt 0)
                       |> BL AL "fflush"
                       |> POP [PC])), fname)
+
+generateArrayCheckRuntime :: RuntimeGenerator
+generateArrayCheckRuntime = do
+  neg <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
+  badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
+  let fname = "runtime_check_array_bounds" in
+    return (RC ArrayCheck (Define fname
+                        <| CMP AL R0 (ImmOpInt 0)
+                        <| LDR LTh W R0 (Label (label neg))
+                        <| B LTh "runtime__throw_runtime_error"
+                        <| (storeToRegisterPure R1 (RegLoc R1)
+                        |> CMP AL R0 (ShiftReg R1 NSH)
+                        |> LDR CS W R0 (Label (label badIndex))
+                        |> BL CS "runtime__throw_runtime_error"
+                        |> POP [PC])), fname)
 
 generatePrintIntRuntime :: RuntimeGenerator
 generatePrintIntRuntime = do

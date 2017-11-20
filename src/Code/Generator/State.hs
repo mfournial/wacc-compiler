@@ -86,11 +86,11 @@ closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (hea
 removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
 
-pushVar :: String -> ARM ()
-pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack
+pushVar :: String -> ARM RetLoc
+pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack >> fmap StackPtr getSP
 
-addToHeap :: String -> Int -> ARM ()
-addToHeap name address = state (\junk -> ((), junk{heap = addToTable name address (heap junk)}))
+addToHeap :: String -> Int -> ARM PureRetLoc
+addToHeap name address = state (\junk -> (HeapAddr address, junk{heap = addToTable name address (heap junk)}))
 
 getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))

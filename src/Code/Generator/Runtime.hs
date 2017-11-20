@@ -3,6 +3,7 @@ module Code.Generator.Runtime(
   generatePrintIntRuntime,
   generatePrintCharRuntime,
   generatePrintBoolRuntime,
+  generatePrintRefRuntime,
   generateReadCharRuntime,
   generateFreePairRuntime,
   generateRuntimeErrorRuntime,

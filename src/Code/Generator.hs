@@ -18,7 +18,7 @@ produceASM = (.genCode) . writeCode
 genCode :: WaccTree -> Seq Instr
 genCode t =  dataSec' >< instr >< generateRuntime (runtime st)
   where
-    dataSec = dataSection (strLits st)
+    dataSec  = dataSection (strLits st)
     dataSec' = if null dataSec then empty else dataSec |> DIVIDER |> DIVIDER
     (instr, st) = runState (genCode' t) newState 
 

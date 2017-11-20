@@ -19,11 +19,27 @@ import Code.Generator.Runtime.Internal
 
 type RuntimeGenerator = ARM (RuntimeComponent, String)
 
+generateRuntimeErrorRuntime :: RuntimeGenerator
+generateRuntimeErrorRuntime = do
+  let fname = "runtime_throw_runtime_error" in
+    return (RC ThrowRuntimeErr (Define fname
+                             <| BL AL "runtime_print_String"
+                             <| BL AL "exit" <| empty), fname)
+
+generateFreePairRuntime :: RuntimeGenerator
+generateFreePairRuntime = do
+  sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
+  let fname = "runtime_free_pair" in
+    return (RC FreePair (Define fname
+                      <| PUSH [LinkRegister]
+                      <| LDR Eq F R0 sloc
+                      ), fname)
+
 generatePrintIntRuntime :: RuntimeGenerator
 generatePrintIntRuntime = do
   intloc <- newStringLiteral "%d\0"
   let fname = "runtime_print_int" in
-    return (RC PrintStr ( Define fname
+    return (RC PrintInt ( Define fname
                        <| PUSH [LinkRegister]
                        <| storeToRegisterPure R1 (RegLoc R0) 
                        >< (ADD AL F R0 R0 (ImmOpInt 4)
@@ -51,13 +67,13 @@ generateReadCharRuntime :: RuntimeGenerator
 generateReadCharRuntime = do
   chloc <- newStringLiteral " %c\0"
   let fname = "runtime_read_char" in
-    return (RC PrintStr (Define fname <| scanfCall chloc), fname)
+    return (RC ReadChar (Define fname <| scanfCall chloc), fname)
 
 generateReadIntRuntime :: RuntimeGenerator
 generateReadIntRuntime = do
   intloc <- newStringLiteral "%d\0"
   let fname = "runtime_read_int" in
-    return (RC PrintStr (Define fname <| scanfCall intloc), fname)
+    return (RC ReadInt (Define fname <| scanfCall intloc), fname)
 
 scanfCall :: PureRetLoc -> Instructions
 scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (RegLoc R0))

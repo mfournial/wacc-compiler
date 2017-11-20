@@ -18,7 +18,7 @@ user input
 import Control.Monad (when)
 import System.Exit (ExitCode(ExitFailure, ExitSuccess), exitWith)
 import System.Environment (getArgs, getProgName)
-import System.FilePath.Posix (replaceExtension)
+import System.FilePath.Posix (replaceExtension, takeFileName)
 import System.IO (stdin, hGetContents)
 
 import Alex.Waskell
@@ -40,7 +40,7 @@ runFile :: Verbosity -- ^ The desired level of verbosity
         -> ParseFunction WaccTree -- ^ The desired parse function to use
         -> FilePath -- ^ The file path 
         -> IO ()
-runFile v p f = putStrLn f >> readFile f >>= run v p (replaceExtension f ".s")
+runFile v p f = putStrLn f >> readFile f >>= run v p (replaceExtension (takeFileName f) ".s")
 
 -- | run will run the parser on the inputed string and output the result if 
 -- the verbosity requires it. Run will always ouput errors

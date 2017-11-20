@@ -129,7 +129,7 @@ addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps
 
 nextLabel :: String -> ARM (String)
-nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ s), junk{ref = ref junk + 1}))
+nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ "_" ++ s), junk{ref = ref junk + 1}))
 
 newState :: Junk
 newState = Junk empty [M.empty] [M.empty] 0 0 []

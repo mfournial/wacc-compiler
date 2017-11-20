@@ -39,6 +39,7 @@ generate _ (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
   printrt <- branchRuntime generatePrintIntRuntime
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
+<<<<<<< HEAD
 --Incorrect behaviour whoops! We threw type information away.
 generate _ (StatementOperator ((StatPrint (e, _)), _)) = do
   (ins, eloc) <- expression e
@@ -46,9 +47,11 @@ generate _ (StatementOperator ((StatPrint (e, _)), _)) = do
   printrt     <- branchRuntime generatePrintIntRuntime
   return $ (ins >< strIns) |> printrt  
 
-generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
-  = generate ns (StatementOperator ((StatPrint (StringExpr (s ++ "\n"), p)), p'))
-generate _ (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
+generate (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
+  = generate (StatementOperator ((StatPrint (StringExpr (s ++ "'\\n"), p)), p'))
+
+  -- TODO REMOVE IRRELEVANT calls to print
+generate (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
   printrt <- branchRuntime generatePrintIntRuntime
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
@@ -75,7 +78,7 @@ generate ns (StatIf (posexp) sb sb') = do
   elseCode <- genScopeBlock sb' ns
   return $ (expInstr
         >< (storeIns
-        |> CMP AL R4 (ImmOpInt 1)
+        |> CMP AL R4 (ImmOpInt 0)
         |> B Eq elseLabel)
         >< ((thenCode |> B AL fiLabel)
         >< ((Define elseLabel <| elseCode) |> Define fiLabel)))
@@ -85,8 +88,13 @@ generate ns (StatWhile (posexp) sb) = do
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
+<<<<<<< HEAD
   bodyCode <- genScopeBlock sb ns
   return $ (B Eq conditionLabel <| Define doLabel <| bodyCode)
+=======
+  bodyCode <- genScopeBlock sb
+  return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
+>>>>>>> Fix bugs
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
          |> CMP AL R4 (ImmOpInt 1)

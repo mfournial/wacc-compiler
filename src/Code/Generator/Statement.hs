@@ -39,6 +39,13 @@ generate (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
   printrt <- branchRuntime generatePrintIntRuntime
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
+--Incorrect behaviour whoops! We threw type information away.
+generate (StatementOperator ((StatPrint (e, _)), _)) = do
+  (ins, eloc) <- expression e
+  strIns      <- storeToRegister R0 eloc
+  printrt     <- branchRuntime generatePrintIntRuntime
+  return $ (ins >< strIns) |> printrt  
+
 generate (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
   = generate (StatementOperator ((StatPrint (StringExpr (s ++ "\n"), p)), p'))
 generate (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do

@@ -25,21 +25,22 @@ import Code.Generator.Runtime.Internal
 type RuntimeGenerator = ARM (RuntimeComponent, String)
 
 generateRuntimeErrorRuntime :: RuntimeGenerator
-generateRuntimeErrorRuntime = do
-  let fname = "runtime_throw_runtime_error" in
-    return (RC ThrowRuntimeErr (Define fname
-                             <| BL AL "runtime_print_String"
+generateRuntimeErrorRuntime =
+  return (RC ThrowRuntimeErr (Define fname
+                             <| BL AL (label PrintStr)
                              <| BL AL "exit" <| empty), fname)
+  where
+    fname = label ThrowRuntimeErr
 
 generateFreePairRuntime :: RuntimeGenerator
 generateFreePairRuntime = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
-  let fname = "runtime_free_pair" in
+  let fname = label FreePair in
     return (RC FreePair (((Define fname
                         <| PUSH [LinkRegister]
                         <| CMP AL R0 (ImmOpInt 0)
-                        <| LDR Eq W R0 (Label (label sloc))
-                        <| B Eq "runtime_throw_runtime_error"
+                        <| LDR Eq W R0 (address sloc)
+                        <| B Eq (label ThrowRuntimeErr)
                         <| PUSH [R0]
                         <| storeToRegisterPure R0 (RegLoc R0))
                         >< BL AL "free"
@@ -50,20 +51,20 @@ generateFreePairRuntime = do
                         |> BL AL "free"
                         |> POP [PC]), fname)
 
-label :: PureRetLoc -> String
-label (StringLit s) = s
-label _ = error "Kyyyyyyyyle"
+address :: PureRetLoc -> Address
+address (StringLit s) = Label s
+address _ = error "Kyyyyyyyyle"
 
 generatePrintBoolRuntime :: RuntimeGenerator
 generatePrintBoolRuntime = do
   trueloc <- newStringLiteral "true"
   falseloc <- newStringLiteral "false"
-  let fname = "runtime_print_bool" in
+  let fname = label PrintBool in
     return (RC PrintBool (Define fname
                        <| POP [LinkRegister]
                        <| CMP AL R0 (ImmOpInt 0)
-                       <| LDR Neq W R0 (Label (label trueloc))
-                       <| LDR Eq W R0 (Label (label falseloc))
+                       <| LDR Neq W R0 (address trueloc)
+                       <| LDR Eq W R0 (address falseloc)
                        <| ADD AL F R0 R0 (ImmOpInt 4)
                        <| BL AL "printf"
                        <| MOV AL F R0 (ImmOpInt 0)
@@ -73,7 +74,7 @@ generatePrintBoolRuntime = do
 
 generatePrintCharRuntime :: RuntimeGenerator
 generatePrintCharRuntime = do
-  let fname = "runtime_print_char" in
+  let fname = label PrintChar in
     return (RC PrintChar (Define fname
                        <| PUSH [LinkRegister]
                        <| BL AL "putchar"
@@ -82,7 +83,7 @@ generatePrintCharRuntime = do
 generatePrintRefRuntime :: RuntimeGenerator
 generatePrintRefRuntime = do
   refloc <- newStringLiteral "%p\0"
-  let fname = "runtime_print_reference" in
+  let fname = label PrintRef in
     return (RC PrintRef ((Define fname
                       <| storeToRegisterPure R1 (Register R0))
                       >< (storeToRegisterPure R0 refloc
@@ -94,23 +95,23 @@ generatePrintRefRuntime = do
 
 generateArrayCheckRuntime :: RuntimeGenerator
 generateArrayCheckRuntime = do
-  neg <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
+  negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
-  let fname = "runtime_check_array_bounds" in
+  let fname = label ArrayCheck in
     return (RC ArrayCheck (Define fname
                         <| CMP AL R0 (ImmOpInt 0)
-                        <| LDR LTh W R0 (Label (label neg))
-                        <| B LTh "runtime__throw_runtime_error"
+                        <| LDR LTh W R0 (address negIndex)
+                        <| B LTh (label ThrowRuntimeErr)
                         <| (storeToRegisterPure R1 (RegLoc R1)
                         |> CMP AL R0 (ShiftReg R1 NSH)
-                        |> LDR CS W R0 (Label (label badIndex))
-                        |> BL CS "runtime__throw_runtime_error"
+                        |> LDR CS W R0 (address badIndex)
+                        |> BL CS (label ThrowRuntimeErr)
                         |> POP [PC])), fname)
 
 generatePrintIntRuntime :: RuntimeGenerator
 generatePrintIntRuntime = do
   intloc <- newStringLiteral "%d\0"
-  let fname = "runtime_print_int" in
+  let fname = label PrintInt in
     return (RC PrintInt ( Define fname
                        <| PUSH [LinkRegister]
                        <| storeToRegisterPure R1 (Register R0) 
@@ -125,7 +126,7 @@ generatePrintIntRuntime = do
 generatePrintStrRuntime :: RuntimeGenerator
 generatePrintStrRuntime = do
  sloc <- newStringLiteral "%.*s\\0"
- let fname = "runtime_print_string" in 
+ let fname = label PrintStr in 
   return (RC PrintStr ((Define fname 
                     <| PUSH [LinkRegister] 
                     <| storeToRegisterPure R1 (RegLoc R0))
@@ -139,25 +140,25 @@ generatePrintStrRuntime = do
 generateReadCharRuntime :: RuntimeGenerator
 generateReadCharRuntime = do
   chloc <- newStringLiteral " %c\0"
-  let fname = "runtime_read_char" in
+  let fname = label ReadChar in
     return (RC ReadChar (Define fname <| scanfCall chloc), fname)
 
 generateDivideByZeroRuntime :: RuntimeGenerator
 generateDivideByZeroRuntime = do
   zloc <- newStringLiteral "%d\0"
-  let fname = "runtime_dbz" in 
+  let fname = label Checkdbz in 
     return (RC Checkdbz (Define fname
                       <| PUSH [LinkRegister]
                       <| CMP AL R1 (ImmOpInt 0)
-                      <| LDR Eq W R0 (Label (label zloc))
-                      <| BL AL "runtime_throw_runtime_error"
+                      <| LDR Eq W R0 (address zloc)
+                      <| BL AL (label ThrowRuntimeErr)
                       <| POP [PC]
                       <| empty), fname)
 
 generateReadIntRuntime :: RuntimeGenerator
 generateReadIntRuntime = do
   intloc <- newStringLiteral "%d\0"
-  let fname = "runtime_read_int" in
+  let fname = label ReadInt in
     return (RC ReadInt (Define fname <| scanfCall intloc), fname)
 
 scanfCall :: PureRetLoc -> Instructions

@@ -1,4 +1,9 @@
-module Code.Generator.RetLoc(RetLoc, PureRetLoc(..), storeToRegister, storeToRegisterPure) where
+module Code.Generator.RetLoc(
+  RetLoc,
+  PureRetLoc(..),
+  storeToRegister,
+  storeToRegisterPure
+) where
 
 import Code.Generator.RetLoc.Internal
 
@@ -18,6 +23,7 @@ storeToRegisterPure :: Reg -> PureRetLoc -> Instructions
 storeToRegisterPure r (HeapAddr i) = storeToRegister' r (Const i) >< storeToRegisterPure r (RegLoc r)
 
 storeToRegisterPure r (StringLit str) = storeToRegister' r (Label str)
+storeToRegisterPure r' (RegLocOffset r o) = storeToRegister' r' (OffReg r (offsetToARMOffset o) False)
 storeToRegisterPure r' (RegLoc r) = storeToRegister' r' (OffReg r (offsetToARMOffset 0) False)
 storeToRegisterPure r (ImmInt x) = singleton (MOV AL F r (ImmOpInt x))
 storeToRegisterPure r (ImmChar c) = singleton (MOV AL F r (ImmOpCh c))

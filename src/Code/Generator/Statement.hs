@@ -17,6 +17,8 @@ import Code.Generator.RetLoc
 import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
+import Data.Waskell.Types(unsfType)
+
 
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
@@ -27,24 +29,21 @@ generate _ (StatementOperator (StatExit (IntExp i, _), _)) = do
 generate _ (StatementOperator (StatReturn (e, _), _)) 
   = (|>) <$> expressionReg e PC <*> pop [PC]
 
-generate _ (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
-  strloc <- newStringLiteral s
-  printrt <- branchRuntime generatePrintStrRuntime
-  return $ (storeToRegisterPure R0 strloc |> printrt)
-
-generate _ (StatementOperator ((StatPrint (CharExpr c, _)), _)) = do
-  return $ storeToRegisterPure R0 (ImmChar c) |> BL AL "putchar"
-
-generate _ (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
-  printrt <- branchRuntime generatePrintIntRuntime
-  return $ storeToRegisterPure R0 (ImmInt i) |> printrt
-
---Incorrect behaviour whoops! We threw type information away.
-generate _ (StatementOperator ((StatPrint (e, _)), _)) = do
+generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchRuntime generatePrintIntRuntime
-  return $ (ins >< strIns) |> printrt  
+  printrt     <- branchRuntime $ selectPrint (unsfType e ns)
+  return $ (ins >< strIns) |> printrt
+  where
+    selectPrint :: Type -> RuntimeGenerator
+    selectPrint (PairType a b)                                          = generatePrintRefRuntime
+    selectPrint (Pairable (BaseType BoolType))                          = generatePrintBoolRuntime
+    selectPrint (Pairable (BaseType StringType))                        = generatePrintStrRuntime
+    selectPrint (Pairable (BaseType IntType))                           = generatePrintIntRuntime
+    selectPrint (Pairable (BaseType CharType))                          = generatePrintCharRuntime
+    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = generatePrintStrRuntime
+    selectPrint (Pairable (ArrayType _))                                = generatePrintRefRuntime
+    selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
 generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
   = generate ns (StatementOperator ((StatPrint (StringExpr (s ++ "'\\n"), p)), p'))

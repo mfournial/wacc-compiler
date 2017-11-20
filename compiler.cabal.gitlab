@@ -33,6 +33,7 @@ library
                    , Happy.Waskell
                    , Code.Generator
                    , Code.Generator.State
+                   , Code.Generator.Statement
                    , Code.Generator.Expression
                    , Code.Generator.RetLoc
                    , Code.Generator.StateInstructions

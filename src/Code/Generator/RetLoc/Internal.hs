@@ -11,3 +11,4 @@ data PureRetLoc = HeapAddr Int
                 | Register Reg
                 | ImmChar Char
                 | ImmInt Int
+  deriving (Show)

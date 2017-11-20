@@ -36,13 +36,13 @@ generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
   return $ (ins >< strIns) |> printrt
   where
     selectPrint :: Type -> RuntimeGenerator
-    selectPrint (PairType a b)                                          = generatePrintRefRuntime
-    selectPrint (Pairable (BaseType BoolType))                          = generatePrintBoolRuntime
-    selectPrint (Pairable (BaseType StringType))                        = generatePrintStrRuntime
-    selectPrint (Pairable (BaseType IntType))                           = generatePrintIntRuntime
-    selectPrint (Pairable (BaseType CharType))                          = generatePrintCharRuntime
-    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = generatePrintStrRuntime
-    selectPrint (Pairable (ArrayType _))                                = generatePrintRefRuntime
+    selectPrint (PairType a b)                                          = printRef
+    selectPrint (Pairable (BaseType BoolType))                          = printBool
+    selectPrint (Pairable (BaseType StringType))                        = printStr
+    selectPrint (Pairable (BaseType IntType))                           = printInt
+    selectPrint (Pairable (BaseType CharType))                          = printChar
+    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = printStr
+    selectPrint (Pairable (ArrayType _))                                = printRef
     selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
 generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
@@ -50,7 +50,7 @@ generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p'))
 
   -- TODO REMOVE IRRELEVANT calls to print
 generate _ (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
-  printrt <- branchRuntime generatePrintIntRuntime
+  printrt <- branchRuntime printInt
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
 generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do

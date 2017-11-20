@@ -1,13 +1,12 @@
 module Code.Generator.Runtime(
-  generatePrintStrRuntime,
-  generatePrintIntRuntime,
-  generatePrintCharRuntime,
-  generatePrintBoolRuntime,
-  generatePrintRefRuntime,
-  generateReadCharRuntime,
-  generateFreePairRuntime,
-  generateRuntimeErrorRuntime,
-  generateReadIntRuntime,
+  printStr,
+  printInt,
+  printBool,
+  printChar,
+  printRef,
+  readChar,
+  freePair,
+  readInt,
   generateRuntime,
   RuntimeGenerator
 ) where
@@ -24,16 +23,16 @@ import Code.Generator.Runtime.Internal
 
 type RuntimeGenerator = ARM (RuntimeComponent, String)
 
-generateRuntimeErrorRuntime :: RuntimeGenerator
-generateRuntimeErrorRuntime =
+throwRuntimeErr :: RuntimeGenerator
+throwRuntimeErr =
   return (RC ThrowRuntimeErr (Define fname
                              <| BL AL (label PrintStr)
                              <| BL AL "exit" <| empty), fname)
   where
     fname = label ThrowRuntimeErr
 
-generateFreePairRuntime :: RuntimeGenerator
-generateFreePairRuntime = do
+freePair :: RuntimeGenerator
+freePair = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   let fname = label FreePair in
     return (RC FreePair (((Define fname
@@ -55,8 +54,8 @@ address :: PureRetLoc -> Address
 address (StringLit s) = Label s
 address _ = error "Kyyyyyyyyle"
 
-generatePrintBoolRuntime :: RuntimeGenerator
-generatePrintBoolRuntime = do
+printBool :: RuntimeGenerator
+printBool = do
   trueloc <- newStringLiteral "true"
   falseloc <- newStringLiteral "false"
   let fname = label PrintBool in
@@ -72,16 +71,16 @@ generatePrintBoolRuntime = do
                        <| POP [PC]
                        <| empty), fname)
 
-generatePrintCharRuntime :: RuntimeGenerator
-generatePrintCharRuntime = do
+printChar :: RuntimeGenerator
+printChar = do
   let fname = label PrintChar in
     return (RC PrintChar (Define fname
                        <| PUSH [LinkRegister]
                        <| BL AL "putchar"
                        <| POP [PC] <| empty), fname)
 
-generatePrintRefRuntime :: RuntimeGenerator
-generatePrintRefRuntime = do
+printRef :: RuntimeGenerator
+printRef = do
   refloc <- newStringLiteral "%p\0"
   let fname = label PrintRef in
     return (RC PrintRef ((Define fname
@@ -93,8 +92,8 @@ generatePrintRefRuntime = do
                       |> BL AL "fflush"
                       |> POP [PC])), fname)
 
-generateArrayCheckRuntime :: RuntimeGenerator
-generateArrayCheckRuntime = do
+arrayCheck :: RuntimeGenerator
+arrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   let fname = label ArrayCheck in
@@ -108,8 +107,8 @@ generateArrayCheckRuntime = do
                         |> BL CS (label ThrowRuntimeErr)
                         |> POP [PC])), fname)
 
-generatePrintIntRuntime :: RuntimeGenerator
-generatePrintIntRuntime = do
+printInt :: RuntimeGenerator
+printInt = do
   intloc <- newStringLiteral "%d\0"
   let fname = label PrintInt in
     return (RC PrintInt ( Define fname
@@ -123,8 +122,8 @@ generatePrintIntRuntime = do
                        <| POP [PC]
                        <| empty)), fname)
 
-generatePrintStrRuntime :: RuntimeGenerator
-generatePrintStrRuntime = do
+printStr :: RuntimeGenerator
+printStr = do
  sloc <- newStringLiteral "%.*s\\0"
  let fname = label PrintStr in 
   return (RC PrintStr ((Define fname 
@@ -137,14 +136,14 @@ generatePrintStrRuntime = do
                     <| POP [PC] <| empty)), fname) 
                    -- Why is there 2 of that instruction? l24 and l26
 
-generateReadCharRuntime :: RuntimeGenerator
-generateReadCharRuntime = do
+readChar :: RuntimeGenerator
+readChar = do
   chloc <- newStringLiteral " %c\0"
   let fname = label ReadChar in
     return (RC ReadChar (Define fname <| scanfCall chloc), fname)
 
-generateDivideByZeroRuntime :: RuntimeGenerator
-generateDivideByZeroRuntime = do
+checkdbz :: RuntimeGenerator
+checkdbz = do
   zloc <- newStringLiteral "%d\0"
   let fname = label Checkdbz in 
     return (RC Checkdbz (Define fname
@@ -155,8 +154,8 @@ generateDivideByZeroRuntime = do
                       <| POP [PC]
                       <| empty), fname)
 
-generateReadIntRuntime :: RuntimeGenerator
-generateReadIntRuntime = do
+readInt :: RuntimeGenerator
+readInt = do
   intloc <- newStringLiteral "%d\0"
   let fname = label ReadInt in
     return (RC ReadInt (Define fname <| scanfCall intloc), fname)

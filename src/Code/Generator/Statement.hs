@@ -34,24 +34,15 @@ generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
   strIns      <- storeToRegister R0 eloc
   printrt     <- branchRuntime $ selectPrint (unsfType e ns)
   return $ (ins >< strIns) |> printrt
-  where
-    selectPrint :: Type -> RuntimeGenerator
-    selectPrint (PairType a b)                                          = generatePrintRefRuntime
-    selectPrint (Pairable (BaseType BoolType))                          = generatePrintBoolRuntime
-    selectPrint (Pairable (BaseType StringType))                        = generatePrintStrRuntime
-    selectPrint (Pairable (BaseType IntType))                           = generatePrintIntRuntime
-    selectPrint (Pairable (BaseType CharType))                          = generatePrintCharRuntime
-    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = generatePrintStrRuntime
-    selectPrint (Pairable (ArrayType _))                                = generatePrintRefRuntime
-    selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
-generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
-  = generate ns (StatementOperator ((StatPrint (StringExpr (s ++ "'\\n"), p)), p'))
-
-  -- TODO REMOVE IRRELEVANT calls to print
-generate _ (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
-  printrt <- branchRuntime generatePrintIntRuntime
-  return $ storeToRegisterPure R0 (ImmInt i) |> printrt
+generate ns (StatementOperator ((StatPrintLn (e, _)), _)) = do
+  (ins, eloc) <- expression e
+  strIns      <- storeToRegister R0 eloc
+  printrt     <- branchRuntime $ selectPrint (unsfType e ns)
+  newline     <- newStringLiteral "\\n"
+  let strnl   = storeToRegisterPure R0 newline
+  printnl     <- branchRuntime $ generatePrintStrRuntime
+  return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
 generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
   return $ empty
@@ -108,3 +99,13 @@ genScopeBlock (sts, (NewScope scp)) ns = do
   instructions <- mapM (generate ((NewScope scp):ns)) (fromList sts)
   closeEnv
   return $ concat instructions
+
+selectPrint :: Type -> RuntimeGenerator
+selectPrint (PairType a b)                                          = generatePrintRefRuntime
+selectPrint (Pairable (BaseType BoolType))                          = generatePrintBoolRuntime
+selectPrint (Pairable (BaseType StringType))                        = generatePrintStrRuntime
+selectPrint (Pairable (BaseType IntType))                           = generatePrintIntRuntime
+selectPrint (Pairable (BaseType CharType))                          = generatePrintCharRuntime
+selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = generatePrintStrRuntime
+selectPrint (Pairable (ArrayType _))                                = generatePrintRefRuntime
+selectPrint _                                                       = error "Front end failed to validate types of expressions"

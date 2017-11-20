@@ -20,12 +20,34 @@ import Code.Generator.Runtime
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
-generate (StatementOperator (StatReturn (e, _), _)) = (|>) <$> expressionReg e PC <*> pop [PC]
+
+generate (StatementOperator (StatExit (IntExp i, _), _)) = do
+  return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
+
+generate (StatementOperator (StatReturn (e, _), _)) 
+  = (|>) <$> expressionReg e PC <*> pop [PC]
 
 generate (StatementOperator ((StatPrint (StringExpr s, _)), _)) = do
   strloc <- newStringLiteral s
   printrt <- branchRuntime generatePrintStrRuntime
   return $ (storeToRegisterPure R0 strloc |> printrt)
+
+generate (StatementOperator ((StatPrint (CharExpr c, _)), _)) = do
+  return $ storeToRegisterPure R0 (ImmChar c) |> BL AL "putchar"
+
+generate (StatementOperator ((StatPrint (IntExp i, _)), _)) = do
+  printrt <- branchRuntime generatePrintIntRuntime
+  return $ storeToRegisterPure R0 (ImmInt i) |> printrt
+
+generate (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
+  = generate (StatementOperator ((StatPrint (StringExpr (s ++ "\n"), p)), p'))
+generate (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
+  printrt <- branchRuntime generatePrintIntRuntime
+  return $ storeToRegisterPure R0 (ImmInt i) |> printrt
+
+generate (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
+  return $ empty
+  -- TODO check if int or char and call relevant generate functions
 
 generate (StatIf (posexp) sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)

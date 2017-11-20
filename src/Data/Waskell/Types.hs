@@ -16,7 +16,7 @@ We also define subType which takes a WaccType and a list of concrete types, subs
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-module Data.Waskell.Types (Typeable(getType), subType, Scop(Scop)) where
+module Data.Waskell.Types (Typeable(getType), subType, Scop(Scop), unsfType) where
 
 import Data.Waskell.ADT
 import Data.Waskell.Error

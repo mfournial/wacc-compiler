@@ -62,7 +62,7 @@ updateWithRegisterPure :: Reg -> PureRetLoc -> Instructions
 updateWithRegisterPure r (ImmInt i)    = error "Attempting to update immediate value"
 updateWithRegisterPure r (ImmChar c)   = error "Attempting to update immediate value"
 updateWithRegisterPure r (Register r') = storeRegs r' r
-updateWithRegisterPure r k             = modifyRegisterPure storeToRegister' r k
+updateWithRegisterPure r k             = modifyRegisterPure updateWithRegister' r k
 
 modifyRegisterPure :: RegMod -> Reg -> PureRetLoc -> Instructions
 modifyRegisterPure f r (StringLit str) = f r (Label str)

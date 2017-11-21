@@ -65,7 +65,7 @@ generate PrintBool = do
   trueloc  <- newStringLiteral "true"
   falseloc <- newStringLiteral "false"
   return $ Define (label PrintBool)
-        <| POP [LinkRegister]
+        <| PUSH [LinkRegister]
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Neq W R0 (address trueloc)
         <| LDR Eq W R0 (address falseloc)

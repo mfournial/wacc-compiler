@@ -30,12 +30,10 @@ generate _ (StatementOperator (StatReturn (e, _), _)) =
   (|>) <$> expressionReg e PC <*> pop [PC]
 
 generate ns (StatementOperator (StatPrint (e, _), _)) = do
-  throw <- branchTo Checkdbz
-  return $ throw <| empty
-  -- (ins, eloc) <- expression e
-  -- strIns      <- storeToRegister R0 eloc
-  -- printrt     <- branchTo $ selectPrint (unsfType e ns)
-  -- return $ (ins >< strIns) |> printrt
+  (ins, eloc) <- expression e
+  strIns      <- storeToRegister R0 eloc
+  printrt     <- branchTo $ selectPrint (unsfType e ns)
+  return $ (ins >< strIns) |> printrt
 
 generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   (ins, eloc) <- expression e

@@ -97,8 +97,8 @@ r e t u r n         { (\p s -> PT p T_ReturnT) }
 \!                  { (\p s -> PT p T_NotT) }
 
 -- | Special tokens matched with regualr exp
-\' ($universal # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) }   -- ^ Char token
-\" ($universal # [\' \\ \"]| \\ [\' \\ n t 0 b f \"]) * \"{ (\p s -> PT p ((T_StringLiteral ) s)) } -- ^ String token
+\' ($universal # [\' \\ \"]| \\ [\' \\ r n t 0 b f \"]) \'  { (\p s -> PT p ((T_CharLiteral ) s)) }   -- ^ Char token
+\" ($universal # [\' \\ \"]| \\ [\' \\ r n t 0 b f \"]) * \"{ (\p s -> PT p ((T_StringLiteral ) s)) } -- ^ String token
 (\_ | $letter)($letter | $digit | \_)*                    { (\p s -> PT p ((T_Identifier ) s)) }    -- ^ Identifier token
 
 {

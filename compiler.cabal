@@ -29,13 +29,13 @@ library
   ghc-options:       -Wall -Werror -O2 -fno-warn-unused-top-binds -fno-warn-unused-matches
   hs-source-dirs:    src
   exposed-modules:   Alex.Waskell
+                   , Alex.Tokens
                    , Code.Generator
                    , Data.Waskell.ADT
                    , Data.Waskell.Error
                    , Data.Waskell.Scope
                    , Happy.Waskell
-  other-modules:     Alex.Tokens
-                   , Code.Generator.ARM
+  other-modules:     Code.Generator.ARM
                    , Code.Generator.Expression
                    , Code.Generator.State
                    , Code.Generator.Statement

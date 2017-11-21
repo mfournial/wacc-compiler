@@ -26,7 +26,9 @@ genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
   minstr <- genScopeBlock sb []
-  rinstr <- generateRuntime
+  ids <- runtimeInstructions
+  instrs <- mapM generateRuntime ids
+  let rinstr = concat instrs
   return $ ((empty
            |> Section "text" |> DIVIDER)
            >< (finstr

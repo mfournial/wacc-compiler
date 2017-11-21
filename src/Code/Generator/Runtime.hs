@@ -1,31 +1,50 @@
 module Code.Generator.Runtime(
   generateRuntime,
   branchTo,
-  RuntimeGenerator,
   RCID(..)
 ) where
 
 import Prelude hiding (concat)
-
+import Data.Maybe(fromJust)
 import Data.Sequence
 
 import Code.Instructions
+import Code.Generator.ARM
 import Code.Generator.State
-import Code.Generator.RetLoc
-import Data.Sequence.Util(concat)
-import Code.Generator.StateInstructions
-import Code.Generator.Runtime.Internal
 
-type RuntimeGenerator = ARM (RuntimeComponent, String)
+generateRuntime :: RCID -> ARM Instructions
+generateRuntime = generate
 
-generateRuntime' :: RCID -> ARM Instructions
-generateRuntime' ThrowRuntimeErr =
+branchTo :: RCID -> ARM Instr
+branchTo name = do
+  addToRuntime name
+  return $ BL AL (label name)
+
+names :: [(RCID, String)]
+names = [ (PrintStr, "runtime_print_string")
+        , (PrintInt, "runtime_print_int")
+        , (PrintChar, "runtime_print_char")
+        , (PrintBool, "runtime_print_bool")
+        , (PrintRef, "runtime_print_ref")
+        , (ReadInt, "runtime_read_int")
+        , (ReadChar, "runtime_read_char")
+        , (ThrowRuntimeErr, "runtime_throw_err")
+        , (FreePair, "runtime_free_pair")
+        , (ArrayCheck, "runtime_array_check")
+        , (Checkdbz, "runtime_check_division_by_zero")
+        ]
+
+label :: RCID -> String
+label = fromJust . flip lookup names
+
+generate :: RCID -> ARM Instructions
+generate ThrowRuntimeErr =
   return $ Define (label ThrowRuntimeErr)
         <| BL AL (label PrintStr)
         <| BL AL "exit"
         <| empty
 
-generateRuntime' FreePair = do
+generate FreePair = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   return $ ((Define (label FreePair)
           <| PUSH [LinkRegister]
@@ -42,7 +61,7 @@ generateRuntime' FreePair = do
           |> BL AL "free"
           |> POP [PC]
 
-generateRuntime' PrintBool = do
+generate PrintBool = do
   trueloc  <- newStringLiteral "true"
   falseloc <- newStringLiteral "false"
   return $ Define (label PrintBool)
@@ -57,14 +76,14 @@ generateRuntime' PrintBool = do
         <| POP [PC]
         <| empty
 
-generateRuntime' PrintChar =
+generate PrintChar =
     return $ Define (label PrintChar)
           <| PUSH [LinkRegister]
           <| BL AL "putchar"
           <| POP [PC]
           <| empty
 
-generateRuntime' PrintRef = do
+generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
         <| storeToRegisterPure R1 (Register R0))
@@ -75,7 +94,7 @@ generateRuntime' PrintRef = do
         |> BL AL "fflush"
         |> POP [PC])
 
-generateRuntime' ArrayCheck = do
+generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   return $ Define (label ArrayCheck)
@@ -88,7 +107,7 @@ generateRuntime' ArrayCheck = do
         |> BL CS (label ThrowRuntimeErr)
         |> POP [PC])
 
-generateRuntime' PrintInt = do
+generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label PrintInt)
        <| PUSH [LinkRegister]
@@ -101,7 +120,7 @@ generateRuntime' PrintInt = do
        <| POP [PC]
        <| empty)
 
-generateRuntime' PrintStr = do
+generate PrintStr = do
  sloc <- newStringLiteral "%.*s\\0"
  return $ (Define (label PrintStr) 
        <| PUSH [LinkRegister] 
@@ -113,11 +132,11 @@ generateRuntime' PrintStr = do
        <| POP [PC]
        <| empty)
 
-generateRuntime' ReadChar = do
+generate ReadChar = do
   chloc <- newStringLiteral " %c\0"
   return $ Define (label ReadChar) <| scanfCall chloc
 
-generateRuntime' Checkdbz = do
+generate Checkdbz = do
   zloc <- newStringLiteral "%d\0"
   return $ Define (label Checkdbz)
         <| PUSH [LinkRegister]
@@ -127,7 +146,7 @@ generateRuntime' Checkdbz = do
         <| POP [PC]
         <| empty
 
-generateRuntime' ReadInt = do
+generate ReadInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label ReadInt) <| scanfCall intloc
 
@@ -141,17 +160,3 @@ scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (Register R0))
 address :: PureRetLoc -> Address
 address (StringLit s) = Label s
 address _ = error "Kyyyyyyyyle"
-
-generateRuntime :: ARM Instructions
-generateRuntime = do
-  ids <- runtimeInstructions
-  instrs <- mapM generateRuntime' ids
-  return $ concat instrs
-
-generateRuntime'' :: [RuntimeComponent] -> Instructions
-generateRuntime'' s = mconcat (fmap (\(RC _ ins) -> ins) s)
-
-branchTo :: RCID -> ARM Instr
-branchTo name = do
-  addToRuntime name
-  return $ BL AL (label name)

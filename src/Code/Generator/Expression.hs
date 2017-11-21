@@ -5,8 +5,7 @@ module Code.Generator.Expression (expression, expressionReg) where
 import Code.Instructions
 import Code.Generator.State
 import Code.Generator.StateInstructions
-import Code.Generator.RetLoc
-import Code.Generator.RetLoc.Internal
+import Code.Generator.ARM
 import Data.Waskell.ADT
 
 import Data.Sequence((><), (<|), (|>), empty, singleton)

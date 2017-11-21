@@ -22,7 +22,9 @@ module Code.Generator.State (
   getOffsetFromStackPtr,
   addToRuntime,
   getVar,
-  getSP
+  getSP,
+  storeToRegister,
+  runtimeInstructions
 )
 where
 
@@ -37,11 +39,8 @@ import qualified Prelude as P
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
-import Code.Generator.RetLoc.Internal
-import Code.Generator.Runtime.Internal(RCID(..))
+import Code.Generator.ARM
 --import Data.Waskell.ADT 
-
-type ARM = State Junk
 
 newStringLiteral :: String -> ARM PureRetLoc
 newStringLiteral str = do
@@ -52,18 +51,6 @@ newStringLiteral str = do
 
 getStringLiterals :: ARM Data
 getStringLiterals = state (\junk -> (strLits junk, junk))
-
-data Junk = Junk {
-  strLits :: Data,
-  stack :: VarTable,
-  heap :: VarTable,
-  sp :: Int,
-  ref :: Int,
-  runtime :: Seq RCID
-} 
-
-type VarTable = [M.HashMap String Int]
-type Data = Seq String
 
 dataSection :: Data -> Instructions
 dataSection strs
@@ -142,3 +129,13 @@ nextLabel s = state (\junk -> ("lab_" ++ [intToDigit (ref junk)] ++ "_" ++ s, ju
 
 newState :: Junk
 newState = Junk empty [M.empty] [M.empty] 0 0 empty
+
+storeToRegister :: Reg -> RetLoc -> ARM Instructions
+storeToRegister r (StackPtr i) = do
+  off <- getOffsetFromStackPtr i
+  return $ storeToRegister' r (OffReg StackPointer (offsetToARMOffset off) False)   
+
+storeToRegister r (PRL k) = return $ storeToRegisterPure r k
+
+runtimeInstructions :: ARM (Seq RCID)
+runtimeInstructions = state (\junk -> (runtime junk, junk))

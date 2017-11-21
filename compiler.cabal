@@ -28,26 +28,24 @@ library
   default-language:  Haskell2010
   ghc-options:       -Wall -Werror -O2 -fno-warn-unused-top-binds -fno-warn-unused-matches
   hs-source-dirs:    src
-  exposed-modules:   Data.Waskell.Error
-                   , Data.Waskell.ADT
-                   , Alex.Tokens
-                   , Alex.Waskell
-                   , Happy.Waskell
-                   , Code.Instructions
+  exposed-modules:   Alex.Waskell
                    , Code.Generator
+                   , Data.Waskell.ADT
+                   , Data.Waskell.Error
+                   , Data.Waskell.Scope
+                   , Happy.Waskell
+  other-modules:     Alex.Tokens
+                   , Code.Generator.ARM
+                   , Code.Generator.Expression
                    , Code.Generator.State
                    , Code.Generator.Statement
-                   , Code.Generator.Expression
-                   , Code.Generator.RetLoc
-                   , Code.Generator.StateInstructions
                    , Code.Generator.Runtime
+                   , Code.Generator.StateInstructions
+                   , Code.Instructions
                    , Data.Sequence.Util
-                   , Data.Waskell.Scope
                    , Data.Waskell.Types
                    , Data.Waskell.Types.Util
                    , Data.Waskell.Types.WaccType
-  other-modules:     Code.Generator.Runtime.Internal,
-                     Code.Generator.RetLoc.Internal
   build-tools:       alex, happy
   build-depends:     base >= 4.8 && < 5
                    , bytestring >= 0.10 && < 0.11

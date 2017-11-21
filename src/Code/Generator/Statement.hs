@@ -13,7 +13,7 @@ import Data.Waskell.ADT
 import Code.Instructions
 import Code.Generator.Expression
 import Code.Generator.State
-import Code.Generator.RetLoc
+import Code.Generator.ARM
 import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 

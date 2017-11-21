@@ -38,11 +38,10 @@ data RCID = PrintStr
           | Checkdbz
           deriving (Eq)
 
-data RetLoc = PRL PureRetLoc | StackPtr Int
+data RetLoc = PRL PureRetLoc | StackPtr Int 
   deriving (Show)
 
-data PureRetLoc = HeapAddr Int
-                | StringLit String
+data PureRetLoc = StringLit String
                 | RegLoc Reg
                 | RegLocOffset Reg Int
                 | Register Reg
@@ -51,6 +50,7 @@ data PureRetLoc = HeapAddr Int
   deriving (Show)
 
 type RegMod = Reg -> Address -> Instructions
+
 
 storeToRegisterPure :: Reg -> PureRetLoc -> Instructions
 storeToRegisterPure r (ImmInt i)    = singleton (MOV AL F r (ImmOpInt i))
@@ -65,7 +65,6 @@ updateWithRegisterPure r (Register r') = storeRegs r' r
 updateWithRegisterPure r k             = modifyRegisterPure storeToRegister' r k
 
 modifyRegisterPure :: RegMod -> Reg -> PureRetLoc -> Instructions
-modifyRegisterPure f r (HeapAddr i) = f r (Const i) >< modifyRegisterPure f r (RegLoc r)
 modifyRegisterPure f r (StringLit str) = f r (Label str)
 modifyRegisterPure f r' (RegLocOffset r o) = f r' (OffReg r (offsetToARMOffset o) False)
 modifyRegisterPure f r' (RegLoc r) = f r' (OffReg r (offsetToARMOffset 0) False)
@@ -82,7 +81,6 @@ storeToRegister' r a = singleton (LDR AL W r a)
 updateWithRegister' :: Reg -> Address -> Instructions
 updateWithRegister' r a = singleton (STR AL W r a)
   
-
 --Note this is the incorrect behaviour TODO 
 offsetToARMOffset :: Int -> Offset
 offsetToARMOffset i = Int i

@@ -7,10 +7,9 @@ module Code.Generator.State (
   ARM,
   runState,
   execState,
+  getStackVar,
   dataSection,
   newStringLiteral,
-  addToHeap,
-  getFromHeap,
   pushVar,
   incrementStack,
   decrementStack,
@@ -21,7 +20,6 @@ module Code.Generator.State (
   getStringLiterals,
   getOffsetFromStackPtr,
   addToRuntime,
-  getVar,
   getSP,
   storeToRegister,
   updateWithRegister,
@@ -31,7 +29,7 @@ module Code.Generator.State (
 where
 
 import Data.Char(intToDigit)
-import Data.Maybe(fromJust, isJust)
+import Data.Maybe(fromJust)
 import Data.Sequence
 import Data.Sequence.Util
 import Control.Monad.State.Lazy
@@ -82,17 +80,11 @@ removeFromTable s addr (m : mps) = M.insert s addr m : mps
 pushVar :: String -> ARM RetLoc
 pushVar name = state (\junk -> (StackPtr (sp junk), junk{stack = addToTable name (sp junk) (stack junk)})) >>= \s -> incrementStack >> return s
 
-addToHeap :: String -> Int -> ARM PureRetLoc
-addToHeap name address = state (\junk -> (HeapAddr address, junk{heap = addToTable name address (heap junk)}))
-
 getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
 
-getFromHeap :: String -> ARM (Maybe PureRetLoc)
-getFromHeap name = state (\junk -> (HeapAddr <$> varAddr name heap junk, junk))
-
-getStackVarPtr :: String -> ARM (Maybe RetLoc)
-getStackVarPtr name = state (\junk -> (StackPtr <$> varAddr name stack junk, junk))
+getVar' :: String -> (Int -> RetLoc) -> ARM RetLoc
+getVar' name f = state (\junk -> (f $ varAddr name junk, junk))
 
 addToRuntime :: RCID -> ARM ()
 addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r (runtime junk))}))
@@ -106,13 +98,11 @@ addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r
       | otherwise = names
 
 -- Needs to be changed to look into parent scopes
-varAddr :: String -> (Junk -> VarTable) -> Junk -> Maybe Int
-varAddr name = ((M.lookup name . head) .)
+varAddr :: String -> Junk -> Int
+varAddr name j = fromJust (M.lookup name (head (stack j)))
 
-getVar :: String -> ARM RetLoc
-getVar s = do
-  h <- getFromHeap s
-  fmap fromJust $ if isJust h then return (fmap PRL h) else getStackVarPtr s
+getStackVar :: String -> ARM RetLoc
+getStackVar s = getVar' s StackPtr
 
 incrementStack :: ARM ()
 incrementStack = state (\junk -> ((), junk{sp = sp junk + 4}))

@@ -9,9 +9,9 @@ import Code.Generator.ARM
 import Data.Waskell.ADT
 
 import Data.Sequence((><), (<|), (|>), empty, singleton)
-import Data.Maybe
 
 import Control.Monad
+
 
 expression :: Expression -> ARM (Instructions, RetLoc)
 expression (BracketExp (e, _)) = expression e
@@ -22,7 +22,7 @@ expression (BoolExp False)    = intToReg 0       R0
 expression (CharExpr c)       = return (singleton (MOV AL F R0 (ImmOpCh c)), PRL (Register R0))
 expression PairExpr           = intToReg 0       R0
 
-expression (IdentExpr (s, _)) = fmap (empty,) $ getVar s
+expression (IdentExpr (s, _)) = fmap (empty,) $ getStackVar s
 
 expression (UExpr (uexp, _) (e, _)) = do
   (sub, loc)          <- expression e
@@ -38,12 +38,12 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   resReg              <- pop [R1]
   return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
 
-expression (ArrayExpr (ArrayElem i indexps, _)) = do
-  (HeapAddr arraddr) <- fmap fromJust $ (getFromHeap . getVal) i
-  let arrLoc = (HeapAddr (arraddr + 1)) -- Note the first word is the length of the array
+expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
+  sv <- getStackVar i
+  strPtr <- storeToRegister R0 sv
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
-  ins    <- foldM arrayExp' (storeToRegisterPure R0 arrLoc) $ reverse pushed
-  return (ins, (PRL (Register R0)))
+  ins    <- foldM arrayExp' (storeToRegisterPure R0 (RegLocOffset R0 1)) $ reverse pushed
+  return (strPtr >< ins, (PRL (Register R0)))
   where
     pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
     pusher (ins, loc) = do

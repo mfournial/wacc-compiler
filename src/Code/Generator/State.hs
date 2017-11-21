@@ -109,11 +109,11 @@ addToRuntime :: RCID -> ARM ()
 addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r (runtime junk))}))
   where
     tryAdd :: Eq a => a -> Seq a -> Seq a
-    tryAdd a as = if a `elem` as then as else a <| as 
+    tryAdd a as = if a `elem` as then as else a <| as
     addDependencies :: RCID -> Seq RCID-> Seq RCID
     addDependencies name names
       | name == ThrowRuntimeErr = tryAdd PrintStr names
-      | name == Checkdbz || name == ArrayCheck = tryAdd ThrowRuntimeErr names
+      | name == Checkdbz || name == ArrayCheck = tryAdd PrintStr $ tryAdd ThrowRuntimeErr names
       | otherwise = names
 
 -- Needs to be changed to look into parent scopes

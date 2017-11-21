@@ -32,17 +32,17 @@ generate _ (StatementOperator (StatReturn (e, _), _))
 generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchRuntime $ selectPrint (unsfType e ns)
+  printrt     <- branchTo $ selectPrint (unsfType e ns)
   return $ (ins >< strIns) |> printrt
   where
-    selectPrint :: Type -> RuntimeGenerator
-    selectPrint (PairType a b)                                          = printRef
-    selectPrint (Pairable (BaseType BoolType))                          = printBool
-    selectPrint (Pairable (BaseType StringType))                        = printStr
-    selectPrint (Pairable (BaseType IntType))                           = printInt
-    selectPrint (Pairable (BaseType CharType))                          = printChar
-    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = printStr
-    selectPrint (Pairable (ArrayType _))                                = printRef
+    selectPrint :: Type -> RCID
+    selectPrint (PairType a b)                                          = PrintRef
+    selectPrint (Pairable (BaseType BoolType))                          = PrintBool
+    selectPrint (Pairable (BaseType StringType))                        = PrintStr
+    selectPrint (Pairable (BaseType IntType))                           = PrintInt
+    selectPrint (Pairable (BaseType CharType))                          = PrintChar
+    selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintStr
+    selectPrint (Pairable (ArrayType _))                                = PrintRef
     selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
 generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p')) 
@@ -50,7 +50,7 @@ generate ns (StatementOperator ((StatPrintLn (StringExpr s, p)), p'))
 
   -- TODO REMOVE IRRELEVANT calls to print
 generate _ (StatementOperator ((StatPrintLn (IntExp i, _)), _)) = do
-  printrt <- branchRuntime printInt
+  printrt <- branchTo PrintInt
   return $ storeToRegisterPure R0 (ImmInt i) |> printrt
 
 generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do

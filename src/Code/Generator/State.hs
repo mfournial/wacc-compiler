@@ -31,14 +31,14 @@ import Data.Maybe(fromJust, isJust)
 import Data.Sequence
 import Data.Sequence.Util
 import Control.Monad.State.Lazy
-import Prelude hiding (concat, length, zipWith, null, take)
+import Prelude hiding (concat, length, zipWith, null, lookup)
 import qualified Prelude as P
 
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 import Code.Generator.RetLoc.Internal
-import Code.Generator.Runtime.Internal(RuntimeComponent)
+import Code.Generator.Runtime.Internal(RCID)
 --import Data.Waskell.ADT 
 
 type ARM = State Junk
@@ -59,7 +59,7 @@ data Junk = Junk {
   heap :: VarTable,
   sp :: Int,
   ref :: Int,
-  runtime :: [RuntimeComponent]
+  runtime :: Seq RCID
 } 
 
 type VarTable = [M.HashMap String Int]
@@ -105,11 +105,11 @@ getFromHeap name = state (\junk -> (fmap HeapAddr $ varAddr name heap junk, junk
 getStackVarPtr :: String -> ARM (Maybe RetLoc)
 getStackVarPtr name = state (\junk -> (fmap StackPtr $ varAddr name stack junk, junk))
 
-addToRuntime :: RuntimeComponent -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))
+addToRuntime :: RCID -> ARM ()
+addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r ((runtime junk))}))
   where
-    tryAdd :: RuntimeComponent -> [RuntimeComponent] -> [RuntimeComponent]
-    tryAdd rc rs = if rc `elem` rs then rs else rc : rs
+    tryAdd :: Eq a => a -> Seq a -> Seq a
+    tryAdd a as = if a `elem` as then as else a <| as 
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Maybe Int
@@ -136,4 +136,4 @@ nextLabel :: String -> ARM (String)
 nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ "_" ++ s), junk{ref = ref junk + 1}))
 
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0 0 []
+newState = Junk empty [M.empty] [M.empty] 0 0 empty

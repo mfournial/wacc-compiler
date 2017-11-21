@@ -127,7 +127,7 @@ genScopeBlock (sts, NewScope scp) ns = do
   newEnv
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
-  mapM_ (\i -> decrementStack) [1..stck]
+  mapM_ (\i -> incrementStack) [1..stck]
   closeEnv
   return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 

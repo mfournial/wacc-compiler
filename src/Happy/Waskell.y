@@ -453,7 +453,7 @@ mkSB sts = (sts, emptyScope)
 
 -- | Strip char token of surrounding quotes.
 mkChar :: (String, Position) -> Char
-mkChar = (!!2) . fst
+mkChar = (!!1) . fst
 
 -- | Strip string token of surrounding quotes.
 mkString :: (String, Position) -> String

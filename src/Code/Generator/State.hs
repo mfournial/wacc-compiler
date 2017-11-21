@@ -115,10 +115,10 @@ getVar s = do
   fmap fromJust $ if isJust h then return (fmap PRL h) else getStackVarPtr s
 
 incrementStack :: ARM ()
-incrementStack = state (\junk -> ((), junk{sp = sp junk + 1}))
+incrementStack = state (\junk -> ((), junk{sp = sp junk + 4}))
 
 decrementStack :: ARM ()
-decrementStack = state (\junk -> ((), junk{sp = sp junk - 1}))
+decrementStack = state (\junk -> ((), junk{sp = sp junk - 4}))
 
 getSP :: ARM Int
 getSP = fmap sp get 

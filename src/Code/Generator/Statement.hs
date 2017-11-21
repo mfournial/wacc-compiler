@@ -26,16 +26,18 @@ generate _ StatSkip = return empty
 generate _ (StatementOperator (StatExit (IntExp i, _), _)) =
   return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
 
-generate _ (StatementOperator (StatReturn (e, _), _)) 
-  = (|>) <$> expressionReg e PC <*> pop [PC]
+generate _ (StatementOperator (StatReturn (e, _), _)) =
+  (|>) <$> expressionReg e PC <*> pop [PC]
 
-generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
-  (ins, eloc) <- expression e
-  strIns      <- storeToRegister R0 eloc
-  printrt     <- branchTo $ selectPrint (unsfType e ns)
-  return $ (ins >< strIns) |> printrt
+generate ns (StatementOperator (StatPrint (e, _), _)) = do
+  throw <- branchTo Checkdbz
+  return $ throw <| empty
+  -- (ins, eloc) <- expression e
+  -- strIns      <- storeToRegister R0 eloc
+  -- printrt     <- branchTo $ selectPrint (unsfType e ns)
+  -- return $ (ins >< strIns) |> printrt
 
-generate ns (StatementOperator ((StatPrintLn (e, _)), _)) = do
+generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
   printrt     <- branchTo $ selectPrint (unsfType e ns)
@@ -44,35 +46,35 @@ generate ns (StatementOperator ((StatPrintLn (e, _)), _)) = do
   printnl     <- branchTo PrintInt
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
-generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
+generate _ (StatementOperator (StatRead (AssignToIdent _), _)) = do
   return $ empty
   -- TODO check if int or char and call relevant generate functions
 
-generate _ (StatementOperator ((StatDecAss (Pairable (BaseType StringType)) _ _), _)) = undefined
-generate _ (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _))), _)) = do
+generate _ (StatementOperator (StatDecAss (Pairable (BaseType StringType)) _ _, _)) = undefined
+generate _ (StatementOperator (StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _)), _)) = do
   (ins, eloc)    <- expression e
   strIns         <- storeToRegister R0 eloc
   strExp         <- referencedPush [R0] [iid]
   return $ (ins >< strIns) |> strExp
 
-generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = return empty
+generate _ (StatementOperator (StatDecAss t (iid, _) arhs, _)) = return empty
   
 
-generate ns (StatIf (posexp) sb sb') = do
+generate ns (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
   thenCode <- genScopeBlock sb ns
   elseCode <- genScopeBlock sb' ns
-  return $ (expInstr
+  return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
         |> B Eq elseLabel)
         >< ((thenCode |> B AL fiLabel)
-        >< ((Define elseLabel <| elseCode) |> Define fiLabel)))
+        >< ((Define elseLabel <| elseCode) |> Define fiLabel))
 
-generate ns (StatWhile (posexp) sb) = do
+generate ns (StatWhile posexp sb) = do
   (expInstr, loc) <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
@@ -94,9 +96,9 @@ genScopeBlock'  (sts, NewScope scp)
 -}
 
 genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
-genScopeBlock (sts, (NewScope scp)) ns = do
+genScopeBlock (sts, NewScope scp) ns = do
   newEnv
-  instructions <- mapM (generate ((NewScope scp):ns)) (fromList sts)
+  instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   closeEnv
   return $ concat instructions
 

@@ -5,7 +5,7 @@ module Code.Generator.Statement (
 where
 
 
-import Data.Sequence
+import Data.Sequence hiding (zip, length)
 import Data.Sequence.Util
 import Prelude hiding(concat)
 
@@ -100,7 +100,17 @@ assignVar loc (AssignExp (e, _)) = do
   strExp         <- updateWithRegister R0 loc
   return $ ins >< strIns >< strExp
 
-assignVar _ _ = error "unimplemented assignment"
+assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
+  let es      = zip (map getVal pes) (map (4*) [1..length pes])
+  let nwords  = length es + 1 -- We need 1 word for the length of the array
+  let bytes   = nwords * 4
+  let mallins = storeToRegisterPure R1 (ImmInt bytes) |> BL AL "malloc" 
+  let strlent = storeToRegisterPure R0 (ImmInt nwords) >< updateWithRegisterPure R0 (RegLoc R1)
+  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
+  return $ mallins >< strlent >< mconcat esinstr
+
+assignVar loc _ = error "unimplemented assign"
+
 
 genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do

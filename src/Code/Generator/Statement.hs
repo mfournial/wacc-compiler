@@ -44,7 +44,7 @@ generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
 generate ns (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
-  (StackPtr isp)  <- getVar s
+  (StackPtr isp)  <- getStackVar s
   off <- getOffsetFromStackPtr isp
   readchr <- branchTo $ selectReadType(unsfType(IdentExpr i) ns)
   return $ (singleton(ADD AL F  R0 StackPointer (ImmOpInt off))

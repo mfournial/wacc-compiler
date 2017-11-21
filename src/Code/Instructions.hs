@@ -141,6 +141,7 @@ instance PrintARM Instr where
 instance PrintARM Op2 where
  printARM (ShiftReg reg shift)           = printARM (reg) ++ printARM (shift)
  printARM (ImmOpInt int)                 = "#" ++ show int
+ printARM (ImmOpCh '\0')                 = "#'\\0'"
  printARM (ImmOpCh char)                 = "#" ++ show char
 
 instance PrintARM Shift where

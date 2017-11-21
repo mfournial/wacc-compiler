@@ -18,6 +18,8 @@ import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
 import Data.Waskell.Types(unsfType)
+import qualified Data.HashMap.Strict as M
+import Control.Monad.State.Lazy(get)
 
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
@@ -124,8 +126,10 @@ genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do
   newEnv
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
+  stck <- fmap (M.size . head . stack) get
+  mapM_ (\i -> decrementStack) [1..stck]
   closeEnv
-  return $ concat instructions
+  return $ concat instructions |> SUB AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef

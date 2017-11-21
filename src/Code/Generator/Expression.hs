@@ -47,7 +47,7 @@ expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
   let (pushins, pushlocs) = unzip pushed
   strPtr <- storeToRegister R0 sv
-  ins    <- foldM arrayExp' (singleton $ ADD AL F R0 R0 (ImmOpInt 4)) $ reverse pushlocs
+  ins    <- foldM arrayExp' empty $ pushlocs
   restore <- pop [R1, R2]
   return ((saveregs <| (mconcat pushins >< strPtr >< ins)) |> restore, (PRL (Register R0)))
   where
@@ -58,11 +58,12 @@ expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
       return ((ins >< str) |> pushins, head pushlocs)
     arrayExp' :: Instructions -> RetLoc -> ARM Instructions
     arrayExp' is loc = do
+      let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
       let strfour = storeToRegisterPure R2 (ImmInt 4)
       str <- storeToRegister R1 loc
       let mulins = MUL AL F R1 R1 R2 
       let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
-      return (is >< strfour >< str >< (empty |> mulins |> addins) >< storeToRegisterPure R0 (RegLoc R0)) 
+      return (is >< (skiplen <| (strfour >< str >< (empty |> mulins |> addins) >< storeToRegisterPure R0 (RegLoc R0)))) 
 
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 

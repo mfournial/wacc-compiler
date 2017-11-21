@@ -57,16 +57,11 @@ dataSection strs
   | null strs = empty
   | otherwise = Section "data" <| concat (zipWith dataElem labels strs)
   where
-    dataElem label str = empty |> Define label |> Word (size str 0) |> Ascii str
+    dataElem label str = empty |> Define label |> Word (P.length str) |> Ascii str
     labels = fromList $ P.take (length strs) (map listPosToLabel [0..])
 
 listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . pure . intToDigit
-
--- | Can't import length from prelude... because of conflicts
-size :: String -> Int-> Int
-size [] i = i
-size (_ : cs) i = size cs (i + 1)
 
 newEnv :: ARM ()
 newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))

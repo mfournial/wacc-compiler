@@ -468,7 +468,22 @@ mkChar (s, _)
 
 -- | Strip string token of surrounding quotes.
 mkString :: (String, Position) -> String
-mkString = tail . init . fst
+mkString = escapeChars . tail . init . fst
+  where
+    escapeChars ('\\' : a : as) = case a of
+      'b'  -> '\b' : escapeChars as
+      'f'  -> '\f' : escapeChars as
+      'n'  -> '\n' : escapeChars as
+      'r'  -> '\r' : escapeChars as
+      't'  -> '\t' : escapeChars as
+      '\\' -> '\\' : escapeChars as
+      '\"' -> '\"' : escapeChars as
+      '\'' -> '\'' : escapeChars as
+      '0'  -> '\0' : escapeChars as
+      _    -> "\\a" ++ escapeChars as
+    escapeChars (a : as) = a : escapeChars as
+    escapeChars []       = []
+
 
 -- | Read the value of IntDigit Tokens.
 read' :: (String, Position) -- ^ the int token to read

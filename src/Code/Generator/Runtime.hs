@@ -155,6 +155,3 @@ branchTo :: RCID -> ARM (Instr)
 branchTo name = do
   addToRuntime name
   return $ BL AL (label name)
-    -- rutime -> printStr
-    -- checkdbz -> throw
-    -- arraycheck -> throw

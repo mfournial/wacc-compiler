@@ -38,7 +38,7 @@ import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 import Code.Generator.RetLoc.Internal
-import Code.Generator.Runtime.Internal(RCID)
+import Code.Generator.Runtime.Internal(RCID(..))
 --import Data.Waskell.ADT 
 
 type ARM = State Junk
@@ -106,10 +106,18 @@ getStackVarPtr :: String -> ARM (Maybe RetLoc)
 getStackVarPtr name = state (\junk -> (fmap StackPtr $ varAddr name stack junk, junk))
 
 addToRuntime :: RCID -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r ((runtime junk))}))
+addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r (runtime junk))}))
   where
     tryAdd :: Eq a => a -> Seq a -> Seq a
     tryAdd a as = if a `elem` as then as else a <| as 
+    addDependencies :: RCID -> Seq RCID-> Seq RCID
+    addDependencies name names =
+      if name == ThrowRuntimeErr
+        then
+          tryAdd PrintStr names
+        else if name == Checkdbz || name == ArrayCheck
+          then tryAdd ThrowRuntimeErr names
+          else names
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Maybe Int

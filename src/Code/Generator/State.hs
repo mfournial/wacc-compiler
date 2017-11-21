@@ -80,7 +80,7 @@ removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
 
 pushVar :: String -> ARM RetLoc
-pushVar name = state (\junk -> ((), junk{stack = addToTable name (sp junk) (stack junk)})) >> incrementStack >> fmap StackPtr getSP
+pushVar name = state (\junk -> (StackPtr (sp junk), junk{stack = addToTable name (sp junk) (stack junk)})) >>= \s -> incrementStack >> return s
 
 addToHeap :: String -> Int -> ARM PureRetLoc
 addToHeap name address = state (\junk -> (HeapAddr address, junk{heap = addToTable name address (heap junk)}))

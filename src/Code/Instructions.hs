@@ -111,7 +111,20 @@ instance PrintARM Instr where
   printARM (Section str)                  = '.' : str  
   printARM (FunSection str)               = "\t\t" ++ '.' : str  
   printARM (Word i)                       = "\t\t" ++ ".word " ++ show i
-  printARM (Ascii str)                    = "\t\t" ++ ".ascii " ++ show str
+  printARM (Ascii str)                    = "\t\t" ++ ".ascii \"" ++ show' str ++ "\""
+                                          where
+                                            show' (c : cs) = case c of
+                                              '\b' -> "\\b" ++ show' cs
+                                              '\f' -> "\\f" ++ show' cs
+                                              '\n' -> "\\n" ++ show' cs
+                                              '\r' -> "\\r" ++ show' cs
+                                              '\t' -> "\\t" ++ show' cs
+                                              '\\' -> "\\\\" ++ show' cs
+                                              '\"' -> "\\\"" ++ show' cs
+                                              '\'' -> "\\\'" ++ show' cs
+                                              '\0' -> "\\0" ++ show' cs
+                                              _    -> c : show' cs
+                                            show' [] = []
   printARM Global                         = ".global main"
   printARM (Define str)                   =  str  ++ ":"
   printARM (MOV  cond set reg op2)        = "\t\t" ++ "MOV" ++ printARM(cond) ++ printARM(set)  ++ " "  ++ printARM(reg) ++ ", " ++ printARM(op2)

@@ -121,7 +121,7 @@ generate PrintInt = do
        <| empty)
 
 generate PrintStr = do
- sloc <- newStringLiteral "%.*s\\0"
+ sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
        <| PUSH [LinkRegister] 
        <| storeToRegisterPure R1 (RegLoc R0))

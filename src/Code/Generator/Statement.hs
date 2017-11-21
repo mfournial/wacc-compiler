@@ -41,7 +41,7 @@ generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   printrt     <- branchTo $ selectPrint (unsfType e ns)
   newline     <- newStringLiteral "\\n"
   let strnl   = storeToRegisterPure R0 newline
-  printnl     <- branchTo PrintInt
+  printnl     <- branchTo PrintStr
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
 generate _ (StatementOperator (StatRead (AssignToIdent _), _)) = do

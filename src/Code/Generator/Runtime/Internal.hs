@@ -1,4 +1,8 @@
-module Code.Generator.Runtime.Internal where
+module Code.Generator.Runtime.Internal(
+  label,
+  RuntimeComponent(RC),
+  RCID(..)
+) where
 
 import Code.Instructions
 import Data.Maybe(fromJust)

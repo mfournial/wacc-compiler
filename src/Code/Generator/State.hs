@@ -31,14 +31,14 @@ import Data.Maybe(fromJust, isJust)
 import Data.Sequence
 import Data.Sequence.Util
 import Control.Monad.State.Lazy
-import Prelude hiding (concat, length, zipWith, null, take)
+import Prelude hiding (concat, length, zipWith, null, lookup)
 import qualified Prelude as P
 
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 import Code.Generator.RetLoc.Internal
-import Code.Generator.Runtime.Internal(RuntimeComponent)
+import Code.Generator.Runtime.Internal(RCID(..))
 --import Data.Waskell.ADT 
 
 type ARM = State Junk
@@ -59,7 +59,7 @@ data Junk = Junk {
   heap :: VarTable,
   sp :: Int,
   ref :: Int,
-  runtime :: [RuntimeComponent]
+  runtime :: Seq RCID
 } 
 
 type VarTable = [M.HashMap String Int]
@@ -79,7 +79,7 @@ listPosToLabel = ("msg_" ++) . pure . intToDigit
 -- | Can't import length from prelude... because of conflicts
 size :: String -> Int-> Int
 size [] i = i
-size (c : cs) i = size cs (i + 1)
+size (_ : cs) i = size cs (i + 1)
 
 newEnv :: ARM ()
 newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
@@ -100,16 +100,21 @@ getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
 
 getFromHeap :: String -> ARM (Maybe PureRetLoc)
-getFromHeap name = state (\junk -> (fmap HeapAddr $ varAddr name heap junk, junk))
+getFromHeap name = state (\junk -> (HeapAddr <$> varAddr name heap junk, junk))
 
 getStackVarPtr :: String -> ARM (Maybe RetLoc)
-getStackVarPtr name = state (\junk -> (fmap StackPtr $ varAddr name stack junk, junk))
+getStackVarPtr name = state (\junk -> (StackPtr <$> varAddr name stack junk, junk))
 
-addToRuntime :: RuntimeComponent -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = tryAdd r (runtime junk)}))
+addToRuntime :: RCID -> ARM ()
+addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r (runtime junk))}))
   where
-    tryAdd :: RuntimeComponent -> [RuntimeComponent] -> [RuntimeComponent]
-    tryAdd rc rs = if rc `elem` rs then rs else rc : rs
+    tryAdd :: Eq a => a -> Seq a -> Seq a
+    tryAdd a as = if a `elem` as then as else a <| as 
+    addDependencies :: RCID -> Seq RCID-> Seq RCID
+    addDependencies name names
+      | name == ThrowRuntimeErr = tryAdd PrintStr names
+      | name == Checkdbz || name == ArrayCheck = tryAdd ThrowRuntimeErr names
+      | otherwise = names
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> (Junk -> VarTable) -> Junk -> Maybe Int
@@ -121,10 +126,10 @@ getVar s = do
   fmap fromJust $ if isJust h then return (fmap PRL h) else getStackVarPtr s
 
 incrementStack :: ARM ()
-incrementStack = state (\junk -> ((), junk{sp = (sp junk) + 1}))
+incrementStack = state (\junk -> ((), junk{sp = sp junk + 1}))
 
 decrementStack :: ARM ()
-decrementStack = state (\junk -> ((), junk{sp = (sp junk) - 1}))
+decrementStack = state (\junk -> ((), junk{sp = sp junk - 1}))
 
 getSP :: ARM Int
 getSP = fmap sp get 
@@ -132,8 +137,8 @@ getSP = fmap sp get
 addToTable :: String -> Int -> VarTable -> VarTable
 addToTable s addr (m : mps) = M.insert s addr m : mps
 
-nextLabel :: String -> ARM (String)
-nextLabel s = state (\junk -> (("lab_" ++ [intToDigit (ref junk)] ++ "_" ++ s), junk{ref = ref junk + 1}))
+nextLabel :: String -> ARM String
+nextLabel s = state (\junk -> ("lab_" ++ [intToDigit (ref junk)] ++ "_" ++ s, junk{ref = ref junk + 1}))
 
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0 0 []
+newState = Junk empty [M.empty] [M.empty] 0 0 empty

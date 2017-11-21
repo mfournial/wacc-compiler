@@ -16,7 +16,7 @@ produceASM :: FilePath -> WaccTree -> IO ()
 produceASM = (.genCode) . writeCode
 
 genCode :: WaccTree -> Seq Instr
-genCode t =  dataSec' >< instr >< generateRuntime (runtime st)
+genCode t =  dataSec' >< instr
   where
     dataSec  = dataSection (strLits st)
     dataSec' = if null dataSec then empty else dataSec |> DIVIDER |> DIVIDER
@@ -26,12 +26,14 @@ genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fps sb)) = do
   finstr <- genFuncsCode (fromList $ map getVal fps)
   minstr <- genScopeBlock sb []
+  rinstr <- generateRuntime
   return $ ((empty
            |> Section "text" |> DIVIDER)
            >< (finstr
            |> Global |> Define "main" |> PUSH [LinkRegister]))
            >< (minstr
            |> LDR AL W R0 (Const 0) |> POP [PC] |> FunSection "ltorg")
+           >< rinstr
   where
     genFuncsCode :: Seq Function -> ARM Instructions
     genFuncsCode fs = fmap concat $ mapM genFuncCode fs

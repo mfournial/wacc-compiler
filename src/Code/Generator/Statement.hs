@@ -23,7 +23,7 @@ import Data.Waskell.Types(unsfType)
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
 
-generate _ (StatementOperator (StatExit (IntExp i, _), _)) = do
+generate _ (StatementOperator (StatExit (IntExp i, _), _)) =
   return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
 
 generate _ (StatementOperator (StatReturn (e, _), _)) 
@@ -32,16 +32,16 @@ generate _ (StatementOperator (StatReturn (e, _), _))
 generate ns (StatementOperator ((StatPrint (e, _)), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchRuntime $ selectPrint (unsfType e ns)
+  printrt     <- branchTo $ selectPrint (unsfType e ns)
   return $ (ins >< strIns) |> printrt
 
 generate ns (StatementOperator ((StatPrintLn (e, _)), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchRuntime $ selectPrint (unsfType e ns)
+  printrt     <- branchTo $ selectPrint (unsfType e ns)
   newline     <- newStringLiteral "\\n"
   let strnl   = storeToRegisterPure R0 newline
-  printnl     <- branchRuntime $ generatePrintStrRuntime
+  printnl     <- branchTo PrintInt
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
 generate _ (StatementOperator ((StatRead (AssignToIdent _)), _)) = do
@@ -55,7 +55,7 @@ generate _ (StatementOperator ((StatDecAss (Pairable (BaseType b)) (iid, _) (Ass
   strExp         <- referencedPush [R0] [iid]
   return $ (ins >< strIns) |> strExp
 
-generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = undefined
+generate _ (StatementOperator ((StatDecAss t (iid, _) arhs), _)) = return empty
   
 
 generate ns (StatIf (posexp) sb sb') = do
@@ -100,12 +100,12 @@ genScopeBlock (sts, (NewScope scp)) ns = do
   closeEnv
   return $ concat instructions
 
-selectPrint :: Type -> RuntimeGenerator
-selectPrint (PairType a b)                                          = generatePrintRefRuntime
-selectPrint (Pairable (BaseType BoolType))                          = generatePrintBoolRuntime
-selectPrint (Pairable (BaseType StringType))                        = generatePrintStrRuntime
-selectPrint (Pairable (BaseType IntType))                           = generatePrintIntRuntime
-selectPrint (Pairable (BaseType CharType))                          = generatePrintCharRuntime
-selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = generatePrintStrRuntime
-selectPrint (Pairable (ArrayType _))                                = generatePrintRefRuntime
+selectPrint :: Type -> RCID
+selectPrint (PairType a b)                                          = PrintRef
+selectPrint (Pairable (BaseType BoolType))                          = PrintBool
+selectPrint (Pairable (BaseType StringType))                        = PrintStr
+selectPrint (Pairable (BaseType IntType))                           = PrintInt
+selectPrint (Pairable (BaseType CharType))                          = PrintChar
+selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintStr
+selectPrint (Pairable (ArrayType _))                                = PrintRef
 selectPrint _                                                       = error "Front end failed to validate types of expressions"

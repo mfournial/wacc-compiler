@@ -3,6 +3,7 @@ module Code.Generator.StateInstructions where
 import Code.Instructions
 import Code.Generator.State
 import Code.Generator.ARM
+import Data.Bifunctor(first)
 
 push :: [Reg] -> ARM (Instr, [RetLoc])
 push rs = do
@@ -12,6 +13,5 @@ push rs = do
 pop :: [Reg] -> ARM Instr
 pop = fmap POP . (mapM (\r -> decrementStack >> return r))
 
-referencedPush :: [Reg] -> [String] -> ARM Instr
-referencedPush = ((.).(.)) (fmap PUSH  . (mapM (\(r,n) -> pushVar n >> return r))) zip
-
+referencedPush :: [Reg] -> [String] -> ARM (Instr, [RetLoc])
+referencedPush = ((.).(.)) ((fmap (first PUSH . unzip)) . (mapM (\ (r,n) -> pushVar n >>= \k -> return (r,k)))) zip

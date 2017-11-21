@@ -48,15 +48,15 @@ generate _ (StatementOperator (StatRead (AssignToIdent _), _)) = do
   return $ empty
   -- TODO check if int or char and call relevant generate functions
 
-generate _ (StatementOperator (StatDecAss (Pairable (BaseType StringType)) _ _, _)) = undefined
-generate _ (StatementOperator (StatDecAss (Pairable (BaseType b)) (iid, _) (AssignExp (e, _)), _)) = do
-  (ins, eloc)    <- expression e
-  strIns         <- storeToRegister R0 eloc
-  strExp         <- referencedPush [R0] [iid]
-  return $ (ins >< strIns) |> strExp
+--This is slightly inefficient but avoids heavy code duplication TODO: Change implementation from declare then assign to all in one go
+generate ns (StatementOperator (StatDecAss t (s, _) ae, p)) = do
+  (decin, (loc : [])) <- referencedPush [R0] [s]
+  assins              <- assignVar loc ae
+  return $ decin <| assins
 
-generate _ (StatementOperator (StatDecAss t (iid, _) arhs, _)) = return empty
-  
+generate ns (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
+  loc <- getVar i
+  assignVar loc ae
 
 generate ns (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
@@ -92,6 +92,15 @@ genScopeBlock'  (sts, NewScope scp)
   = concat <$> withEnv $ \env -> 
       traverse (generate env) (fromList sts)
 -}
+
+assignVar :: RetLoc -> AssignRhs -> ARM Instructions
+assignVar loc (AssignExp (e, _)) = do
+  (ins, eloc)    <- expression e
+  strIns         <- storeToRegister    R0 eloc
+  strExp         <- updateWithRegister R0 loc
+  return $ ins >< strIns >< strExp
+
+assignVar _ _ = error "unimplemented assignment"
 
 genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do

@@ -24,6 +24,8 @@ module Code.Generator.State (
   getVar,
   getSP,
   storeToRegister,
+  updateWithRegister,
+  modifyRegister,
   runtimeInstructions
 )
 where
@@ -131,11 +133,19 @@ newState :: Junk
 newState = Junk empty [M.empty] [M.empty] 0 0 empty
 
 storeToRegister :: Reg -> RetLoc -> ARM Instructions
-storeToRegister r (StackPtr i) = do
-  off <- getOffsetFromStackPtr i
-  return $ storeToRegister' r (OffReg StackPointer (offsetToARMOffset off) False)   
+storeToRegister r (PRL k)     = return $ storeToRegisterPure r k
+storeToRegister r l           = modifyRegister     storeToRegister' r l
 
-storeToRegister r (PRL k) = return $ storeToRegisterPure r k
+updateWithRegister :: Reg -> RetLoc -> ARM Instructions
+updateWithRegister r (PRL k)     = return $ updateWithRegisterPure r k
+updateWithRegister r l           = modifyRegister updateWithRegister' r l
+
+modifyRegister :: RegMod -> Reg -> RetLoc -> ARM Instructions
+modifyRegister f r (StackPtr i) = do
+  off <- getOffsetFromStackPtr i
+  return $ f r (OffReg StackPointer (offsetToARMOffset off) False)   
+
+modifyRegister f r (PRL k) = return $ modifyRegisterPure f r k
 
 runtimeInstructions :: ARM (Seq RCID)
 runtimeInstructions = state (\junk -> (runtime junk, junk))

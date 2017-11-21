@@ -38,7 +38,7 @@ generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
   printrt     <- branchTo $ selectPrint (unsfType e ns)
-  newline     <- newStringLiteral "\\n"
+  newline     <- newStringLiteral "\n"
   let strnl   = storeToRegisterPure R0 newline
   printnl     <- branchTo PrintStr
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
@@ -49,8 +49,6 @@ generate ns (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
   readchr <- branchTo $ selectReadType(unsfType(IdentExpr i) ns)
   return $ (singleton(ADD AL F  R0 StackPointer (ImmOpInt off))
             |> readchr)
-
-  -- TODO check if int or char and call relevant generate functions
 
 --This is slightly inefficient but avoids heavy code duplication TODO: Change implementation from declare then assign to all in one go
 generate ns (StatementOperator (StatDecAss t (s, _) ae, p)) = do
@@ -114,6 +112,10 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
   esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
+
+-- assignVar loc (AssignCall (fname, _) posexprs) = do
+  -- let exprs = map getVal posexprs
+
 
 assignVar loc _ = error "unimplemented assign"
 

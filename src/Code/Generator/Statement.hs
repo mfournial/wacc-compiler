@@ -43,11 +43,12 @@ generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
   printnl     <- branchTo PrintStr
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
-generate ns (StatementOperator ((StatRead (AssignToIdent i)), _)) = do
---  identype <- unsfType (IdentExpr i) ns
-  return $ ((singleton(ADD AL F R4 StackPointer (ImmOpInt 0))
-            >< (storeToRegisterPure R0 (Register R4)))
-            |> BL AL "readchar")
+generate ns (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
+--  identype <- unsfType (i) ns
+  (StackPtr isp)  <- getVar s
+  readchr <- branchTo $ selectReadType(unsfType(IdentExpr i) ns)
+  return $ (singleton(ADD AL F  R0 StackPointer (ImmOpInt isp)) 
+            |> readchr)
 
   -- TODO check if int or char and call relevant generate functions
 
@@ -131,3 +132,10 @@ selectPrint (Pairable (BaseType CharType))                          = PrintChar
 selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintStr
 selectPrint (Pairable (ArrayType _))                                = PrintRef
 selectPrint _                                                       = error "Front end failed to validate types of expressions"
+
+selectReadType :: Type -> RCID
+selectReadType (Pairable(BaseType IntType)) = ReadInt
+selectReadType (Pairable(BaseType CharType)) = ReadChar
+selectReadType _ = error "front end did not pick this up"
+
+

@@ -26,7 +26,7 @@ generate _ (StatementOperator (StatExit (IntExp i, _), _)) =
   return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
 
 generate _ (StatementOperator (StatReturn (e, _), _)) =
-  (|>) <$> expressionReg e PC <*> pop [PC]
+  (|>) <$> expressionReg e R0 <*> pop [PC]
 
 generate ns (StatementOperator (StatPrint (e, _), _)) = do
   (ins, eloc) <- expression e

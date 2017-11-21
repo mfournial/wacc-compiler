@@ -453,7 +453,18 @@ mkSB sts = (sts, emptyScope)
 
 -- | Strip char token of surrounding quotes.
 mkChar :: (String, Position) -> Char
-mkChar = (!!1) . fst
+mkChar (s, _)
+  | length s == 3 = s!!1
+  | otherwise = case s!!2 of
+        'b'  -> '\b'
+        'f'  -> '\f'
+        'n'  -> '\n'
+        'r'  -> '\r'
+        't'  -> '\t'
+        '\\' -> '\\'
+        '\"' -> '\"'
+        '\'' -> '\''
+        _    -> '\0'
 
 -- | Strip string token of surrounding quotes.
 mkString :: (String, Position) -> String

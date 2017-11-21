@@ -129,7 +129,7 @@ genScopeBlock (sts, NewScope scp) ns = do
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> decrementStack) [1..stck]
   closeEnv
-  return $ concat instructions |> SUB AL F StackPointer StackPointer (ImmOpInt (4 * stck))
+  return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef

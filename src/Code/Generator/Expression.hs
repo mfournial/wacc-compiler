@@ -39,21 +39,27 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
 
 expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
+  (saveregs, _) <- push [R1, R2]
   sv <- getStackVar i
-  strPtr <- storeToRegister R0 sv
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
-  ins    <- foldM arrayExp' (storeToRegisterPure R0 (RegLocOffset R0 1)) $ reverse pushed
-  return (strPtr >< ins, (PRL (Register R0)))
+  let (pushins, pushlocs) = unzip pushed
+  strPtr <- storeToRegister R0 sv
+  ins    <- foldM arrayExp' (singleton $ ADD AL F R0 R0 (ImmOpInt 4)) $ reverse pushlocs
+  restore <- pop [R1, R2]
+  return ((saveregs <| (mconcat pushins >< strPtr >< ins)) |> restore, (PRL (Register R0)))
   where
     pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
     pusher (ins, loc) = do
       str <- storeToRegister R0 loc
       (pushins, pushlocs) <- push [R0]
       return ((ins >< str) |> pushins, head pushlocs)
-    arrayExp' :: Instructions -> (Instructions, RetLoc) -> ARM Instructions
-    arrayExp' is (is', loc) = do
-      str <- storeToRegister R0 loc
-      return (is >< is' >< str >< storeToRegisterPure R0 (RegLoc R0)) 
+    arrayExp' :: Instructions -> RetLoc -> ARM Instructions
+    arrayExp' is loc = do
+      let strfour = storeToRegisterPure R2 (ImmInt 4)
+      str <- storeToRegister R1 loc
+      let mulins = MUL AL F R1 R1 R2 
+      let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
+      return (is >< strfour >< str >< (empty |> mulins |> addins) >< storeToRegisterPure R0 (RegLoc R0)) 
 
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 

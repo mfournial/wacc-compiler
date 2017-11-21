@@ -22,7 +22,10 @@ expression (BoolExp False)    = intToReg 0       R0
 expression (CharExpr c)       = return (singleton (MOV AL F R0 (ImmOpCh c)), PRL (Register R0))
 expression PairExpr           = intToReg 0       R0
 
-expression (IdentExpr (s, _)) = fmap (empty,) $ getStackVar s
+expression (IdentExpr (s, _)) = do
+  sv <- getStackVar s
+  ins <- storeToRegister R0 sv 
+  return (ins, PRL (Register R0))
 
 expression (UExpr (uexp, _) (e, _)) = do
   (sub, loc)          <- expression e

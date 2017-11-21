@@ -9,7 +9,6 @@ import Code.Generator.ARM
 import Data.Waskell.ADT
 
 import Data.Sequence((><), (<|), (|>), empty, singleton)
-import Data.Char(ord)
 import Data.Maybe
 
 import Control.Monad
@@ -20,7 +19,7 @@ expression (BracketExp (e, _)) = expression e
 expression (IntExp i)         = intToReg i       R0
 expression (BoolExp True)     = intToReg 1       R0
 expression (BoolExp False)    = intToReg 0       R0
-expression (CharExpr c)       = intToReg (ord c) R0
+expression (CharExpr c)       = return (singleton (MOV AL F R0 (ImmOpCh c)), PRL (Register R0))
 expression PairExpr           = intToReg 0       R0
 
 expression (IdentExpr (s, _)) = fmap (empty,) $ getVar s
@@ -90,7 +89,7 @@ evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))
 
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
-intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))
+intToReg i r = return (pure (MOV AL F r (ImmOpInt i)), PRL (Register r))
 
 expressionReg :: Expression -> Reg -> ARM Instructions
 expressionReg e r = do

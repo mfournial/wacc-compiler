@@ -64,8 +64,8 @@ generate ns (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
   loc <- getStackVar i
   assignVar loc ae
 
-generate ns (StatementOperator (StatAss (AssignToArrayElem arre) rhs, _)) = do
-  (getptr, _) <- expression (ArrayExpr arre)
+generate ns (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
+  getptr <- getArrayEPtr arre
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ getptr >< movtoten >< ass
@@ -194,7 +194,7 @@ genScopeBlock (sts, NewScope scp) ns = do
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> decrementStack) [1..stck]
-  return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
+  return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
 
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef
@@ -211,4 +211,8 @@ selectReadType (Pairable(BaseType IntType)) = ReadInt
 selectReadType (Pairable(BaseType CharType)) = ReadChar
 selectReadType _ = error "front end did not pick this up"
 
-
+immOpIntCheck :: Instr -> Instructions
+immOpIntCheck (ADD cond s reg oReg (ImmOpInt i))
+ | i > 1024 = singleton((ADD cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck (ADD cond s reg oReg (ImmOpInt (i-1024)))
+ | otherwise = singleton(ADD cond s reg oReg (ImmOpInt i))
+immOpIntCheck _ = error "should never be here"

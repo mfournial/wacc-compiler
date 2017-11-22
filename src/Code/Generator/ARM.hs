@@ -87,3 +87,4 @@ updateWithRegister' r a = singleton (STR AL W r a)
 --Note this is the incorrect behaviour TODO 
 offsetToARMOffset :: Int -> Offset
 offsetToARMOffset i = Int i
+

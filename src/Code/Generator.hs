@@ -58,3 +58,4 @@ genFuncCode (Function _ iden params sb) = do
 
 writeCode :: FilePath -> Instructions -> IO ()
 writeCode = (. (unlines . toList . fmap printARM)) . writeFile
+

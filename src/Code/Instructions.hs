@@ -149,7 +149,7 @@ instance PrintARM Instr where
   printARM (SUB  cond set reg oReg op2)   = "\t\t" ++ "SUB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (RSB  cond set reg oReg op2)   = "\t\t" ++ "RSB" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (ADD  cond set reg oReg op2)   =
-    if op2 == (ImmOpInt 0)
+    if op2 == (ImmOpInt 0) && (reg == oReg)
       then ""
       else "\t\t" ++ "ADD" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (MUL  cond set reg oReg oReg1) = "\t\t" ++ "MUL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)

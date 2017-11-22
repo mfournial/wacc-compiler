@@ -23,8 +23,8 @@ genCode t =  dataSec' >< instr
     (instr, st) = runState (genCode' t) newState 
 
 genCode' :: WaccTree -> ARM Instructions
-genCode' (WaccTree (Program fps sb)) = do
-  finstr <- genFuncsCode (fromList $ map getVal fps)
+genCode' (WaccTree (Program fcs sb)) = do
+  finstr <- genFuncsCode $ fromList $ map getVal fcs
   minstr <- genScopeBlock sb [] []
   ids <- runtimeInstructions
   instrs <- mapM generateRuntime ids
@@ -43,7 +43,12 @@ genCode' (WaccTree (Program fps sb)) = do
 genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
   body <- genScopeBlock sb [] (getIden params)
-  return $ (Define ("fun_" ++ (getVal iden)) <|) body |> FunSection "ltorg" |> DIVIDER
+  return $ (Define ("fun_" ++ (getVal iden))
+        <| PUSH [LinkRegister]
+        <| body)
+        |> POP [PC]
+        |> FunSection "ltorg"
+        |> DIVIDER
   where
     getIden [] = []
     getIden ((Param _ piden) : ps) = getIden ps ++ [getVal piden]

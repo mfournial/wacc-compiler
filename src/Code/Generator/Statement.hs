@@ -83,6 +83,12 @@ generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ rgtins >< movtoten >< ass
 
+generate ns (StatScope sb) = do
+  newEnv
+  body <- genScopeBlock sb ns
+  closeEnv
+  return $ body
+
 generate ns (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
@@ -187,7 +193,7 @@ genScopeBlock :: ScopeBlock
 genScopeBlock (sts, NewScope scp) ns = do
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
-  mapM_ (\i -> incrementStack) [1..stck]
+  mapM_ (\i -> decrementStack) [1..stck]
   return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
 
 selectPrint :: Type -> RCID

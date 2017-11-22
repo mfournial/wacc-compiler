@@ -105,7 +105,7 @@ addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r
     addDependencies :: RCID -> Seq RCID-> Seq RCID
     addDependencies name names
       | name == ThrowRuntimeErr = tryAdd PrintStr names
-      | name == Checkdbz || name == ArrayCheck || name == ThrowOverflowErr
+      | name == Checkdbz || name == ArrayCheck || name == ThrowOverflowErr || name == FreePair
           = tryAdd PrintStr $ tryAdd ThrowRuntimeErr names
       | otherwise = names
 

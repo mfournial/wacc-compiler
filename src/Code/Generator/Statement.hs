@@ -83,6 +83,11 @@ generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ rgtins >< movtoten >< ass
 
+generate ns (StatementOperator (StatFree posexp, _)) = do
+  (expInstr, _) <- expression (getVal posexp)
+  brFree <- branchTo FreePair
+  return $ expInstr |> brFree
+
 generate ns (StatScope sb) = do
   newEnv
   body <- genScopeBlock sb ns
@@ -120,6 +125,7 @@ generate ns (StatWhile posexp sb) = do
          >< (storeIns
          |> CMP AL R4 (ImmOpInt 1)
          |> B Eq doLabel)
+
 
 generate _ _ = error "How end up here ???"
 

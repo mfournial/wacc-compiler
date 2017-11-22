@@ -46,20 +46,14 @@ generate ThrowRuntimeErr =
 
 generate FreePair = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
-  return $ ((Define (label FreePair)
-          <| PUSH [LinkRegister]
-          <| CMP AL R0 (ImmOpInt 0)
-          <| LDR Eq W R0 (address sloc)
-          <| B Eq (label ThrowRuntimeErr)
-          <| PUSH [R0]
-          <| storeToRegisterPure R0 (RegLoc R0))
-          >< BL AL "free"
-          <| storeToRegisterPure R0 (RegLoc StackPointer))
-          |> LDR Eq W R0 (OffReg R0 (Int 4) False)
-          |> BL AL "free"
-          |> POP [R0]
-          |> BL AL "free"
-          |> POP [PC]
+  return $ Define (label FreePair)
+        <| PUSH [LinkRegister]
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR Eq W R0 (address sloc)
+        <| B Eq (label ThrowRuntimeErr)
+        <| BL AL "free"
+        <| POP [PC]
+        <| empty
 
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"

@@ -80,14 +80,14 @@ generate PrintChar =
 generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
-        <| PUSH [LinkRegister]
+        <| PUSH [LinkRegister, R1]
         <| storeToRegisterPure R1 (Register R0))
         >< (storeToRegisterPure R0 refloc
         |> ADD AL F R0 R0 (ImmOpInt 4)
         |> BL AL "printf")
         >< (storeToRegisterPure R0 (ImmInt 0)
         |> BL AL "fflush"
-        |> POP [PC])
+        |> POP [PC, R1])
 
 generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"

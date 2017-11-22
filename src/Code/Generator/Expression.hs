@@ -111,11 +111,11 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
       return ((ins >< str) |> pushins, head pushlocs)
     arrayExp' :: Instructions -> RetLoc -> ARM Instructions
     arrayExp' is loc = do
+      let deref   = storeToRegisterPure R0 (RegLoc R0)
       str <- storeToRegister R1 loc
       ac  <- branchTo ArrayCheck
-      let deref   = storeToRegisterPure R0 (RegLoc R0)
       let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
       let strfour = storeToRegisterPure R2 (ImmInt 4)
       let mulins = MUL AL F R1 R1 R2 
       let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
-      return (is >< str >< singleton ac >< deref >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
+      return (is >< deref >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 

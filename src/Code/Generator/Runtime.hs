@@ -41,6 +41,7 @@ generate :: RCID -> ARM Instructions
 generate ThrowRuntimeErr =
   return $ Define (label ThrowRuntimeErr)
         <| BL AL (label PrintStr)
+        <| MOV AL F R0 (ImmOpInt (-1))
         <| BL AL "exit"
         <| empty
 
@@ -93,15 +94,18 @@ generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   return $ Define (label ArrayCheck)
-        <| PUSH [LinkRegister, R0, R1]
-        <| CMP AL R1 (ImmOpInt 0)
-        <| LDR LTh W R1 (address negIndex)
+        <| PUSH [LinkRegister, R0, R1, R2]
+        <| MOV AL F R2 (ShiftReg R0 NSH)
+        <| MOV AL F R0 (ShiftReg R1 NSH)
+        <| MOV AL F R1 (ShiftReg R2 NSH)
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR LTh W R0 (address negIndex)
         <| B LTh (label ThrowRuntimeErr)
-        <| (storeToRegisterPure R0 (RegLoc R0)
-        |> CMP AL R1 (ShiftReg R0 NSH)
-        |> LDR CS W R1 (address badIndex)
-        |> BL CS (label ThrowRuntimeErr)
-        |> POP [R1, R0, PC])
+        <| (storeToRegisterPure R1 (RegLoc R1)
+        |> CMP AL R0 (ShiftReg R1 NSH)
+        |> LDR GE W R0 (address badIndex)
+        |> BL GE (label ThrowRuntimeErr)
+        |> POP [R2, R1, R0, PC])
 
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"

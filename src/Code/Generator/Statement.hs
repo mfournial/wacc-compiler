@@ -210,6 +210,7 @@ selectPrint (Pairable (BaseType IntType))                           = PrintInt
 selectPrint (Pairable (BaseType CharType))                          = PrintChar
 selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintStr
 selectPrint (Pairable (ArrayType _))                                = PrintRef
+selectPrint (Pairable (PairNull))                                   = PrintRef
 selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
 selectReadType :: Type -> RCID

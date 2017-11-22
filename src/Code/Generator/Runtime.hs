@@ -1,7 +1,6 @@
 module Code.Generator.Runtime(
   generateRuntime,
-  branchTo,
-  RCID(..)
+  branchTo
 ) where
 
 import Prelude hiding (concat)

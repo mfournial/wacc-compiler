@@ -85,7 +85,7 @@ generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)
 
 generate ns (StatementOperator (StatFree posexp, _)) = do
   (expInstr, _) <- expression (getVal posexp)
-  brFree <- branchTo FreePair
+  brFree <- branchTo Free
   return $ expInstr |> brFree
 
 generate ns (StatScope sb) = do

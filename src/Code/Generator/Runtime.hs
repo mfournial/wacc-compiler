@@ -28,7 +28,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (ReadInt, "runtime_read_int")
         , (ReadChar, "runtime_read_char")
         , (ThrowRuntimeErr, "runtime_throw_err")
-        , (FreePair, "runtime_free_pair")
+        , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
         , (ThrowOverflowErr, "runtime_throw_overflow")
@@ -45,16 +45,16 @@ generate ThrowRuntimeErr =
         <| BL AL "exit"
         <| empty
 
-generate FreePair = do
+generate Free = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
-  return $ Define (label FreePair)
-        <| PUSH [LinkRegister]
-        <| CMP AL R0 (ImmOpInt 0)
-        <| LDR Eq W R0 (address sloc)
-        <| B Eq (label ThrowRuntimeErr)
-        <| BL AL "free"
-        <| POP [PC]
-        <| empty
+  return $ (Define (label Free)
+        <| PUSH [LinkRegister, R1]
+        <| storeToRegisterPure R1 (RegLoc R0))
+        |> CMP AL R1 (ImmOpInt 0)
+        |> LDR Eq W R0 (address sloc)
+        |> B Eq (label ThrowRuntimeErr)
+        |> BL AL "free"
+        |> POP [R1, PC]
 
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"

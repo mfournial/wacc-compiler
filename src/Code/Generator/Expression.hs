@@ -35,11 +35,13 @@ expression (UExpr (uexp, _) (e, _)) = do
 expression (BExp (e, _) (bop, _) (e', _)) = do
   (saveReg, _)  <- push [R1]
   (left, lloc)        <- expression e
-  strLeft             <- storeToRegister R1 lloc
+  strLeft             <- storeToRegister R0 lloc
+  (pushleft,_)        <- push [R0]
   (right, rloc)       <- expression e'
-  strRight            <- storeToRegister R0 rloc
+  strRight            <- storeToRegister R1 rloc
+  popleft             <- pop [R0]
   resReg              <- pop [R1]
-  return $ ((saveReg <| ((left >< strLeft >< right >< strRight >< evalBExp bop) |> resReg)), (PRL (Register R0)))
+  return $ ((saveReg <| ((left >< strLeft >< (pushleft <| (right >< strRight >< (popleft <| evalBExp bop)))) |> resReg)), (PRL (Register R0)))
 
 expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
   (saveregs, _) <- push [R1, R2]

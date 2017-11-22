@@ -119,13 +119,13 @@ generate PrintInt = do
 generate PrintStr = do
  sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
-       <| PUSH [LinkRegister] 
+       <| PUSH [LinkRegister, R0, R1] 
        <| storeToRegisterPure R1 (RegLoc R0))
        >< (ADD AL F R2 R0 (ImmOpInt 4) 
        <| storeToRegisterPure R0 sloc) 
        >< (ADD AL F R0 R0 (ImmOpInt 4) <| BL AL "printf" 
        <| MOV AL F R0 (ImmOpInt 0) <| BL AL "fflush"
-       <| POP [PC]
+       <| POP [R1, R0, PC]
        <| empty)
 
 generate ReadChar = do

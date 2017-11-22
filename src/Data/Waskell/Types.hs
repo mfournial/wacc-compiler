@@ -264,6 +264,7 @@ unsfType PairExpr   _                         = Pairable PairNull
 unsfType (IdentExpr i)  ns                    = unsafeGetErrorValue $ lookupType i ns
 unsfType (ArrayExpr ((ArrayElem i es), p)) ns = unsafeGetErrorValue $ getArrayElemType i es p ns
 unsfType (UExpr (UChr, _) _) _                = liftType CharType
+unsfType (UExpr (UBang, _) _) _               = liftType BoolType
 unsfType (UExpr _ _) _                        = liftType IntType
 unsfType (BExp _ (BTimes, _) _) _             = liftType IntType 
 unsfType (BExp _ (BDivide, _) _) _            = liftType IntType 

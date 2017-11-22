@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Code.Generator.Expression (expression, expressionReg) where
+module Code.Generator.Expression (expression, expressionReg, getArrayEPtr) where
 
 import Code.Instructions
 import Code.Generator.State

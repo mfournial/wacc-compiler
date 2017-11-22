@@ -64,8 +64,8 @@ generate ns (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
   loc <- getStackVar i
   assignVar loc ae
 
-generate ns (StatementOperator (StatAss (AssignToArrayElem arre) rhs, _)) = do
-  (getptr, _) <- expression (ArrayExpr arre)
+generate ns (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
+  getptr <- getArrayEPtr arre
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ getptr >< movtoten >< ass

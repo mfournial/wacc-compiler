@@ -32,6 +32,7 @@ data RCID = PrintStr
           | ReadInt
           | ReadChar
           | ThrowRuntimeErr
+          | ThrowOverflowErr
           | FreePair
           | PrintRef
           | ArrayCheck

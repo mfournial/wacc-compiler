@@ -31,6 +31,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (FreePair, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
+        , (ThrowOverflowErr, "runtime_throw_overflow")
         ]
 
 label :: RCID -> String
@@ -61,8 +62,8 @@ generate FreePair = do
           |> POP [PC]
 
 generate PrintBool = do
-  trueloc  <- newStringLiteral "true"
-  falseloc <- newStringLiteral "false"
+  trueloc  <- newStringLiteral "true\0"
+  falseloc <- newStringLiteral "false\0"
   return $ Define (label PrintBool)
         <| PUSH [LinkRegister]
         <| CMP AL R0 (ImmOpInt 0)
@@ -149,6 +150,12 @@ generate Checkdbz = do
 generate ReadInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label ReadInt) <| scanfCall intloc
+
+generate ThrowOverflowErr = do
+  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n"
+  return $ Define (label ThrowOverflowErr)
+        <| storeToRegisterPure R0 msgloc
+        <| BL AL (label ThrowRuntimeErr)
 
 scanfCall :: PureRetLoc -> Instructions
 scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (Register R0))

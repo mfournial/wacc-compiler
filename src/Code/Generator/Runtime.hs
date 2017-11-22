@@ -93,6 +93,7 @@ generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   return $ Define (label ArrayCheck)
+        <| PUSH [LinkRegister, R0, R1]
         <| CMP AL R1 (ImmOpInt 0)
         <| LDR LTh W R1 (address negIndex)
         <| B LTh (label ThrowRuntimeErr)
@@ -100,7 +101,7 @@ generate ArrayCheck = do
         |> CMP AL R1 (ShiftReg R0 NSH)
         |> LDR CS W R1 (address badIndex)
         |> BL CS (label ThrowRuntimeErr)
-        |> POP [PC])
+        |> POP [R1, R0, PC])
 
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"

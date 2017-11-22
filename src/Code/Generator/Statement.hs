@@ -24,8 +24,10 @@ import Control.Monad.State.Lazy(get)
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
 
-generate _ (StatementOperator (StatExit (IntExp i, _), _)) =
-  return $ storeToRegisterPure R0 (ImmInt i) |> BL AL "exit"
+generate _ (StatementOperator (StatExit (i, _), _)) = do
+  (ins, eloc) <- expression i
+  strIns      <- storeToRegister R0 eloc
+  return $ strIns |> BL AL "exit"
 
 generate _ (StatementOperator (StatReturn (e, _), _)) =
   (|>) <$> expressionReg e R0 <*> pop [PC]
@@ -120,7 +122,6 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
 
 
 assignVar loc _ = error "unimplemented assign"
-
 
 genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do

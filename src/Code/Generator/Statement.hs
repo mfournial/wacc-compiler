@@ -5,9 +5,9 @@ module Code.Generator.Statement (
 where
 
 
-import Data.Sequence hiding (zip, length)
+import Data.Sequence hiding (zip, length, reverse)
 import Data.Sequence.Util
-import Prelude hiding(concat)
+import Prelude hiding (concat)
 
 import Data.Waskell.ADT
 import Code.Instructions
@@ -17,9 +17,9 @@ import Code.Generator.ARM
 import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
-import Data.Waskell.Types(unsfType)
+import Data.Waskell.Types (unsfType)
 import qualified Data.HashMap.Strict as M
-import Control.Monad.State.Lazy(get)
+import Control.Monad.State.Lazy (get)
 
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
@@ -69,8 +69,8 @@ generate ns (StatIf posexp sb sb') = do
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  thenCode <- genScopeBlock sb ns
-  elseCode <- genScopeBlock sb' ns
+  thenCode <- genScopeBlock sb ns []
+  elseCode <- genScopeBlock sb' ns []
   return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
@@ -83,7 +83,7 @@ generate ns (StatWhile posexp sb) = do
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  bodyCode <- genScopeBlock sb ns
+  bodyCode <- genScopeBlock sb ns []
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
@@ -117,19 +117,32 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
 
--- assignVar loc (AssignCall (fname, _) posexprs) = do
-  -- let exprs = map getVal posexprs
-
+assignVar loc (AssignCall (fname, _) posexprs) = do
+  let params = getVal' posexprs
+  pushedPars <- mapM evalAndPush params
+  return $ mconcat pushedPars 
+        |> BL AL ("fun_" ++ fname)
+        |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params))
+  where
+    getVal' [] = []
+    getVal' (e : es) = getVal' es ++ [getVal e]
+    evalAndPush e = expression e >>= \(instr, reg) -> return $ instr |> PUSH [getReg reg]
+    getReg (PRL (Register r)) = r
+    getReg _ = error "In assignVar (AssignCall): expression didn't return a reg"
 
 assignVar loc _ = error "unimplemented assign"
 
-genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
-genScopeBlock (sts, NewScope scp) ns = do
-  newEnv
+
+genScopeBlock :: ScopeBlock 
+              -> [NewScope]
+              -> [String] -- ^ if SB is function, then these are the params that will be the globals
+              -> ARM Instructions
+genScopeBlock (sts, NewScope scp) ns params = do
+  newEnv params
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> incrementStack) [1..stck]
-  closeEnv
+  closeEnv (length params)
   return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID

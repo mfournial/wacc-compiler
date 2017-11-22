@@ -63,11 +63,18 @@ dataSection strs
 listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . pure . intToDigit
 
-newEnv :: ARM ()
-newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+newEnv :: [String] -- ^ Possible parameters for functions that will be added above the sp in the function
+       -> ARM ()
+newEnv params = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+  >> mapM_ pushVar params
 
-closeEnv :: ARM ()
-closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk)}))
+closeEnv :: Int -- ^ Number of parameters (env of function)
+         -> ARM ()
+closeEnv i = state (\junk -> ((), junk{
+    stack = tail (stack junk),
+    heap = tail (heap junk),
+    sp = (sp junk) - 4 * i
+  }))
 
 removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps

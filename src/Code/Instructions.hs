@@ -142,7 +142,10 @@ instance PrintARM Instr where
   printARM (CMN  cond reg op2)            = "\t\t" ++ "CMN" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
   printARM (TEQ  cond reg op2)            = "\t\t" ++ "TEQ" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
   printARM (TST  cond reg op2)            = "\t\t" ++ "TST" ++ printARM(cond) ++ " " ++ printARM (reg) ++ ", " ++ printARM (op2)
-  printARM (AND  cond set reg oReg op2)   = "\t\t" ++ "AND" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
+  printARM (AND  cond set reg oReg op2)   = 
+    if op2 == (ImmOpInt 0)
+      then ""
+      else "\t\t" ++ "AND" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (EOR  cond set reg oReg op2)   = "\t\t" ++ "EOR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (BIC  cond set reg oReg op2)   = "\t\t" ++ "BIC" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
   printARM (ORR  cond set reg oReg op2)   = "\t\t" ++ "ORR" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)

@@ -7,11 +7,11 @@ import Data.Bifunctor(first)
 
 push :: [Reg] -> ARM (Instr, [RetLoc])
 push rs = do
-  locs <- mapM (\r -> decrementStack >> getSP >>= return . StackPtr) rs
+  locs <- mapM (\r -> incrementStack >> getSP >>= return . StackPtr) rs
   return (PUSH rs, locs)
 
 pop :: [Reg] -> ARM Instr
-pop = fmap POP . (mapM (\r -> incrementStack >> return r))
+pop = fmap POP . (mapM (\r -> decrementStack >> return r))
 
 referencedPush :: [Reg] -> [String] -> ARM (Instr, [RetLoc])
 referencedPush = ((.).(.)) ((fmap (first PUSH . unzip)) . (mapM (\ (r,n) -> pushVar n >>= \k -> return (r,k)))) zip

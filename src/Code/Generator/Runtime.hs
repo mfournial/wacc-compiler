@@ -93,12 +93,12 @@ generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   return $ Define (label ArrayCheck)
-        <| CMP AL R0 (ImmOpInt 0)
-        <| LDR LTh W R0 (address negIndex)
+        <| CMP AL R1 (ImmOpInt 0)
+        <| LDR LTh W R1 (address negIndex)
         <| B LTh (label ThrowRuntimeErr)
-        <| (storeToRegisterPure R1 (RegLoc R1)
-        |> CMP AL R0 (ShiftReg R1 NSH)
-        |> LDR CS W R0 (address badIndex)
+        <| (storeToRegisterPure R0 (RegLoc R0)
+        |> CMP AL R1 (ShiftReg R0 NSH)
+        |> LDR CS W R1 (address badIndex)
         |> BL CS (label ThrowRuntimeErr)
         |> POP [PC])
 
@@ -132,7 +132,7 @@ generate ReadChar = do
   return $ Define (label ReadChar) <| scanfCall chloc
 
 generate Checkdbz = do
-  zloc <- newStringLiteral "%d\0"
+  zloc <- newStringLiteral "DivideByZeroError: divide or modulo by zero\0"
   return $ Define (label Checkdbz)
         <| PUSH [LinkRegister]
         <| CMP AL R1 (ImmOpInt 0)

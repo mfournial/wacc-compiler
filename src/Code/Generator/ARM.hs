@@ -25,29 +25,31 @@ data RuntimeComponent = RC RCID Instructions
 instance Eq RuntimeComponent where
   (==) (RC rid _) (RC rid' _) = rid == rid'
 
-data RCID = PrintStr
-          | PrintInt
-          | PrintChar
-          | PrintBool
-          | ReadInt
-          | ReadChar
-          | ThrowRuntimeErr
-          | ThrowOverflowErr
-          | FreePair
-          | PrintRef
-          | ArrayCheck
-          | Checkdbz
-          deriving (Eq)
+data RCID = 
+      PrintStr
+    | PrintInt
+    | PrintChar
+    | PrintBool
+    | ReadInt
+    | ReadChar
+    | ThrowRuntimeErr
+    | ThrowOverflowErr
+    | FreePair
+    | PrintRef
+    | ArrayCheck
+    | Checkdbz
+  deriving (Eq)
 
 data RetLoc = PRL PureRetLoc | StackPtr Int 
   deriving (Show)
 
-data PureRetLoc = StringLit String
-                | RegLoc Reg
-                | RegLocOffset Reg Int
-                | Register Reg
-                | ImmChar Char
-                | ImmInt Int
+data PureRetLoc = 
+      StringLit String
+    | RegLoc Reg
+    | RegLocOffset Reg Int
+    | Register Reg
+    | ImmChar Char
+    | ImmInt Int
   deriving (Show)
 
 type RegMod = Reg -> Address -> Instructions

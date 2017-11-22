@@ -80,7 +80,7 @@ removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
 
 pushVar :: String -> ARM RetLoc
-pushVar name = state (\junk -> (StackPtr (sp junk), junk{stack = addToTable name (sp junk) (stack junk)})) >>= \s -> decrementStack >> return s
+pushVar name = incrementStack >> state (\junk -> (StackPtr (sp junk), junk{stack = addToTable name (sp junk) (stack junk)}))
 
 getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))

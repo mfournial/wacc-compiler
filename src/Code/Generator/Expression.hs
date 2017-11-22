@@ -48,8 +48,9 @@ expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
   let (pushins, pushlocs) = unzip pushed
   strPtr <- storeToRegister R0 sv
   ins    <- foldM arrayExp' empty $ pushlocs
+  let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * length pushlocs))
   restore <- pop [R1, R2]
-  return ((saveregs <| (mconcat pushins >< strPtr >< ins)) |> restore, (PRL (Register R0)))
+  return ((saveregs <| (mconcat pushins >< strPtr >< ins)) |> restorestack |> restore, (PRL (Register R0)))
   where
     pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
     pusher (ins, loc) = do

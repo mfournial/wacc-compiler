@@ -16,7 +16,9 @@ module Code.Generator.State (
   newState,
   nextLabel,
   newEnv,
+  newFunctionEnv,
   closeEnv,
+  closeFunctionEnv,
   getStringLiterals,
   getOffsetFromStackPtr,
   addToRuntime,
@@ -63,14 +65,20 @@ dataSection strs
 listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . pure . intToDigit
 
-newEnv :: [String] -- ^ Possible parameters for functions that will be added above the sp in the function
-       -> ARM ()
-newEnv params = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+newEnv :: ARM ()
+newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+
+newFunctionEnv :: [String] -- ^ Add the parameters to the function environment
+               -> ARM ()
+newFunctionEnv params = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
   >> mapM_ pushVar params
 
-closeEnv :: Int -- ^ Number of parameters (env of function)
-         -> ARM ()
-closeEnv i = state (\junk -> ((), junk{
+closeEnv :: ARM ()
+closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk)}))
+
+closeFunctionEnv :: Int -- ^ Number of parameters of the function
+                 -> ARM ()
+closeFunctionEnv i = state (\junk -> ((), junk{
     stack = tail (stack junk),
     heap = tail (heap junk),
     sp = (sp junk) - 4 * i

@@ -193,7 +193,7 @@ genScopeBlock :: ScopeBlock
 genScopeBlock (sts, NewScope scp) ns = do
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
-  mapM_ (\i -> incrementStack) [1..stck]
+  mapM_ (\i -> decrementStack) [1..stck]
   return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID

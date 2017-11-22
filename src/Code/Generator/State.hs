@@ -5,6 +5,7 @@ module Code.Generator.State (
   Junk(..),
   Instructions,
   ARM,
+  getVar',
   runState,
   execState,
   getStackVar,
@@ -93,7 +94,7 @@ pushVar name = incrementStack >> state (\junk -> (StackPtr (sp junk), junk{stack
 getOffsetFromStackPtr :: Int -> ARM Int
 getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
 
-getVar' :: String -> (Int -> RetLoc) -> ARM RetLoc
+getVar' :: String -> (Int -> a) -> ARM a
 getVar' name f = state (\junk -> (f $ varAddr name junk, junk))
 
 addToRuntime :: RCID -> ARM ()

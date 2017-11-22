@@ -43,31 +43,11 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   resReg              <- pop [R1]
   return $ ((saveReg <| ((left >< strLeft >< (pushleft <| (right >< strRight >< (popleft <| evalBExp bop)))) |> resReg)), (PRL (Register R0)))
 
-expression (ArrayExpr (ArrayElem (i, _) indexps, _)) = do
-  (saveregs, _) <- push [R1, R2]
-  sv <- getStackVar i
-  pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
-  let (pushins, pushlocs) = unzip pushed
-  strPtr <- storeToRegister R0 sv
-  ins    <- foldM arrayExp' empty $ pushlocs
-  let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * length pushlocs))
-  restore <- pop [R1, R2]
-  return ((saveregs <| (mconcat pushins >< strPtr >< ins)) |> restorestack |> restore, (PRL (Register R0)))
-  where
-    pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
-    pusher (ins, loc) = do
-      str <- storeToRegister R0 loc
-      (pushins, pushlocs) <- push [R0]
-      return ((ins >< str) |> pushins, head pushlocs)
-    arrayExp' :: Instructions -> RetLoc -> ARM Instructions
-    arrayExp' is loc = do
-      let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
-      let strfour = storeToRegisterPure R2 (ImmInt 4)
-      str <- storeToRegister R1 loc
-      let mulins = MUL AL F R1 R1 R2 
-      let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
-      return (is >< (skiplen <| (strfour >< str >< (empty |> mulins |> addins) >< storeToRegisterPure R0 (RegLoc R0)))) 
-
+expression (ArrayExpr (ae, _)) = do
+  getptr <- getArrayEPtr ae
+  let deref = storeToRegisterPure R0 (RegLoc R0)
+  return $ (getptr >< deref, PRL (Register R0))
+  
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
 evalUExp :: UnaryOperator -> Instructions
@@ -109,3 +89,31 @@ expressionReg e r = do
   (is, rl) <- expression e
   iStore <- storeToRegister r rl
   return (is >< iStore)
+
+getArrayEPtr :: ArrayElem -> ARM Instructions
+getArrayEPtr (ArrayElem (i, _) indexps) = do
+  (saveregs, _) <- push [R1, R2]
+  pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
+  let (pushins, pushlocs) = unzip pushed
+  ptr  <- getVar' i id >>= getOffsetFromStackPtr
+  let addptr   = ADD AL F R0 StackPointer (ImmOpInt ptr) 
+  ins    <- foldM arrayExp' empty $ pushlocs
+  let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * Prelude.length pushlocs))
+  mapM_ (\k -> decrementStack) pushlocs
+  restore <- pop [R2, R1]
+  return $ (saveregs <| (mconcat pushins >< singleton addptr >< ins)) |> restorestack |> restore
+  where
+    pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
+    pusher (ins, loc) = do
+      str <- storeToRegister R0 loc
+      (pushins, pushlocs) <- push [R0]
+      return ((ins >< str) |> pushins, head pushlocs)
+    arrayExp' :: Instructions -> RetLoc -> ARM Instructions
+    arrayExp' is loc = do
+      let deref   = storeToRegisterPure R0 (RegLoc R0)
+      let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
+      let strfour = storeToRegisterPure R2 (ImmInt 4)
+      str <- storeToRegister R1 loc
+      let mulins = MUL AL F R1 R1 R2 
+      let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
+      return (is >< deref >< (skiplen <| (strfour >< str >< (empty |> mulins |> addins)))) 

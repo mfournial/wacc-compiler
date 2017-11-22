@@ -152,10 +152,10 @@ generate ReadInt = do
   return $ Define (label ReadInt) <| scanfCall intloc
 
 generate ThrowOverflowErr = do
-  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n"
+  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
-        <| storeToRegisterPure R0 msgloc
-        <| BL AL (label ThrowRuntimeErr)
+        <| (storeToRegisterPure R0 msgloc
+        |> BL AL (label ThrowRuntimeErr))
 
 scanfCall :: PureRetLoc -> Instructions
 scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (Register R0))

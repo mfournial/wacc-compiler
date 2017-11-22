@@ -72,7 +72,7 @@ expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
 evalUExp :: UnaryOperator -> Instructions
 evalUExp UMinus  = singleton (RSB AL F R0 R0 (ImmOpInt 0))
-evalUExp UBang   = singleton (MVN AL F R0 (ShiftReg R0 NSH))
+evalUExp UBang   = singleton (EOR AL F R0 R0 (ImmOpInt 1))
 evalUExp ULength = storeToRegisterPure R0 (RegLoc R0)
 -- UOrd and UChr actually do nothing! They exist only for type safety.
 evalUExp UOrd    = empty

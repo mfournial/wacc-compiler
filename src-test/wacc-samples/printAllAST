@@ -1,0 +1,12 @@
+#!/usr/bin/env perl
+
+use v5.14;
+
+my @files = split("\n", `find valid/**/*.wacc -type f`);
+
+my $cnt = 0;
+for my $file (@files) {
+	print `ruby refCompile.rb -t $file`;
+  $cnt++;
+}
+say "You have tested $cnt files";

@@ -67,8 +67,8 @@ generate ns (StatIf posexp sb sb') = do
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  thenCode <- genScopeBlock sb ns
-  elseCode <- genScopeBlock sb' ns
+  thenCode <- genScopeBlock sb ns []
+  elseCode <- genScopeBlock sb' ns []
   return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
@@ -81,7 +81,7 @@ generate ns (StatWhile posexp sb) = do
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  bodyCode <- genScopeBlock sb ns
+  bodyCode <- genScopeBlock sb ns []
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
@@ -118,7 +118,9 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
 assignVar loc (AssignCall (fname, _) posexprs) = do
   let params = getVal' posexprs
   pushedPars <- mapM evalAndPush params
-  return $ mconcat pushedPars |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params))
+  return $ mconcat pushedPars 
+        |> BL AL ("fun_" ++ fname)
+        |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params))
   where
     getVal' [] = []
     getVal' (e : es) = getVal' es ++ [getVal e]
@@ -129,13 +131,16 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
 assignVar loc _ = error "unimplemented assign"
 
 
-genScopeBlock :: ScopeBlock -> [NewScope]-> ARM Instructions
-genScopeBlock (sts, NewScope scp) ns = do
-  newEnv
+genScopeBlock :: ScopeBlock 
+              -> [NewScope]
+              -> [String] -- ^ if SB is function, then these are the params that will be the globals
+              -> ARM Instructions
+genScopeBlock (sts, NewScope scp) ns params = do
+  newEnv params
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> incrementStack) [1..stck]
-  closeEnv
+  closeEnv (length params)
   return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID

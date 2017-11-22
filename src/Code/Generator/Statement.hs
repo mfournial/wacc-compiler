@@ -188,7 +188,7 @@ genScopeBlock (sts, NewScope scp) ns = do
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> incrementStack) [1..stck]
-  return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
+  return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
 
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef
@@ -205,4 +205,8 @@ selectReadType (Pairable(BaseType IntType)) = ReadInt
 selectReadType (Pairable(BaseType CharType)) = ReadChar
 selectReadType _ = error "front end did not pick this up"
 
-
+immOpIntCheck :: Instr -> Instructions
+immOpIntCheck (ADD cond s reg oReg (ImmOpInt i))
+ | i > 1024 = singleton((ADD cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck (ADD cond s reg oReg (ImmOpInt (i-1024)))
+ | otherwise = singleton(ADD cond s reg oReg (ImmOpInt i))
+immOpIntCheck _ = error "should never be here"

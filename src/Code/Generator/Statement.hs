@@ -120,9 +120,11 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
 assignVar loc (AssignCall (fname, _) posexprs) = do
   let params = getVal' posexprs
   pushedPars <- mapM evalAndPush params
-  return $ mconcat pushedPars 
+  result <- updateWithRegister R0 loc
+  return $ (mconcat pushedPars 
         |> BL AL ("fun_" ++ fname)
-        |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params))
+        |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params)))
+        >< result
   where
     getVal' [] = []
     getVal' (e : es) = getVal' es ++ [getVal e]

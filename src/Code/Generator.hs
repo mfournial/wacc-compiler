@@ -46,7 +46,6 @@ genFuncCode (Function _ iden params sb) = do
   return $ (Define ("fun_" ++ (getVal iden))
         <| PUSH [LinkRegister]
         <| body)
-        |> POP [PC]
         |> FunSection "ltorg"
         |> DIVIDER
   where

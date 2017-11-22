@@ -124,7 +124,7 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
     getVal' (e : es) = getVal' es ++ [getVal e]
     evalAndPush e = expression e >>= \(instr, reg) -> return $ instr |> PUSH [getReg reg]
     getReg (PRL (Register r)) = r
-    getReg _ = error "In assignVar   (AssignCall _) where expression didn't return a reg"
+    getReg _ = error "In assignVar (AssignCall): expression didn't return a reg"
 
 assignVar loc _ = error "unimplemented assign"
 

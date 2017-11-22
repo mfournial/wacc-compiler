@@ -110,7 +110,7 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   let bytes   = nwords * 4
   let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc" 
   let moveMal = storeToRegisterPure R1 (Register R0)
-  assignArr  <- updateWithRegister R0 loc
+  assignArr  <- updateWithRegister R1 loc
   let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
   esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr

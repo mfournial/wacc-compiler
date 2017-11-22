@@ -110,7 +110,12 @@ addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r
 
 -- Needs to be changed to look into parent scopes
 varAddr :: String -> Junk -> Int
-varAddr name j = fromJust (M.lookup name (head (stack j)))
+varAddr name j = varAddr' name (stack j)
+  where
+    varAddr' [] _ = error "in VarAddr: Could not find the requested param"
+    varAddr' name' (t : ts)
+      | Nothing == M.lookup name' t = varAddr' name' ts
+      | otherwise = fromJust $  M.lookup name' t
 
 getStackVar :: String -> ARM RetLoc
 getStackVar s = getVar' s StackPtr

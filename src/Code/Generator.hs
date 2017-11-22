@@ -45,7 +45,7 @@ genFuncCode (Function _ iden params sb) = do
   --Commented out, caller should push parameters onto the stack.
   --mapM_ push $ map (\(Param _ identifier) -> getVal identifier) params
   body <- genScopeBlock sb []
-  return $ (Define ("fun_" ++ (getVal iden)) <|) body |> DIVIDER
+  return $ (Define ("fun_" ++ (getVal iden)) <|) body |> FunSection "ltorg" |> DIVIDER
 
 writeCode :: FilePath -> Instructions -> IO ()
 writeCode = (. (unlines . toList . fmap printARM)) . writeFile

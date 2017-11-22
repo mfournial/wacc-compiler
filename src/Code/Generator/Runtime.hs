@@ -111,14 +111,14 @@ generate ArrayCheck = do
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label PrintInt)
-       <| PUSH [LinkRegister]
+       <| PUSH [LinkRegister, R1]
        <| storeToRegisterPure R1 (Register R0) 
        >< storeToRegisterPure R0 intloc
        >< (ADD AL F R0 R0 (ImmOpInt 4)
        <| BL AL "printf"
        <| MOV AL F R0 (ImmOpInt 0)
        <| BL AL "fflush"
-       <| POP [PC]
+       <| POP [R1, PC]
        <| empty)
 
 generate PrintStr = do

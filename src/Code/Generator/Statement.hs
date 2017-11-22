@@ -5,9 +5,9 @@ module Code.Generator.Statement (
 where
 
 
-import Data.Sequence hiding (zip, length)
+import Data.Sequence hiding (zip, length, reverse)
 import Data.Sequence.Util
-import Prelude hiding(concat)
+import Prelude hiding (concat)
 
 import Data.Waskell.ADT
 import Code.Instructions
@@ -17,9 +17,9 @@ import Code.Generator.ARM
 import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
-import Data.Waskell.Types(unsfType)
+import Data.Waskell.Types (unsfType)
 import qualified Data.HashMap.Strict as M
-import Control.Monad.State.Lazy(get)
+import Control.Monad.State.Lazy (get)
 
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
@@ -115,9 +115,16 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
 
--- assignVar loc (AssignCall (fname, _) posexprs) = do
-  -- let exprs = map getVal posexprs
-
+assignVar loc (AssignCall (fname, _) posexprs) = do
+  let params = getVal' posexprs
+  pushedPars <- mapM evalAndPush params
+  return $ mconcat pushedPars |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params))
+  where
+    getVal' [] = []
+    getVal' (e : es) = getVal' es ++ [getVal e]
+    evalAndPush e = expression e >>= \(instr, reg) -> return $ instr |> PUSH [getReg reg]
+    getReg (PRL (Register r)) = r
+    getReg _ = error "In assignVar   (AssignCall _) where expression didn't return a reg"
 
 assignVar loc _ = error "unimplemented assign"
 

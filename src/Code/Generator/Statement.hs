@@ -117,6 +117,28 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
 
+
+assignVar loc (AssignPair (e, _) (e', _)) = do
+  let bytes   = 2 * 4  --One word for the value of each expression
+  let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc"
+  let moveMal = storeToRegisterPure R1 (Register R0)
+  assignPair <- updateWithRegister R1 loc
+  assleft    <- expression e >>= return . (>< updateWithRegisterPure R0 (RegLoc R1)) . fst
+  assright   <- expression e'>>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 4)) . fst
+  return $ mallins >< moveMal >< assignPair >< assleft >< assright
+
+assignVar loc (AssignPairElem (Left (e, _), _)) = do
+  (eins, _) <- expression e
+  let getlft = storeToRegisterPure R0 (RegLoc R0)
+  assign    <- updateWithRegister R0 loc
+  return $ eins >< getlft >< assign
+
+assignVar loc (AssignPairElem (Right (e, _), _)) = do
+  (eins, _) <- expression e
+  let getrgt = storeToRegisterPure R0 (RegLocOffset R0 4)
+  assign    <- updateWithRegister R0 loc
+  return $ eins >< getrgt >< assign
+
 assignVar loc (AssignCall (fname, _) posexprs) = do
   let params = getVal' posexprs
   pushedPars <- mapM evalAndPush params
@@ -131,9 +153,6 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
     evalAndPush e = expression e >>= \(instr, reg) -> return $ instr |> PUSH [getReg reg]
     getReg (PRL (Register r)) = r
     getReg _ = error "In assignVar (AssignCall): expression didn't return a reg"
-
-assignVar loc _ = error "unimplemented assign"
-
 
 genScopeBlock :: ScopeBlock 
               -> [NewScope]

@@ -27,7 +27,7 @@ generate _ StatSkip = return empty
 generate _ (StatementOperator (StatExit (i, _), _)) = do
   (ins, eloc) <- expression i
   strIns      <- storeToRegister R0 eloc
-  return $ strIns |> BL AL "exit"
+  return $ (ins >< strIns) |> BL AL "exit"
 
 generate _ (StatementOperator (StatReturn (e, _), _)) =
   (|>) <$> expressionReg e R0 <*> pop [PC]

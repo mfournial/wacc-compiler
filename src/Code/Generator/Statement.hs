@@ -64,6 +64,25 @@ generate ns (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
   loc <- getStackVar i
   assignVar loc ae
 
+generate ns (StatementOperator (StatAss (AssignToArrayElem arre) rhs, _)) = do
+  (getptr, _) <- expression (ArrayExpr arre)
+  let movtoten = storeToRegisterPure R10 (Register R0)
+  ass <- assignVar (PRL (RegLoc R10)) rhs
+  return $ getptr >< movtoten >< ass
+
+
+generate ns (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
+  (lftins, _) <- expression e
+  let movtoten = storeToRegisterPure R10 (Register R0)
+  ass <- assignVar (PRL (RegLoc R10)) rhs
+  return $ lftins >< movtoten >< ass
+
+generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
+  (rgtins, _) <- expression e
+  let movtoten = storeToRegisterPure R10 (Register R0)
+  ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
+  return $ rgtins >< movtoten >< ass
+
 generate ns (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
@@ -105,6 +124,8 @@ genScopeBlock'  (sts, NewScope scp)
       traverse (generate env) (fromList sts)
 -}
 
+--PRE: AssignVar does not modify R10, even if it pushes it beforehand
+--This is so we may pass it [R10] as a retloc
 assignVar :: RetLoc -> AssignRhs -> ARM Instructions
 assignVar loc (AssignExp (e, _)) = do
   (ins, eloc)    <- expression e

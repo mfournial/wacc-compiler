@@ -83,6 +83,12 @@ generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ rgtins >< movtoten >< ass
 
+generate ns (StatScope sb) = do
+  newEnv
+  body <- genScopeBlock sb ns
+  closeEnv
+  return $ body
+
 generate ns (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"

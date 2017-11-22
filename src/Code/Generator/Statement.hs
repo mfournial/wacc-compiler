@@ -69,8 +69,12 @@ generate ns (StatIf posexp sb sb') = do
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  thenCode <- genScopeBlock sb ns []
-  elseCode <- genScopeBlock sb' ns []
+  newEnv
+  thenCode <- genScopeBlock sb ns
+  closeEnv
+  newEnv
+  elseCode <- genScopeBlock sb' ns
+  closeEnv
   return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
@@ -83,7 +87,9 @@ generate ns (StatWhile posexp sb) = do
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  bodyCode <- genScopeBlock sb ns []
+  newEnv
+  bodyCode <- genScopeBlock sb ns
+  closeEnv
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
@@ -156,14 +162,11 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
 
 genScopeBlock :: ScopeBlock 
               -> [NewScope]
-              -> [String] -- ^ if SB is function, then these are the params that will be the globals
               -> ARM Instructions
-genScopeBlock (sts, NewScope scp) ns params = do
-  newEnv params
+genScopeBlock (sts, NewScope scp) ns = do
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get
   mapM_ (\i -> incrementStack) [1..stck]
-  closeEnv (length params)
   return $ concat instructions |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck))
 
 selectPrint :: Type -> RCID

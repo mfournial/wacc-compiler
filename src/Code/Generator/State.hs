@@ -32,7 +32,6 @@ module Code.Generator.State (
 )
 where
 
-import Data.Char(intToDigit)
 import Data.Maybe(fromJust)
 import Data.Sequence
 import Data.Sequence.Util
@@ -65,7 +64,7 @@ dataSection strs
     labels = fromList $ P.take (length strs) (map listPosToLabel [0..])
 
 listPosToLabel :: Int -> String
-listPosToLabel = ("msg_" ++) . pure . intToDigit
+listPosToLabel = ("msg_" ++) . pure . show 
 
 newEnv :: ARM ()
 newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))

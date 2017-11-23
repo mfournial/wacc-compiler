@@ -90,7 +90,7 @@ evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))
 
 
 intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
-intToReg i r = return (pure (MOV AL F r (ImmOpInt i)), PRL (Register r))
+intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))
 
 expressionReg :: Expression -> Reg -> ARM Instructions
 expressionReg e r = do

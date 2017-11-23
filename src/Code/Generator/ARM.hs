@@ -57,7 +57,7 @@ type RegMod = Reg -> Address -> Instructions
 
 
 storeToRegisterPure :: Reg -> PureRetLoc -> Instructions
-storeToRegisterPure r (ImmInt i)    = singleton (MOV AL F r (ImmOpInt i))
+storeToRegisterPure r (ImmInt i)    = singleton (LDR AL W r (Const i))
 storeToRegisterPure r (ImmChar c)   = singleton (MOV AL F r (ImmOpCh c))
 storeToRegisterPure r (Register r') = storeRegs r r'
 storeToRegisterPure r k             = modifyRegisterPure storeToRegister' r k

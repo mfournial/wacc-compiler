@@ -27,7 +27,8 @@ module Code.Generator.State (
   storeToRegister,
   updateWithRegister,
   modifyRegister,
-  runtimeInstructions
+  runtimeInstructions,
+  get
 )
 where
 

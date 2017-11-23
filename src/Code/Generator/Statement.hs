@@ -19,7 +19,6 @@ import Code.Generator.Runtime
 
 import Data.Waskell.Types (unsfType)
 import qualified Data.HashMap.Strict as M
-import Control.Monad.State.Lazy (get)
 
 generate :: [NewScope] -> Statement -> ARM Instructions
 generate _ StatSkip = return empty
@@ -29,8 +28,11 @@ generate _ (StatementOperator (StatExit (i, _), _)) = do
   strIns      <- storeToRegister R0 eloc
   return $ (ins >< strIns) |> BL AL "exit"
 
-generate _ (StatementOperator (StatReturn (e, _), _)) =
-  (|>) <$> expressionReg e R0 <*> pop [PC]
+generate _ (StatementOperator (StatReturn (e, _), _)) = do
+  ins <- expressionReg e R0
+  stck <- fmap (M.size . head . stack) get
+  let stackChange = immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * (stck))))
+  return $ ins >< stackChange >< singleton (POP [PC])
 
 generate ns (StatementOperator (StatPrint (e, _), _)) = do
   (ins, eloc) <- expression e
@@ -89,9 +91,7 @@ generate ns (StatementOperator (StatFree posexp, _)) = do
   return $ expInstr |> brFree
 
 generate ns (StatScope sb) = do
-  newEnv
   body <- genScopeBlock sb ns
-  closeEnv
   return $ body
 
 generate ns (StatIf posexp sb sb') = do
@@ -99,12 +99,8 @@ generate ns (StatIf posexp sb sb') = do
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  newEnv
   thenCode <- genScopeBlock sb ns
-  closeEnv
-  newEnv
   elseCode <- genScopeBlock sb' ns
-  closeEnv
   return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
@@ -117,9 +113,7 @@ generate ns (StatWhile posexp sb) = do
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  newEnv
   bodyCode <- genScopeBlock sb ns
-  closeEnv
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
@@ -197,9 +191,11 @@ genScopeBlock :: ScopeBlock
               -> [NewScope]
               -> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do
+  newEnv
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
-  stck <- fmap (M.size . head . stack) get
+  stck <- fmap (M.size . head . stack) get --Exclude number of program args
   mapM_ (\i -> decrementStack) [1..stck]
+  closeEnv
   return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
 
 selectPrint :: Type -> RCID

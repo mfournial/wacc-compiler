@@ -85,10 +85,13 @@ generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ rgtins >< movtoten >< ass
 
-generate ns (StatementOperator (StatFree posexp, _)) = do
-  (expInstr, _) <- expression (getVal posexp)
+generate ns (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
+  loc    <- getStackVar s
+  ins    <- storeToRegister R0 loc
   brFree <- branchTo Free
-  return $ expInstr |> brFree
+  let clearReg = MOV AL F R0 (ImmOpInt 0)
+  clear  <- updateWithRegister R0 loc
+  return $ (ins |> brFree |> clearReg) >< clear
 
 generate ns (StatScope sb) = do
   body <- genScopeBlock sb ns

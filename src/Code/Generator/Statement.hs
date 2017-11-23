@@ -92,11 +92,10 @@ generate (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) =
 generate (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
   loc       <- getStackVar s
   ins       <- storeToRegister R0 loc
-  checknull <- branchTo NullCheck
   brFree    <- branchTo Free
   let clearReg = MOV AL F R0 (ImmOpInt 0)
   clear  <- updateWithRegister R0 loc
-  return $ (ins |> checknull |> brFree |> clearReg) >< clear
+  return $ (ins |> brFree |> clearReg) >< clear
 
 generate (StatScope sb) = do
   body <- genScopeBlock sb

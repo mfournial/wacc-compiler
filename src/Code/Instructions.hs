@@ -30,6 +30,7 @@ data Instr =
     | RSB Condition Set Reg Reg Op2
     | ADD Condition Set Reg Reg Op2
     | MUL Condition Set Reg Reg Reg
+    | SMULL Condition Set Reg Reg Reg Reg
     | MLA Condition Set Reg Reg Reg
     | LDR Condition Mem Reg Address
     | STR Condition Mem Reg Address
@@ -152,7 +153,8 @@ instance PrintARM Instr where
     if op2 == (ImmOpInt 0) && (reg == oReg)
       then ""
       else "\t\t" ++ "ADD" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(op2)
-  printARM (MUL  cond set reg oReg oReg1) = "\t\t" ++ "MUL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (MUL  cond set reg oReg oReg1) = "\t\t" ++ "SMULL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
+  printARM (SMULL  cond set reg oReg oReg1 oReg2) = "\t\t" ++ "SMULL" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1) ++ ", " ++ printARM(oReg2)
   printARM (MLA  cond set reg oReg oReg1) = "\t\t" ++ "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
   printARM (LDR  cond mem reg address)    = "\t\t" ++ "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
   printARM (STR  cond mem reg address)    = "\t\t" ++ "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)

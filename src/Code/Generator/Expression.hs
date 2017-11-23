@@ -54,7 +54,7 @@ expression (ArrayExpr (ae, _)) = do
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
 evalUExp :: UnaryOperator -> ARM Instructions
-evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL F R0 R0 (ImmOpInt 0)) |> e
+evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e
 evalUExp UBang   = return $ singleton (EOR AL F R0 R0 (ImmOpInt 1))
 evalUExp ULength = return $ storeToRegisterPure R0 (RegLoc R0)
 -- UOrd and UChr actually do nothing! They exist only for type safety.
@@ -62,7 +62,13 @@ evalUExp UOrd    = return empty
 evalUExp UChr    = return empty
 
 evalBExp :: BinaryOperator -> ARM Instructions
-evalBExp BTimes     = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (MUL AL T R0 R0 R1) |> e
+
+evalBExp BTimes     = do
+  let smull = SMULL AL F R0 R1 R0 R1
+  let cmp   = CMP AL R1 (ShiftReg R0 (ASR 31))
+  checkov  <- branchToIf Neq ThrowOverflowErr
+  return $ empty |> smull |> cmp |> checkov 
+
 evalBExp BDivide    = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idiv"
 evalBExp BModulus   = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idivmod" |> MOV AL F R0 (ShiftReg R1 NSH) 
 evalBExp BPlus      = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (ADD AL T R0 R0 (ShiftReg R1 NSH)) |> e

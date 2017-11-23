@@ -294,7 +294,6 @@ AssignLhs : Identifier { AssignToIdent $1 }
           | PairElem { AssignToPair $1 }
 AssignRhs :: { AssignRhs }
 AssignRhs : Expression { AssignExp $1 }
-          | StringLiteral { AssignArrayLit $ ArrayLiteral $ zip (map (CharExpr) (mkString $1)) (repeat (0,0)) }
           | ArrayLiteral { AssignArrayLit $1 }
           | 'newpair' '(' Expression ',' Expression ')' { AssignPair $3 $5 }
           | PairElem { AssignPairElem $1 }
@@ -365,6 +364,7 @@ Expression : Expression '||' Expression
            | TrueToken { (BoolExp (True), $1) }
            | FalseToken { (BoolExp (False), $1) }
            | CharLiteral { (CharExpr (mkChar $1), getPos $1) }
+           | StringLiteral { (StringExpr (mkString $1), getPos $1) }
            | NullT { (PairExpr, $1) }
            | Identifier { (IdentExpr $1, getPos $1) }
            | ArrayElem { (ArrayExpr $1, getPos $1) }

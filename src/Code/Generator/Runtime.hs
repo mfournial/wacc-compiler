@@ -27,6 +27,7 @@ names :: [(RCID, String)]
 names = [ (PrintStr, "runtime_print_string")
         , (PrintInt, "runtime_print_int")
         , (PrintChar, "runtime_print_char")
+        , (PrintCharArray, "runtime_print_char_array")
         , (PrintBool, "runtime_print_bool")
         , (PrintRef, "runtime_print_ref")
         , (ReadInt, "runtime_read_int")
@@ -87,11 +88,38 @@ generate PrintBool = do
         <| empty
 
 generate PrintChar =
-    return $ Define (label PrintChar)
-          <| PUSH [LinkRegister, R0]
-          <| BL AL "putchar"
-          <| POP [R0, PC]
-          <| empty
+  return $ Define (label PrintChar)
+        <| PUSH [LinkRegister, R0]
+        <| BL AL "putchar"
+        <| POP [R0, PC]
+        <| empty
+
+
+generate PrintCharArray =
+  return $ Define (label PrintCharArray)
+        <| PUSH [LinkRegister, R0, R1, R2, R3]
+        <| LDR AL W R1 (OffReg R0 (Int 0) False)
+        <| MOV AL F R2 (ShiftReg R0 NSH)
+        <| ADD AL F R3 R0 (ImmOpInt 4)
+        <| LDR AL W R2 (OffReg R3 (Int 0) False)
+        <| CMP AL R2 (ImmOpInt 255)
+        <| B GTh "runtime_print_char_array_return"
+        <| B AL "runtime_print_char_array_cond"
+        <| Define "runtime_print_char_array_body"
+        <| LDR AL W R0 (OffReg R3 (Int 0) False)
+        <| PUSH [R1, R3]        
+        <| BL AL "putchar"
+        <| POP [R3, R1]
+        <| ADD AL F R3 R3 (ImmOpInt 4)
+        <| SUB AL F R1 R1 (ImmOpInt 1)
+        <| Define "runtime_print_char_array_cond"
+        <| CMP AL R1 (ImmOpInt 0)
+        <| B Neq "runtime_print_char_array_body"
+        <| POP [R3, R2, R1, R0, PC]
+        <| Define "runtime_print_char_array_return"
+        <| BL AL (label PrintStr)
+        <| POP [R3, R2, R1, R0, PC]
+        <| empty
 
 generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
@@ -138,13 +166,13 @@ generate PrintInt = do
 generate PrintStr = do
  sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
-       <| PUSH [LinkRegister, R0, R1] 
+       <| PUSH [LinkRegister, R0, R1, R2] 
        <| storeToRegisterPure R1 (RegLoc R0))
        >< (ADD AL F R2 R0 (ImmOpInt 4) 
        <| storeToRegisterPure R0 sloc) 
        >< (ADD AL F R0 R0 (ImmOpInt 4) <| BL AL "printf" 
        <| MOV AL F R0 (ImmOpInt 0) <| BL AL "fflush"
-       <| POP [R1, R0, PC]
+       <| POP [R2, R1, R0, PC]
        <| empty)
 
 generate ReadChar = do

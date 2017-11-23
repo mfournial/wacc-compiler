@@ -31,6 +31,7 @@ data RCID =
       PrintStr
     | PrintInt
     | PrintChar
+    | PrintCharArray
     | PrintBool
     | ReadInt
     | ReadChar

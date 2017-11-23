@@ -106,9 +106,9 @@ addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r
     addDependencies name names
       | name == ThrowRuntimeErr = tryAdd PrintStr names
       | name == ThrowDerefRuntimeErr = tryAdd PrintStr names
-      | name == Free || name == NullCheck
+      | name == Free
           = tryAdd PrintStr $ tryAdd ThrowDerefRuntimeErr names
-      | name == Checkdbz || name == ArrayCheck || name == ThrowOverflowErr
+      | name == Checkdbz || name == NullCheck || name == ArrayCheck || name == ThrowOverflowErr
           = tryAdd PrintStr $ tryAdd ThrowRuntimeErr names
       | otherwise = names
 

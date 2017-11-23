@@ -165,7 +165,7 @@ generate NullCheck = do
         <| PUSH [LinkRegister, R0]
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
-        <| BL Eq (label ThrowDerefRuntimeErr)
+        <| BL Eq (label ThrowRuntimeErr)
         <| POP [R0, PC]
         <| empty
 

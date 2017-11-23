@@ -75,20 +75,25 @@ generate ns (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) =
 
 generate ns (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
   (lftins, _) <- expression e
+  checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
-  return $ lftins >< movtoten >< ass
+  return $ (lftins |> checkderef) >< movtoten >< ass
 
 generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
   (rgtins, _) <- expression e
+  checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
-  return $ rgtins >< movtoten >< ass
+  return $ (rgtins |> checkderef) >< movtoten >< ass
 
-generate ns (StatementOperator (StatFree posexp, _)) = do
-  (expInstr, _) <- expression (getVal posexp)
+generate ns (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
+  loc    <- getStackVar s
+  ins    <- storeToRegister R0 loc
   brFree <- branchTo Free
-  return $ expInstr |> brFree
+  let clearReg = MOV AL F R0 (ImmOpInt 0)
+  clear  <- updateWithRegister R0 loc
+  return $ (ins |> brFree |> clearReg) >< clear
 
 generate ns (StatScope sb) = do
   body <- genScopeBlock sb ns
@@ -162,15 +167,17 @@ assignVar loc (AssignPair (e, _) (e', _)) = do
 
 assignVar loc (AssignPairElem (Left (e, _), _)) = do
   (eins, _) <- expression e
+  checkderef  <- branchTo NullCheck
   let getlft = storeToRegisterPure R0 (RegLoc R0)
   assign    <- updateWithRegister R0 loc
-  return $ eins >< getlft >< assign
+  return $ (eins |> checkderef) >< getlft >< assign
 
 assignVar loc (AssignPairElem (Right (e, _), _)) = do
   (eins, _) <- expression e
+  checkderef  <- branchTo NullCheck
   let getrgt = storeToRegisterPure R0 (RegLocOffset R0 4)
   assign    <- updateWithRegister R0 loc
-  return $ eins >< getrgt >< assign
+  return $ (eins |> checkderef) >< getrgt >< assign
 
 assignVar loc (AssignCall (fname, _) posexprs) = do
   let params = getVal' posexprs

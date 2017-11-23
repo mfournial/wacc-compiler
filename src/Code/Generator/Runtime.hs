@@ -1,6 +1,7 @@
 module Code.Generator.Runtime(
   generateRuntime,
-  branchTo
+  branchTo,
+  branchToIf
 ) where
 
 import Prelude hiding (concat)
@@ -15,9 +16,12 @@ generateRuntime :: RCID -> ARM Instructions
 generateRuntime = generate
 
 branchTo :: RCID -> ARM Instr
-branchTo name = do
+branchTo = branchToIf AL
+
+branchToIf :: Condition -> RCID -> ARM Instr
+branchToIf cond name = do
   addToRuntime name
-  return $ BL AL (label name)
+  return $ BL cond (label name)
 
 names :: [(RCID, String)]
 names = [ (PrintStr, "runtime_print_string")
@@ -31,6 +35,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
+        , (NullCheck, "runtime_null_check")
         , (ThrowOverflowErr, "runtime_throw_overflow")
         ]
 
@@ -48,19 +53,19 @@ generate ThrowRuntimeErr =
 generate Free = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   return $ (Define (label Free)
-        <| PUSH [LinkRegister, R1]
+        <| PUSH [LinkRegister, R0, R1]
         <| storeToRegisterPure R1 (RegLoc R0))
         |> CMP AL R1 (ImmOpInt 0)
         |> LDR Eq W R0 (address sloc)
         |> B Eq (label ThrowRuntimeErr)
         |> BL AL "free"
-        |> POP [R1, PC]
+        |> POP [R1, R0, PC]
 
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"
   falseloc <- newStringLiteral "false\0"
   return $ Define (label PrintBool)
-        <| PUSH [LinkRegister]
+        <| PUSH [LinkRegister, R0]
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Neq W R0 (address trueloc)
         <| LDR Eq W R0 (address falseloc)
@@ -68,27 +73,27 @@ generate PrintBool = do
         <| BL AL "printf"
         <| MOV AL F R0 (ImmOpInt 0)
         <| BL AL "fflush"
-        <| POP [PC]
+        <| POP [R0, PC]
         <| empty
 
 generate PrintChar =
     return $ Define (label PrintChar)
-          <| PUSH [LinkRegister]
+          <| PUSH [LinkRegister, R0]
           <| BL AL "putchar"
-          <| POP [PC]
+          <| POP [R0, PC]
           <| empty
 
 generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
-        <| PUSH [LinkRegister, R1]
+        <| PUSH [LinkRegister, R0, R1]
         <| storeToRegisterPure R1 (Register R0))
         >< (storeToRegisterPure R0 refloc
         |> ADD AL F R0 R0 (ImmOpInt 4)
         |> BL AL "printf")
         >< (storeToRegisterPure R0 (ImmInt 0)
         |> BL AL "fflush"
-        |> POP [PC, R1])
+        |> POP [R1, R0, PC])
 
 generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
@@ -110,14 +115,14 @@ generate ArrayCheck = do
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label PrintInt)
-       <| PUSH [LinkRegister, R1]
+       <| PUSH [LinkRegister, R0, R1]
        <| storeToRegisterPure R1 (Register R0) 
        >< storeToRegisterPure R0 intloc
        >< (ADD AL F R0 R0 (ImmOpInt 4)
        <| BL AL "printf"
        <| MOV AL F R0 (ImmOpInt 0)
        <| BL AL "fflush"
-       <| POP [R1, PC]
+       <| POP [R1, R0, PC]
        <| empty)
 
 generate PrintStr = do
@@ -139,11 +144,21 @@ generate ReadChar = do
 generate Checkdbz = do
   zloc <- newStringLiteral "DivideByZeroError: divide or modulo by zero\0"
   return $ Define (label Checkdbz)
-        <| PUSH [LinkRegister]
+        <| PUSH [LinkRegister, R0, R1]
         <| CMP AL R1 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
-        <| BL AL (label ThrowRuntimeErr)
-        <| POP [PC]
+        <| BL Eq (label ThrowRuntimeErr)
+        <| POP [R1, R0, PC]
+        <| empty
+
+generate NullCheck = do
+  zloc <- newStringLiteral "Attempt to deref null variable\0"
+  return $ Define (label NullCheck)
+        <| PUSH [LinkRegister, R0]
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR Eq W R0 (address zloc)
+        <| BL Eq (label ThrowRuntimeErr)
+        <| POP [R0, PC]
         <| empty
 
 generate ReadInt = do
@@ -151,9 +166,9 @@ generate ReadInt = do
   return $ Define (label ReadInt) <| scanfCall intloc
 
 generate ThrowOverflowErr = do
-  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+  err <- newStringLiteral "Over/UnderflowError: the result is too large/small to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
-        <| (storeToRegisterPure R0 msgloc
+        <| (storeToRegisterPure R0 err
         |> BL AL (label ThrowRuntimeErr))
 
 scanfCall :: PureRetLoc -> Instructions

@@ -16,6 +16,7 @@ module Code.Generator.State (
   decrementStack,
   newState,
   nextLabel,
+  lookupType,
   newEnv,
   newFunctionEnv,
   closeEnv,
@@ -32,7 +33,9 @@ module Code.Generator.State (
 )
 where
 
-import Data.Waskell.ADT(NewScope)
+import Data.Waskell.ADT(NewScope, Type, Expression)
+import Data.Waskell.Types(unsfType)
+
 import Data.Maybe(fromJust)
 import Data.Sequence
 import Data.Sequence.Util
@@ -136,6 +139,9 @@ addToTable s addr (m : mps) = M.insert s addr m : mps
 
 nextLabel :: String -> ARM String
 nextLabel s = state (\junk -> ("lab_" ++ show (ref junk) ++ "_" ++ s, junk{ref = ref junk + 1}))
+
+lookupType :: Expression -> ARM Type
+lookupType e = fmap scope get >>= return . (unsfType e)
 
 newState :: Junk
 newState = Junk empty [] [] [] 0 0 empty

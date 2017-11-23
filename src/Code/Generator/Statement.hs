@@ -17,77 +17,79 @@ import Code.Generator.ARM
 import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
-import Data.Waskell.Types (unsfType)
 import qualified Data.HashMap.Strict as M
 
-generate :: [NewScope] -> Statement -> ARM Instructions
-generate _ StatSkip = return empty
+generate :: Statement -> ARM Instructions
+generate StatSkip = return empty
 
-generate _ (StatementOperator (StatExit (i, _), _)) = do
+generate (StatementOperator (StatExit (i, _), _)) = do
   (ins, eloc) <- expression i
   strIns      <- storeToRegister R0 eloc
   return $ (ins >< strIns) |> BL AL "exit"
 
-generate _ (StatementOperator (StatReturn (e, _), _)) = do
+generate (StatementOperator (StatReturn (e, _), _)) = do
   ins <- expressionReg e R0
   stck <- fmap (M.size . head . stack) get
   let stackChange = immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * (stck))))
   return $ ins >< stackChange >< singleton (POP [PC])
 
-generate ns (StatementOperator (StatPrint (e, _), _)) = do
+generate (StatementOperator (StatPrint (e, _), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchTo $ selectPrint (unsfType e ns)
+  t <- lookupType e
+  printrt     <- branchTo $ selectPrint t
   return $ (ins >< strIns) |> printrt
 
-generate ns (StatementOperator (StatPrintLn (e, _), _)) = do
+generate (StatementOperator (StatPrintLn (e, _), _)) = do
   (ins, eloc) <- expression e
   strIns      <- storeToRegister R0 eloc
-  printrt     <- branchTo $ selectPrint (unsfType e ns)
+  t           <- lookupType e
+  printrt     <- branchTo $ selectPrint t
   newline     <- newStringLiteral "\n"
   let strnl   = storeToRegisterPure R0 newline
   printnl     <- branchTo PrintStr
   return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
 
-generate ns (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
+generate (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
   (StackPtr isp)  <- getStackVar s
   off <- getOffsetFromStackPtr isp
-  readchr <- branchTo $ selectReadType(unsfType(IdentExpr i) ns)
+  t   <- lookupType (IdentExpr i)
+  readchr <- branchTo $ selectReadType t
   return $ (singleton(ADD AL F  R0 StackPointer (ImmOpInt off))
             |> readchr)
 
 --This is slightly inefficient but avoids heavy code duplication TODO: Change implementation from declare then assign to all in one go
-generate ns (StatementOperator (StatDecAss t (s, _) ae, p)) = do
+generate (StatementOperator (StatDecAss t (s, _) ae, p)) = do
   (decin, (loc : [])) <- referencedPush [R0] [s]
   assins              <- assignVar loc ae
   return $ decin <| assins
 
-generate ns (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
+generate (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
   loc <- getStackVar i
   assignVar loc ae
 
-generate ns (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
+generate (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
   getptr <- getArrayEPtr arre
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ getptr >< movtoten >< ass
 
 
-generate ns (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
+generate (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
   (lftins, _) <- expression e
   checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ (lftins |> checkderef) >< movtoten >< ass
 
-generate ns (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
+generate (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
   (rgtins, _) <- expression e
   checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ (rgtins |> checkderef) >< movtoten >< ass
 
-generate ns (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
+generate (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
   loc       <- getStackVar s
   ins       <- storeToRegister R0 loc
   checknull <- branchTo NullCheck
@@ -96,17 +98,17 @@ generate ns (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
   clear  <- updateWithRegister R0 loc
   return $ (ins |> checknull |> brFree |> clearReg) >< clear
 
-generate ns (StatScope sb) = do
-  body <- genScopeBlock sb ns
+generate (StatScope sb) = do
+  body <- genScopeBlock sb
   return $ body
 
-generate ns (StatIf posexp sb sb') = do
+generate (StatIf posexp sb sb') = do
   (expInstr, loc) <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
   storeIns <- storeToRegister R4 loc
-  thenCode <- genScopeBlock sb ns
-  elseCode <- genScopeBlock sb' ns
+  thenCode <- genScopeBlock sb
+  elseCode <- genScopeBlock sb'
   return $ expInstr
         >< (storeIns
         |> CMP AL R4 (ImmOpInt 0)
@@ -114,12 +116,12 @@ generate ns (StatIf posexp sb sb') = do
         >< ((thenCode |> B AL fiLabel)
         >< ((Define elseLabel <| elseCode) |> Define fiLabel))
 
-generate ns (StatWhile posexp sb) = do
+generate (StatWhile posexp sb) = do
   (expInstr, loc) <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
   storeIns <- storeToRegister R4 loc
-  bodyCode <- genScopeBlock sb ns
+  bodyCode <- genScopeBlock sb
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
          >< (storeIns
@@ -127,7 +129,7 @@ generate ns (StatWhile posexp sb) = do
          |> B Eq doLabel)
 
 
-generate _ _ = error "How end up here ???"
+generate _ = error "How end up here ???"
 
 {- Will Jones God code
 genScopeBlock' :: ScopeBlock -> ARM Instructions
@@ -196,11 +198,10 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
     getReg _ = error "In assignVar (AssignCall): expression didn't return a reg"
 
 genScopeBlock :: ScopeBlock 
-              -> [NewScope]
               -> ARM Instructions
-genScopeBlock (sts, NewScope scp) ns = do
+genScopeBlock (sts, NewScope scp) = do
   newEnv (NewScope scp)
-  instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
+  instructions <- mapM generate (fromList sts)
   stck <- fmap (M.size . head . stack) get --Exclude number of program args
   mapM_ (\i -> decrementStack) [1..stck]
   closeEnv

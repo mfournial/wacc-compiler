@@ -27,7 +27,7 @@ genCode t =  dataSec' >< instr
 genCode' :: WaccTree -> ARM Instructions
 genCode' (WaccTree (Program fcs sb)) = do
   finstr <- genFuncsCode $ fromList $ map getVal fcs
-  minstr <- genScopeBlock sb []
+  minstr <- genScopeBlock sb
   ids <- runtimeInstructions
   instrs <- mapM generateRuntime ids
   let rinstr = concat instrs
@@ -47,7 +47,7 @@ genFuncCode (Function _ iden params sb) = do
   newEnv emptyScope
   mapM_ pushVar (getIden params)
   (lr, _) <- push [LinkRegister]
-  body <- genScopeBlock sb []
+  body <- genScopeBlock sb
   mapM_ (\i -> decrementStack) [0.. length params] -- Note we're canceling our local effect of pushing the args to the stack plus the Linkregister
   closeEnv
   return $ ((Define ("fun_" ++ (getVal iden))

@@ -1,6 +1,7 @@
 module Code.Generator.Runtime(
   generateRuntime,
-  branchTo
+  branchTo,
+  branchToIf
 ) where
 
 import Prelude hiding (concat)
@@ -15,9 +16,12 @@ generateRuntime :: RCID -> ARM Instructions
 generateRuntime = generate
 
 branchTo :: RCID -> ARM Instr
-branchTo name = do
+branchTo = branchToIf AL
+
+branchToIf :: Condition -> RCID -> ARM Instr
+branchToIf cond name = do
   addToRuntime name
-  return $ BL AL (label name)
+  return $ BL cond (label name)
 
 names :: [(RCID, String)]
 names = [ (PrintStr, "runtime_print_string")
@@ -31,6 +35,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
+        , (NullCheck, "runtime_null_check")
         , (ThrowOverflowErr, "runtime_throw_overflow")
         ]
 
@@ -142,8 +147,18 @@ generate Checkdbz = do
         <| PUSH [LinkRegister, R0, R1]
         <| CMP AL R1 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
-        <| BL AL (label ThrowRuntimeErr)
+        <| BL Eq (label ThrowRuntimeErr)
         <| POP [R1, R0, PC]
+        <| empty
+
+generate NullCheck = do
+  zloc <- newStringLiteral "Attempt to deref null variable\0"
+  return $ Define (label NullCheck)
+        <| PUSH [LinkRegister, R0]
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR Eq W R0 (address zloc)
+        <| BL Eq (label ThrowRuntimeErr)
+        <| POP [R0, PC]
         <| empty
 
 generate ReadInt = do
@@ -151,9 +166,9 @@ generate ReadInt = do
   return $ Define (label ReadInt) <| scanfCall intloc
 
 generate ThrowOverflowErr = do
-  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+  err <- newStringLiteral "Over/UnderflowError: the result is too large/small to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
-        <| (storeToRegisterPure R0 msgloc
+        <| (storeToRegisterPure R0 err
         |> BL AL (label ThrowRuntimeErr))
 
 scanfCall :: PureRetLoc -> Instructions

@@ -32,6 +32,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (ReadInt, "runtime_read_int")
         , (ReadChar, "runtime_read_char")
         , (ThrowRuntimeErr, "runtime_throw_err")
+        , (ThrowDerefRuntimeErr, "runtime_throw_deref_err")
         , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
@@ -50,6 +51,13 @@ generate ThrowRuntimeErr =
         <| BL AL "exit"
         <| empty
 
+generate ThrowDerefRuntimeErr =
+  return $ Define (label ThrowRuntimeErr)
+        <| BL AL (label PrintStr)
+        <| MOV AL F R0 (ImmOpInt (134))
+        <| BL AL "exit"
+        <| empty
+
 generate Free = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   return $ (Define (label Free)
@@ -57,7 +65,7 @@ generate Free = do
         <| storeToRegisterPure R1 (RegLoc R0))
         |> CMP AL R1 (ImmOpInt 0)
         |> LDR Eq W R0 (address sloc)
-        |> B Eq (label ThrowRuntimeErr)
+        |> B Eq (label ThrowDerefRuntimeErr)
         |> BL AL "free"
         |> POP [R1, R0, PC]
 
@@ -152,12 +160,12 @@ generate Checkdbz = do
         <| empty
 
 generate NullCheck = do
-  zloc <- newStringLiteral "Attempt to deref null variable\0"
+  zloc <- newStringLiteral "NullReferenceError: dereference a null reference\0"
   return $ Define (label NullCheck)
         <| PUSH [LinkRegister, R0]
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
-        <| BL Eq (label ThrowRuntimeErr)
+        <| BL Eq (label ThrowDerefRuntimeErr)
         <| POP [R0, PC]
         <| empty
 

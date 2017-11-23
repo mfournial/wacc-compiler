@@ -51,7 +51,10 @@ expression (ArrayExpr (ae, _)) = do
   let deref = storeToRegisterPure R0 (RegLoc R0)
   return $ (getptr >< deref, PRL (Register R0))
   
-expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
+expression (StringExpr str) = do
+  lit <- newStringLiteral str
+  let deref = storeToRegisterPure R0 lit
+  return (deref, PRL (Register R0))
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e

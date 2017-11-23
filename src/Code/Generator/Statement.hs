@@ -209,10 +209,10 @@ genScopeBlock (sts, NewScope scp) = do
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef
 selectPrint (Pairable (BaseType BoolType))                          = PrintBool
-selectPrint (Pairable (BaseType StringType))                        = PrintStr
+selectPrint (Pairable (BaseType StringType))                        = PrintCharArray
 selectPrint (Pairable (BaseType IntType))                           = PrintInt
 selectPrint (Pairable (BaseType CharType))                          = PrintChar
-selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintStr
+selectPrint (Pairable (ArrayType (Pairable (BaseType CharType))))   = PrintCharArray
 selectPrint (Pairable (ArrayType _))                                = PrintRef
 selectPrint (Pairable (PairNull))                                   = PrintRef
 selectPrint _                                                       = error "Front end failed to validate types of expressions"

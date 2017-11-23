@@ -37,6 +37,7 @@ data RCID =
     | Free
     | PrintRef
     | ArrayCheck
+    | NullCheck
     | Checkdbz
   deriving (Eq)
 

@@ -35,6 +35,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
+        , (NullCheck, "runtime_null_check")
         , (ThrowOverflowErr, "runtime_throw_overflow")
         ]
 
@@ -146,8 +147,18 @@ generate Checkdbz = do
         <| PUSH [LinkRegister, R0, R1]
         <| CMP AL R1 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
-        <| BL AL (label ThrowRuntimeErr)
+        <| BL Eq (label ThrowRuntimeErr)
         <| POP [R1, R0, PC]
+        <| empty
+
+generate NullCheck = do
+  zloc <- newStringLiteral "Attempt to deref null variable\0"
+  return $ Define (label NullCheck)
+        <| PUSH [LinkRegister, R0]
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR Eq W R0 (address zloc)
+        <| BL Eq (label ThrowRuntimeErr)
+        <| POP [R0, PC]
         <| empty
 
 generate ReadInt = do

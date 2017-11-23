@@ -50,11 +50,7 @@ import Code.Generator.ARM
 --import Data.Waskell.ADT 
 
 newStringLiteral :: String -> ARM PureRetLoc
-newStringLiteral str = do
-  j <- get
-  let strs = strLits j
-  let ind = elemIndexL str strs
-  maybe (put j{strLits = strs |> str} >> return (StringLit (listPosToLabel (length strs)))) (\i -> return (StringLit (listPosToLabel i))) ind
+newStringLiteral str = state (\junk -> (StringLit (listPosToLabel (length (strLits junk))), junk{strLits = strLits junk |> str}))
 
 getStringLiterals :: ARM Data
 getStringLiterals = state (\junk -> (strLits junk, junk))

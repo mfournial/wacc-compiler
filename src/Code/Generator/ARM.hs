@@ -34,7 +34,7 @@ data RCID =
     | ReadChar
     | ThrowRuntimeErr
     | ThrowOverflowErr
-    | FreePair
+    | Free
     | PrintRef
     | ArrayCheck
     | Checkdbz

@@ -28,7 +28,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (ReadInt, "runtime_read_int")
         , (ReadChar, "runtime_read_char")
         , (ThrowRuntimeErr, "runtime_throw_err")
-        , (FreePair, "runtime_free_pair")
+        , (Free, "runtime_free_pair")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
         , (ThrowOverflowErr, "runtime_throw_overflow")
@@ -41,19 +41,20 @@ generate :: RCID -> ARM Instructions
 generate ThrowRuntimeErr =
   return $ Define (label ThrowRuntimeErr)
         <| BL AL (label PrintStr)
+        <| MOV AL F R0 (ImmOpInt (-1))
         <| BL AL "exit"
         <| empty
 
-generate FreePair = do
+generate Free = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
-  return $ Define (label FreePair)
-        <| PUSH [LinkRegister]
-        <| CMP AL R0 (ImmOpInt 0)
-        <| LDR Eq W R0 (address sloc)
-        <| B Eq (label ThrowRuntimeErr)
-        <| BL AL "free"
-        <| POP [PC]
-        <| empty
+  return $ (Define (label Free)
+        <| PUSH [LinkRegister, R1]
+        <| storeToRegisterPure R1 (RegLoc R0))
+        |> CMP AL R1 (ImmOpInt 0)
+        |> LDR Eq W R0 (address sloc)
+        |> B Eq (label ThrowRuntimeErr)
+        |> BL AL "free"
+        |> POP [R1, PC]
 
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"
@@ -80,27 +81,31 @@ generate PrintChar =
 generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
-        <| PUSH [LinkRegister]
+        <| PUSH [LinkRegister, R1]
         <| storeToRegisterPure R1 (Register R0))
         >< (storeToRegisterPure R0 refloc
         |> ADD AL F R0 R0 (ImmOpInt 4)
         |> BL AL "printf")
         >< (storeToRegisterPure R0 (ImmInt 0)
         |> BL AL "fflush"
-        |> POP [PC])
+        |> POP [PC, R1])
 
 generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
   return $ Define (label ArrayCheck)
-        <| CMP AL R1 (ImmOpInt 0)
-        <| LDR LTh W R1 (address negIndex)
+        <| PUSH [LinkRegister, R0, R1, R2]
+        <| MOV AL F R2 (ShiftReg R0 NSH)
+        <| MOV AL F R0 (ShiftReg R1 NSH)
+        <| MOV AL F R1 (ShiftReg R2 NSH)
+        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR LTh W R0 (address negIndex)
         <| B LTh (label ThrowRuntimeErr)
-        <| (storeToRegisterPure R0 (RegLoc R0)
-        |> CMP AL R1 (ShiftReg R0 NSH)
-        |> LDR CS W R1 (address badIndex)
-        |> BL CS (label ThrowRuntimeErr)
-        |> POP [PC])
+        <| (storeToRegisterPure R1 (RegLoc R1)
+        |> CMP AL R0 (ShiftReg R1 NSH)
+        |> LDR GE W R0 (address badIndex)
+        |> BL GE (label ThrowRuntimeErr)
+        |> POP [R2, R1, R0, PC])
 
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
@@ -118,13 +123,13 @@ generate PrintInt = do
 generate PrintStr = do
  sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
-       <| PUSH [LinkRegister] 
+       <| PUSH [LinkRegister, R0, R1] 
        <| storeToRegisterPure R1 (RegLoc R0))
        >< (ADD AL F R2 R0 (ImmOpInt 4) 
        <| storeToRegisterPure R0 sloc) 
        >< (ADD AL F R0 R0 (ImmOpInt 4) <| BL AL "printf" 
        <| MOV AL F R0 (ImmOpInt 0) <| BL AL "fflush"
-       <| POP [PC]
+       <| POP [R1, R0, PC]
        <| empty)
 
 generate ReadChar = do

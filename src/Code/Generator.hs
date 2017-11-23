@@ -43,10 +43,12 @@ genCode' (WaccTree (Program fcs sb)) = do
 
 genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
-  newFunctionEnv (getIden params)  
+  newEnv 
+  mapM_ pushVar (getIden params)
   (lr, _) <- push [LinkRegister]
   body <- genScopeBlock sb []
-  closeFunctionEnv (length params)
+  mapM_ (\i -> decrementStack) [0.. length params] -- Note we're canceling our local effect of pushing the args to the stack plus the Linkregister
+  closeEnv
   return $ ((Define ("fun_" ++ (getVal iden))
         <| lr
         <| body)

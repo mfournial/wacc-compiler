@@ -32,6 +32,7 @@ module Code.Generator.State (
 )
 where
 
+import Data.Waskell.ADT(NewScope)
 import Data.Maybe(fromJust)
 import Data.Sequence
 import Data.Sequence.Util
@@ -66,8 +67,8 @@ dataSection strs
 listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . show 
 
-newEnv :: ARM ()
-newEnv = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
+newEnv :: NewScope -> ARM ()
+newEnv s = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk, scope = s : scope junk}))
 
 newFunctionEnv :: [String] -- ^ Add the parameters to the function environment
                -> ARM ()
@@ -75,7 +76,7 @@ newFunctionEnv params = state (\junk -> ((), junk{stack = M.empty : stack junk, 
   >> mapM_ pushVar params
 
 closeEnv :: ARM ()
-closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk)}))
+closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk), scope = tail (scope junk)}))
 
 closeFunctionEnv :: Int -- ^ Number of parameters of the function
                  -> ARM ()
@@ -137,7 +138,7 @@ nextLabel :: String -> ARM String
 nextLabel s = state (\junk -> ("lab_" ++ show (ref junk) ++ "_" ++ s, junk{ref = ref junk + 1}))
 
 newState :: Junk
-newState = Junk empty [M.empty] [M.empty] 0 0 empty
+newState = Junk empty [] [] [] 0 0 empty
 
 storeToRegister :: Reg -> RetLoc -> ARM Instructions
 storeToRegister r (PRL k)     = return $ storeToRegisterPure r k

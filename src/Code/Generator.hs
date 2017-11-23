@@ -11,6 +11,7 @@ import Code.Generator.Statement
 import Code.Generator.Runtime
 import Code.Instructions
 import Data.Waskell.ADT 
+import Data.Waskell.Scope(emptyScope)
 
 produceASM :: FilePath -> WaccTree -> IO ()
 -- produceASM f = writeCode f . genCode 
@@ -43,7 +44,7 @@ genCode' (WaccTree (Program fcs sb)) = do
 
 genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
-  newEnv 
+  newEnv emptyScope
   mapM_ pushVar (getIden params)
   (lr, _) <- push [LinkRegister]
   body <- genScopeBlock sb []

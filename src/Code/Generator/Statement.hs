@@ -199,7 +199,7 @@ genScopeBlock :: ScopeBlock
               -> [NewScope]
               -> ARM Instructions
 genScopeBlock (sts, NewScope scp) ns = do
-  newEnv
+  newEnv (NewScope scp)
   instructions <- mapM (generate (NewScope scp : ns)) (fromList sts)
   stck <- fmap (M.size . head . stack) get --Exclude number of program args
   mapM_ (\i -> decrementStack) [1..stck]

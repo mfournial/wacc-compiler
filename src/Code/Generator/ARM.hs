@@ -2,6 +2,7 @@ module Code.Generator.ARM where
 
 import Control.Monad.State.Lazy(State)
 import Data.Sequence
+import Data.Waskell.ADT(NewScope)
 import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
@@ -12,6 +13,7 @@ data Junk = Junk {
   strLits :: Data,
   stack :: VarTable,
   heap :: VarTable,
+  scope :: [NewScope],
   sp :: Int,
   ref :: Int,
   runtime :: Seq RCID

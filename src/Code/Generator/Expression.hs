@@ -31,7 +31,8 @@ expression (IdentExpr (s, _)) = do
 expression (UExpr (uexp, _) (e, _)) = do
   (sub, loc)          <- expression e
   strRegIns           <- storeToRegister R0 loc
-  return $ (sub >< strRegIns >< evalUExp uexp, (PRL (Register R0)))
+  uns                 <- evalUExp uexp
+  return $ (sub >< strRegIns >< uns, (PRL (Register R0)))
 
 expression (BExp (e, _) (bop, _) (e', _)) = do
   (saveReg, _)  <- push [R1]
@@ -52,20 +53,20 @@ expression (ArrayExpr (ae, _)) = do
   
 expression (StringExpr str) = fmap ((empty,) . PRL) $ newStringLiteral str
 
-evalUExp :: UnaryOperator -> Instructions
-evalUExp UMinus  = singleton (RSB AL F R0 R0 (ImmOpInt 0))
-evalUExp UBang   = singleton (EOR AL F R0 R0 (ImmOpInt 1))
-evalUExp ULength = storeToRegisterPure R0 (RegLoc R0)
+evalUExp :: UnaryOperator -> ARM Instructions
+evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL F R0 R0 (ImmOpInt 0)) |> e
+evalUExp UBang   = return $ singleton (EOR AL F R0 R0 (ImmOpInt 1))
+evalUExp ULength = return $ storeToRegisterPure R0 (RegLoc R0)
 -- UOrd and UChr actually do nothing! They exist only for type safety.
-evalUExp UOrd    = empty
-evalUExp UChr    = empty
+evalUExp UOrd    = return empty
+evalUExp UChr    = return empty
 
 evalBExp :: BinaryOperator -> ARM Instructions
-evalBExp BTimes     = return $ singleton (MUL AL F R0 R0 R1)
+evalBExp BTimes     = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (MUL AL T R0 R0 R1) |> e
 evalBExp BDivide    = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idiv"
 evalBExp BModulus   = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idivmod" |> MOV AL F R0 (ShiftReg R1 NSH) 
-evalBExp BPlus      = return $ singleton (ADD AL F R0 R0 (ShiftReg R1 NSH))
-evalBExp BMinus     = return $ singleton (SUB AL F R0 R0 (ShiftReg R1 NSH))
+evalBExp BPlus      = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (ADD AL T R0 R0 (ShiftReg R1 NSH)) |> e
+evalBExp BMinus     = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (SUB AL T R0 R0 (ShiftReg R1 NSH)) |> e
 evalBExp BAnd       = return $ singleton (AND AL F R0 R0 (ShiftReg R1 NSH))
 evalBExp BOr        = return $ singleton (ORR AL F R0 R0 (ShiftReg R1 NSH))
 

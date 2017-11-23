@@ -1,6 +1,7 @@
 module Code.Generator.Runtime(
   generateRuntime,
-  branchTo
+  branchTo,
+  branchToIf
 ) where
 
 import Prelude hiding (concat)
@@ -15,9 +16,12 @@ generateRuntime :: RCID -> ARM Instructions
 generateRuntime = generate
 
 branchTo :: RCID -> ARM Instr
-branchTo name = do
+branchTo = branchToIf AL
+
+branchToIf :: Condition -> RCID -> ARM Instr
+branchToIf cond name = do
   addToRuntime name
-  return $ BL AL (label name)
+  return $ BL cond (label name)
 
 names :: [(RCID, String)]
 names = [ (PrintStr, "runtime_print_string")
@@ -151,9 +155,9 @@ generate ReadInt = do
   return $ Define (label ReadInt) <| scanfCall intloc
 
 generate ThrowOverflowErr = do
-  msgloc <- newStringLiteral "OverflowError: the result is too small/large to store in a 4-byte signed-integer.\n\0"
+  err <- newStringLiteral "Over/UnderflowError: the result is too large/small to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
-        <| (storeToRegisterPure R0 msgloc
+        <| (storeToRegisterPure R0 err
         |> BL AL (label ThrowRuntimeErr))
 
 scanfCall :: PureRetLoc -> Instructions

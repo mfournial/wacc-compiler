@@ -64,8 +64,7 @@ generate Free = do
   return $ (Define (label Free)
         <| PUSH [LinkRegister, R0, R1]
         <| CMP AL R0 (ImmOpInt 0)
-        <| BL Eq (label ThrowDerefRuntimeErr)
-        <| CMP AL R0 (ImmOpInt 0)
+        <| LDR Eq W R0 (address sloc)
         <| BL Eq (label ThrowDerefRuntimeErr)
         <| storeToRegisterPure R1 (RegLoc R0))
         |> CMP AL R1 (ImmOpInt 0)

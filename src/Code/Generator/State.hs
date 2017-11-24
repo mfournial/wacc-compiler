@@ -21,7 +21,7 @@ parts of the program.
 
 module Code.Generator.State
   ( Data
-  , Junk(..)
+  , ARMData(..)
   , Instructions
   , ARM
   , getVar
@@ -40,8 +40,8 @@ module Code.Generator.State
   , closeEnv
   , getOffsetFromStackPtr
   , addToRuntime
-  , storeToRegister
-  , updateWithRegister
+  , store
+  , update
   , modifyRegister
   , runtimeInstructions
   , push
@@ -59,7 +59,7 @@ import Control.Monad.State.Lazy
 import Data.Bifunctor (first)
 import Data.Maybe (fromJust, isNothing)
 import qualified Data.HashMap.Strict as M
-import Data.Sequence
+import Data.Sequence hiding (update)
 import Data.Sequence.Util
 import Prelude hiding (concat, length, lookup, null, zipWith)
 import qualified Prelude as P
@@ -67,7 +67,7 @@ import qualified Prelude as P
 
 -- | newStringLiteral adds the given string to the state to add in the data
 -- section on top of the file at the end of the compilation
-newStringLiteral :: String -> ARM PureRetLoc
+newStringLiteral :: String -> ARM PureLocation
 newStringLiteral str = do
   j <- get
   let strs = strLits j
@@ -113,7 +113,7 @@ closeEnv = modify (\j -> j {stack = tail (stack j), scope = tail (scope j)})
 -- | pushVar updates our local stack. It gives a local stack address to the
 -- given identifier to be able to calculate its offset later
 pushVar :: String -- ^ The identifier of the var to push
-        -> ARM RetLoc
+        -> ARM Location
 pushVar name =
   incrementStack >>
   state
@@ -129,7 +129,7 @@ pushVar name =
 
 -- | pushes the registers and updates the virtual stack
 push :: [Reg] -- ^ the list of regs to push
-     -> ARM (Instr, [RetLoc]) -- ^ the instructions to push the regs with local addresses
+     -> ARM (Instr, [Location]) -- ^ the instructions to push the regs with local addresses
 push rs = do
   locs <- mapM (\r -> incrementStack >> (fmap sp get) >>= return . StackPtr) rs
   return (PUSH rs, locs)
@@ -142,7 +142,7 @@ pop = fmap POP . (mapM (\r -> decrementStack >> return r))
 -- later retrieval
 referencedPush :: [Reg] -- ^ registers to push 
                -> [String] -- ^ the identifiers of the variables
-               -> ARM (Instr, [RetLoc])
+               -> ARM (Instr, [Location])
 referencedPush =
   ((.) . (.))
     ((fmap (first PUSH . P.unzip)) .
@@ -160,7 +160,7 @@ getVar :: String -- ^ the identifier of the variable
 getVar name = fmap (varAddr name) get
 
 -- | varAddr lookup the address of the given variable in the virtual stack
-varAddr :: String -> Junk -> Int
+varAddr :: String -> ARMData -> Int
 varAddr name j = varAddr' name (stack j)
   where
     varAddr' [] _ = error "in VarAddr: Could not find the requested param"
@@ -170,7 +170,7 @@ varAddr name j = varAddr' name (stack j)
 
 -- | getStackVar returns the location of the given identifier
 getStackVar :: String -- ^ the identifier of the variable
-            -> ARM RetLoc -- ^ The location of the variable
+            -> ARM Location -- ^ The location of the variable
 getStackVar s = fmap StackPtr $ getVar s 
 
 -- | addToRuntime manages the runtime state environment. It also adds the
@@ -222,27 +222,27 @@ lookupType :: Expression -- ^ the expression we want to know the type of
 lookupType = (`fmap` fmap scope get) . unsfType
 
 -- | helper that initialises the state
-newState :: Junk
-newState = Junk empty [] [] 0 0 empty
+newState :: ARMData
+newState = ARMData empty [] [] 0 0 empty
 
 -- | Stores the storable into the given register
-storeToRegister :: Reg -- ^ the register to store the var to
-                -> RetLoc -- ^ The storable to be stored
+store :: Reg -- ^ the register to store the var to
+                -> Location -- ^ The storable to be stored
                 -> ARM Instructions -- ^ the instructions to store the value
-storeToRegister r (PRL k) = return $ storeToRegisterPure r k
-storeToRegister r l       = modifyRegister storeToRegister' r l
+store r (PRL k) = return $ storePure r k
+store r l       = modifyRegister store' r l
 
 -- | Stores the value in the register into the given location
-updateWithRegister :: Reg -- ^ the register to store
-                   -> RetLoc -- ^ where to store the register
+update :: Reg -- ^ the register to store
+                   -> Location -- ^ where to store the register
                    -> ARM Instructions -- ^ the instructions to store the reg
-updateWithRegister r (PRL k) = return $ updateWithRegisterPure r k
-updateWithRegister r l       = modifyRegister updateWithRegister' r l
+update r (PRL k) = return $ updatePure r k
+update r l       = modifyRegister update' r l
 
 -- | Changes register values
 modifyRegister :: RegMod -- ^ Function to modify the register
                -> Reg -- ^ First register operand
-               -> RetLoc -- ^ Storable operand
+               -> Location -- ^ Storable operand
                -> ARM Instructions -- ^ the instructions to execute RegMod
 modifyRegister f r (StackPtr i) = do
   off <- getOffsetFromStackPtr i

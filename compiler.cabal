@@ -34,10 +34,10 @@ library
                    , Data.Waskell.ADT
                    , Data.Waskell.Error
                    , Data.Waskell.Scope
+                   , Code.Generator.State
                    , Happy.Waskell
   other-modules:     Code.Generator.ARM
                    , Code.Generator.Expression
-                   , Code.Generator.State
                    , Code.Generator.Statement
                    , Code.Generator.Runtime
                    , Code.Instructions

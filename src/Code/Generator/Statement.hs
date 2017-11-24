@@ -5,7 +5,7 @@ where
 
 
 import qualified Data.HashMap.Strict as M
-import Data.Sequence hiding (zip, length, reverse)
+import Data.Sequence hiding (zip, length, reverse, update)
 import Data.Sequence.Util
 import Prelude hiding (concat)
 
@@ -45,7 +45,7 @@ generate (StatementOperator (StatPrintLn (e, _), _)) = do
   t           <- lookupType e
   printrt     <- branchTo $ selectPrint t
   newline     <- newStringLiteral "\n"
-  let strnl   = storeToRegisterPure R0 newline
+  let strnl   = storePure R0 newline
   printnl     <- branchTo PrintStr
   return $ ((ins |> printrt) >< strnl) |> printnl
 
@@ -66,14 +66,14 @@ generate (StatementOperator ((StatRead (AssignToArrayElem (arre, p)), _))) = do
 
 generate (StatementOperator (StatRead (AssignToPair(Left (e@(IdentExpr (s,_)),_), _)), _)) = do
    regs        <- getStackVar s
-   strregs     <- storeToRegister R0 regs 
+   strregs     <- store R0 regs 
    checkderef  <- branchTo NullCheck
    readchr     <- (getPairTypeL e)
    return $ (strregs |> checkderef) |> readchr
 
 generate (StatementOperator (StatRead (AssignToPair(Right (e@(IdentExpr (s,_)),_), _)), _)) = do
    regs        <- getStackVar s
-   strregs     <- storeToRegister R0 regs 
+   strregs     <- store R0 regs 
    checkderef  <- branchTo NullCheck
    readchr     <- (getPairTypeR e)
    return $ (strregs |> checkderef |> (ADD AL F R0 R0 (ImmOpInt 4))) |> readchr
@@ -88,7 +88,7 @@ generate (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = getStackVar
 
 generate (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
   getptr <- getArrayEPtr arre
-  let movtoten = storeToRegisterPure R10 (Register R0)
+  let movtoten = storePure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ getptr >< movtoten >< ass
 
@@ -96,23 +96,23 @@ generate (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
 generate (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
   lftins      <- expression e
   checkderef  <- branchTo NullCheck
-  let movtoten = storeToRegisterPure R10 (Register R0)
+  let movtoten = storePure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ (lftins |> checkderef) >< movtoten >< ass
 
 generate (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
   rgtins      <- expression e
   checkderef  <- branchTo NullCheck
-  let movtoten = storeToRegisterPure R10 (Register R0)
+  let movtoten = storePure R10 (Register R0)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
   return $ (rgtins |> checkderef) >< movtoten >< ass
 
 generate (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
   loc       <- getStackVar s
-  ins       <- storeToRegister R0 loc
+  ins       <- store R0 loc
   brFree    <- branchTo Free
   let clearReg = MOV AL F R0 (ImmOpInt 0)
-  clear  <- updateWithRegister R0 loc
+  clear  <- update R0 loc
   return $ (ins |> brFree |> clearReg) >< clear
 
 generate (StatScope sb) = genScopeBlock sb
@@ -121,7 +121,7 @@ generate (StatIf posexp sb sb') = do
   expInstr  <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
-  let storeIns = storeToRegisterPure R4 (Register R0)
+  let storeIns = storePure R4 (Register R0)
   thenCode <- genScopeBlock sb
   elseCode <- genScopeBlock sb'
   return $ expInstr
@@ -135,7 +135,7 @@ generate (StatWhile posexp sb) = do
   expInstr  <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
-  let storeIns = storeToRegisterPure R4 (Register R0)
+  let storeIns = storePure R4 (Register R0)
   bodyCode <- genScopeBlock sb
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
@@ -153,38 +153,38 @@ generate _ = error "How end up here ???"
 -- | The result in a register.
 --PRE: AssignVar does not modify R10, even if it pushes it beforehand
 --This is so we may pass it [R10] as a retloc
-assignVar :: RetLoc -> AssignRhs -> ARM Instructions
-assignVar loc (AssignExp (e, _)) = (><) <$> expression e <*> updateWithRegister R0 loc
+assignVar :: Location -> AssignRhs -> ARM Instructions
+assignVar loc (AssignExp (e, _)) = (><) <$> expression e <*> update R0 loc
 
 assignVar loc (AssignArrayLit al) = allocateArray loc al
 
 assignVar loc (AssignPair (e, _) (e', _)) = do
   let bytes   = 2 * 4  --One word for the value of each expression
-  let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc"
-  let moveMal = storeToRegisterPure R1 (Register R0)
-  assignPair <- updateWithRegister R1 loc
-  assleft    <- expression e >>= return . (>< updateWithRegisterPure R0 (RegLoc R1))
-  assright   <- expression e'>>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 4))
+  let mallins = storePure R0 (ImmInt bytes) |> BL AL "malloc"
+  let moveMal = storePure R1 (Register R0)
+  assignPair <- update R1 loc
+  assleft    <- expression e >>= return . (>< updatePure R0 (RegLoc R1))
+  assright   <- expression e'>>= return . (>< updatePure R0 (RegLocOffset R1 4))
   return $ mallins >< moveMal >< assignPair >< assleft >< assright
 
 assignVar loc (AssignPairElem (Left (e, _), _)) = do
   eins  <- expression e
   checkderef  <- branchTo NullCheck
-  let getlft = storeToRegisterPure R0 (RegLoc R0)
-  assign    <- updateWithRegister R0 loc
+  let getlft = storePure R0 (RegLoc R0)
+  assign    <- update R0 loc
   return $ (eins |> checkderef) >< getlft >< assign
 
 assignVar loc (AssignPairElem (Right (e, _), _)) = do
   eins <- expression e
   checkderef  <- branchTo NullCheck
-  let getrgt = storeToRegisterPure R0 (RegLocOffset R0 4)
-  assign    <- updateWithRegister R0 loc
+  let getrgt = storePure R0 (RegLocOffset R0 4)
+  assign    <- update R0 loc
   return $ (eins |> checkderef) >< getrgt >< assign
 
 assignVar loc (AssignCall (fname, _) posexprs) = do
   let params = getVal' posexprs
   pushedPars <- mapM evalAndPush params
-  result <- updateWithRegister R0 loc
+  result <- update R0 loc
   return $ (mconcat pushedPars 
         |> BL AL ("fun_" ++ fname)
         |> ADD AL F StackPointer StackPointer (ImmOpInt (4 * length params)))

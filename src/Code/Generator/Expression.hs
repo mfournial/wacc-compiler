@@ -25,7 +25,7 @@ expression PairExpr           = intToReg 0       R0
 
 expression (IdentExpr (s, _)) = do
   sv <- getStackVar s
-  ins <- storeToRegister R0 sv 
+  ins <- store R0 sv 
   return ins
 
 expression (UExpr (uexp, _) (e, _)) = (><) <$> expression e <*> evalUExp uexp
@@ -35,26 +35,26 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   left                <- expression e
   (pushleft,_)        <- push [R0]
   right               <- expression e'
-  let strRight         = storeToRegisterPure R1 (Register R0) 
+  let strRight         = storePure R1 (Register R0) 
   popleft             <- pop [R0]
   bins                <- evalBExp bop
   resReg              <- pop [R1]
   return $ saveReg <| ((left >< (pushleft <| (right >< strRight >< (popleft <| bins)))) |> resReg)
 
-expression (ArrayExpr (ae, _)) = fmap (>< storeToRegisterPure R0 (RegLoc R0)) $ getArrayEPtr ae 
+expression (ArrayExpr (ae, _)) = fmap (>< storePure R0 (RegLoc R0)) $ getArrayEPtr ae 
   
 expression (StringExpr str) = do
   (savereg, _) <- push [R1, R2]
   let arrayStr = ArrayLiteral $ zip (map CharExpr str) (repeat (0,0))
   instrs <- allocateArray (PRL (Register R2)) arrayStr
-  let save = updateWithRegisterPure R2 (Register R0)
+  let save = updatePure R2 (Register R0)
   restorereg <- pop [R2, R1]
   return $ savereg <| ((instrs >< save) |> restorereg)
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e
 evalUExp UBang   = return $ singleton (EOR AL F R0 R0 (ImmOpInt 1))
-evalUExp ULength = return $ storeToRegisterPure R0 (RegLoc R0)
+evalUExp ULength = return $ storePure R0 (RegLoc R0)
 -- UOrd and UChr actually do nothing! They exist only for type safety.
 evalUExp UOrd    = return empty
 evalUExp UChr    = return empty
@@ -109,7 +109,7 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
 -- | joinedPush will take a sequence of instructions and return a pair representing 
 -- | a list of instructions plus PUSH [R0] along with a location token representing our internal notion
 -- | of where the item was pushed.
-joinedPush :: Instructions -> ARM (Instructions, RetLoc)
+joinedPush :: Instructions -> ARM (Instructions, Location)
 joinedPush ins = do
   (pushins, pushlocs) <- push [R0]
   return (ins |> pushins, head pushlocs)
@@ -119,30 +119,30 @@ joinedPush ins = do
 -- | store the index of an array element in R0
 -- | It will then return instructions designed to place a reference to the requried
 -- | Array element in R0.
-indexIntoArray :: Instructions -> RetLoc -> ARM Instructions
+indexIntoArray :: Instructions -> Location -> ARM Instructions
 indexIntoArray is loc = do
   checknulls  <- branchTo NullCheck 
-  let deref   = storeToRegisterPure R0 (RegLoc R0)
+  let deref   = storePure R0 (RegLoc R0)
   checknulls' <- branchTo NullCheck
-  str <- storeToRegister R1 loc
+  str <- store R1 loc
   ac  <- branchTo ArrayCheck
   let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
-  let strfour = storeToRegisterPure R2 (ImmInt 4)
+  let strfour = storePure R2 (ImmInt 4)
   let mulins = MUL AL F R1 R1 R2 
   let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
   return (is >< singleton checknulls >< deref >< singleton checknulls' >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
       
 -- | Allocate an array on the heap place the resulting address in loc
-allocateArray :: RetLoc
+allocateArray :: Location
                     -> ArrayLiteral
                     -> ARM Instructions
 allocateArray loc (ArrayLiteral pes) = do
   let es      = zip (map getVal pes) (map (4*) [1..length pes])
   let nwords  = length es + 1 -- We need 1 word for the length of the array
   let bytes   = nwords * 4
-  let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc"
-  let moveMal = storeToRegisterPure R1 (Register R0)
-  assignArr  <- updateWithRegister R1 loc
-  let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
-  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off))) es
+  let mallins = storePure R0 (ImmInt bytes) |> BL AL "malloc"
+  let moveMal = storePure R1 (Register R0)
+  assignArr  <- update R1 loc
+  let strlent = storePure R0 (ImmInt (length es)) >< updatePure R0 (RegLoc R1)
+  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updatePure R0 (RegLocOffset R1 off))) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr

@@ -72,7 +72,7 @@ generate Free = do
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Eq W R0 (address sloc)
         <| BL Eq (label ThrowDerefRuntimeErr)
-        <| storeToRegisterPure R1 (RegLoc R0))
+        <| storePure R1 (RegLoc R0))
         |> CMP AL R1 (ImmOpInt 0)
         |> LDR Eq W R0 (address sloc)
         |> B Eq (label ThrowDerefRuntimeErr)
@@ -132,11 +132,11 @@ generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
         <| PUSH [LinkRegister, R0, R1]
-        <| storeToRegisterPure R1 (Register R0))
-        >< (storeToRegisterPure R0 refloc
+        <| storePure R1 (Register R0))
+        >< (storePure R0 refloc
         |> ADD AL F R0 R0 (ImmOpInt 4)
         |> BL AL "printf")
-        >< (storeToRegisterPure R0 (ImmInt 0)
+        >< (storePure R0 (ImmInt 0)
         |> BL AL "fflush"
         |> POP [R1, R0, PC])
 
@@ -151,7 +151,7 @@ generate ArrayCheck = do
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR LTh W R0 (address negIndex)
         <| B LTh (label ThrowRuntimeErr)
-        <| (storeToRegisterPure R1 (RegLoc R1)
+        <| (storePure R1 (RegLoc R1)
         |> CMP AL R0 (ShiftReg R1 NSH)
         |> LDR GE W R0 (address badIndex)
         |> BL GE (label ThrowRuntimeErr)
@@ -161,8 +161,8 @@ generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label PrintInt)
        <| PUSH [LinkRegister, R0, R1]
-       <| storeToRegisterPure R1 (Register R0) 
-       >< storeToRegisterPure R0 intloc
+       <| storePure R1 (Register R0) 
+       >< storePure R0 intloc
        >< (ADD AL F R0 R0 (ImmOpInt 4)
        <| BL AL "printf"
        <| MOV AL F R0 (ImmOpInt 0)
@@ -174,9 +174,9 @@ generate PrintStr = do
  sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
        <| PUSH [LinkRegister, R0, R1, R2] 
-       <| storeToRegisterPure R1 (RegLoc R0))
+       <| storePure R1 (RegLoc R0))
        >< (ADD AL F R2 R0 (ImmOpInt 4) 
-       <| storeToRegisterPure R0 sloc) 
+       <| storePure R0 sloc) 
        >< (ADD AL F R0 R0 (ImmOpInt 4) <| BL AL "printf" 
        <| MOV AL F R0 (ImmOpInt 0) <| BL AL "fflush"
        <| POP [R2, R1, R0, PC]
@@ -213,18 +213,18 @@ generate ReadInt = do
 generate ThrowOverflowErr = do
   err <- newStringLiteral "Over/UnderflowError: the result is too large/small to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
-        <| (storeToRegisterPure R0 err
+        <| (storePure R0 err
         |> BL AL (label ThrowRuntimeErr))
 
 -- | Generates ARM Instructions to get value from input
-scanfCall :: PureRetLoc -> Instructions
-scanfCall loc = (PUSH [R0, R1, LinkRegister] <| storeToRegisterPure R1 (Register R0))
-             >< (storeToRegisterPure R0 loc
+scanfCall :: PureLocation -> Instructions
+scanfCall loc = (PUSH [R0, R1, LinkRegister] <| storePure R1 (Register R0))
+             >< (storePure R0 loc
              |> ADD AL F R0 R0 (ImmOpInt 4)
              |> BL AL "scanf"
              |> POP [R0, R1, PC])
 
 -- | returns an address  
-address :: PureRetLoc -> Address
+address :: PureLocation -> Address
 address (StringLit s) = Label s
 address _ = error "Address type is not a String Literal"

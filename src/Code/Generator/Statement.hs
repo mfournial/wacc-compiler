@@ -19,6 +19,12 @@ import Code.Generator.Runtime
 import qualified Data.HashMap.Strict as M
 import Control.Monad.State.Lazy (get)
 
+-- | Generate takes a statement and then produces the arm instructions required to execute the
+-- | statement. Note generate makes no guarentees about the registers that it uses and in
+-- | particular will make use of R0 and R1 liberally.
+-- |
+-- | Sequences are used for efficiency reasons, in order to avoid O(n) insertion on the production
+-- | of each instruction.
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
 
@@ -142,13 +148,11 @@ generate (StatWhile posexp sb) = do
 
 generate _ = error "How end up here ???"
 
-{- Will Jones God code
-genScopeBlock' :: ScopeBlock -> ARM Instructions
-genScopeBlock'  (sts, NewScope scp)
-  = concat <$> withEnv $ \env -> 
-      traverse (generate env) (fromList sts)
--}
-
+-- | AssignVar takes a location/address and an assignrhs and will produce instructions
+-- | to evaluate the rhs and then put the result in the location/address passed.
+-- | assignVar again makes use of registers R0 and R1 liberally.
+-- | Note though it guarentees that R10 is perserved, in case the user wishes to store
+-- | The result in a register.
 --PRE: AssignVar does not modify R10, even if it pushes it beforehand
 --This is so we may pass it [R10] as a retloc
 assignVar :: RetLoc -> AssignRhs -> ARM Instructions
@@ -192,6 +196,8 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
     getVal' (e : es) = getVal' es ++ [getVal e]
     evalAndPush e = expression e >>= \instr -> return $ instr |> PUSH [R0]
 
+-- | genScopeBlock takes a scopeblock and produces the instructions required to execute 
+-- | all of the wacc statements in the scopeblock.
 genScopeBlock :: ScopeBlock 
               -> ARM Instructions
 genScopeBlock (sts, NewScope scp) = do
@@ -219,6 +225,8 @@ getPairTypeR e = do
   _   -> error "front end failed"
 
 
+-- | SelectPrint takes a type and then returns the id of the runtime element used to print
+-- | that types string representation.
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef
 selectPrint (Pairable (BaseType BoolType))                          = PrintBool
@@ -230,13 +238,24 @@ selectPrint (Pairable (ArrayType _))                                = PrintRef
 selectPrint (Pairable (PairNull))                                   = PrintRef
 selectPrint _                                                       = error "Front end failed to validate types of expressions"
 
+-- | SelectReadType takes a type and then returns the id of the runtime element used to
+-- | read that types string representation.
 selectReadType :: Type -> RCID
 selectReadType (Pairable(BaseType IntType)) = ReadInt
 selectReadType (Pairable(BaseType CharType)) = ReadChar
 selectReadType _ = error "front end did not pick this up"
 
 immOpIntCheck :: Instr -> Instructions
-immOpIntCheck (ADD cond s reg oReg (ImmOpInt i))
- | i > 1024 = singleton((ADD cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck (ADD cond s reg reg (ImmOpInt (i-1024)))
- | otherwise = singleton(ADD cond s reg oReg (ImmOpInt i))
+immOpIntCheck (ADD cond s reg oReg (ImmOpInt i)) = immOpIntCheck' ADD cond s reg oReg i
+immOpIntCheck (SUB cond s reg oReg (ImmOpInt i)) = immOpIntCheck' SUB cond s reg oReg i
+immOpIntCheck (RSB cond s reg oReg (ImmOpInt i)) = immOpIntCheck' RSB cond s reg oReg i
+immOpIntCheck (AND cond s reg oReg (ImmOpInt i)) = immOpIntCheck' AND cond s reg oReg i
+immOpIntCheck (EOR cond s reg oReg (ImmOpInt i)) = immOpIntCheck' EOR cond s reg oReg i
+immOpIntCheck (BIC cond s reg oReg (ImmOpInt i)) = immOpIntCheck' BIC cond s reg oReg i
+immOpIntCheck (ORR cond s reg oReg (ImmOpInt i)) = immOpIntCheck' ORR cond s reg oReg i
 immOpIntCheck _ = error "should never be here"
+
+immOpIntCheck' :: (Condition -> Set -> Reg -> Reg -> Op2 -> Instr) -> Condition -> Set -> Reg -> Reg -> Int -> Instructions
+immOpIntCheck' constr cond s reg oReg i
+ | i > 1024 = singleton((constr cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck' constr cond s reg reg (i-1024)
+ | otherwise = singleton(constr cond s reg oReg (ImmOpInt i))

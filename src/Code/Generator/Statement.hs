@@ -18,6 +18,7 @@ import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
 import qualified Data.HashMap.Strict as M
+import Control.Monad.State.Lazy (get)
 
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
@@ -57,6 +58,27 @@ generate (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
   readchr <- branchTo $ selectReadType t
   return $ (singleton(ADD AL F  R0 StackPointer (ImmOpInt off))
             |> readchr)
+
+generate (StatementOperator ((StatRead (AssignToArrayElem (arre, p)), _))) = do
+  getptr <- getArrayEPtr arre
+  t      <- lookupType (ArrayExpr (arre,p))
+  readci <- branchTo $ selectReadType(t)
+  return $ getptr |> readci 
+
+
+generate (StatementOperator (StatRead (AssignToPair(Left (e@(IdentExpr (s,_)),_), _)), _)) = do
+   regs        <- getStackVar s
+   strregs     <- storeToRegister R0 regs 
+   checkderef  <- branchTo NullCheck
+   readchr     <- (getPairTypeL e)
+   return $ (strregs |> checkderef) |> readchr
+
+generate (StatementOperator (StatRead (AssignToPair(Right (e@(IdentExpr (s,_)),_), _)), _)) = do
+   regs        <- getStackVar s
+   strregs     <- storeToRegister R0 regs 
+   checkderef  <- branchTo NullCheck
+   readchr     <- (getPairTypeR e)
+   return $ (strregs |> checkderef |> (ADD AL F R0 R0 (ImmOpInt 4))) |> readchr
 
 --This is slightly inefficient but avoids heavy code duplication TODO: Change implementation from declare then assign to all in one go
 generate (StatementOperator (StatDecAss t (s, _) ae, p)) = do
@@ -203,8 +225,24 @@ genScopeBlock (sts, NewScope scp) = do
   instructions <- mapM generate (fromList sts)
   stck <- fmap (M.size . head . stack) get --Exclude number of program args
   mapM_ (\i -> decrementStack) [1..stck]
-  closeEnv
   return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
+
+
+getPairTypeL :: Expression -> ARM Instr
+getPairTypeL e = do
+ t <- lookupType e
+ case t of
+  (PairType l _) -> branchTo $ (selectReadType l)
+  _   -> error "front end failed"
+
+
+getPairTypeR :: Expression -> ARM Instr
+getPairTypeR e = do
+ t <- lookupType e
+ case t of
+  (PairType _ r) -> branchTo $ (selectReadType r)
+  _   -> error "front end failed"
+
 
 selectPrint :: Type -> RCID
 selectPrint (PairType a b)                                          = PrintRef
@@ -224,6 +262,6 @@ selectReadType _ = error "front end did not pick this up"
 
 immOpIntCheck :: Instr -> Instructions
 immOpIntCheck (ADD cond s reg oReg (ImmOpInt i))
- | i > 1024 = singleton((ADD cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck (ADD cond s reg oReg (ImmOpInt (i-1024)))
+ | i > 1024 = singleton((ADD cond s reg oReg (ImmOpInt (1024)))) >< immOpIntCheck (ADD cond s reg reg (ImmOpInt (i-1024)))
  | otherwise = singleton(ADD cond s reg oReg (ImmOpInt i))
 immOpIntCheck _ = error "should never be here"

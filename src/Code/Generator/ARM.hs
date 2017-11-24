@@ -12,7 +12,6 @@ type ARM = State Junk
 data Junk = Junk {
   strLits :: Data,
   stack :: VarTable,
-  heap :: VarTable,
   scope :: [NewScope],
   sp :: Int,
   ref :: Int,

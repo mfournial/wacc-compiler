@@ -24,7 +24,6 @@ module Code.Generator.State (
   getStringLiterals,
   getOffsetFromStackPtr,
   addToRuntime,
-  getSP,
   storeToRegister,
   updateWithRegister,
   modifyRegister,
@@ -75,18 +74,18 @@ listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . show 
 
 newEnv :: NewScope -> ARM ()
-newEnv s = modify (\j -> j{stack = M.empty : stack j, heap = M.empty : heap j, scope = s : scope j})
+newEnv s = modify (\j -> j{stack = M.empty : stack j, scope = s : scope j})
 
 newFunctionEnv :: [String] -- ^ Add the parameters to the function environment
                -> ARM ()
-newFunctionEnv params = modify (\j -> j{stack = M.empty : stack j, heap = M.empty : heap j}) >> mapM_ pushVar params
+newFunctionEnv params = modify (\j -> j{stack = M.empty : stack j}) >> mapM_ pushVar params
 
 closeEnv :: ARM ()
-closeEnv = modify (\j -> j{stack = tail (stack j), heap = tail (heap j), scope = tail (scope j)})
+closeEnv = modify (\j -> j{stack = tail (stack j), scope = tail (scope j)})
 
 closeFunctionEnv :: Int -- ^ Number of parameters of the function
                  -> ARM ()
-closeFunctionEnv i = modify (\j -> j{stack = tail (stack j), heap = tail (heap j), sp = sp j - 4 * i})
+closeFunctionEnv i = modify (\j -> j{stack = tail (stack j), sp = sp j - 4 * i})
 
 removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
@@ -146,7 +145,7 @@ lookupType :: Expression -> ARM Type
 lookupType = (`fmap` fmap scope get) . unsfType
 
 newState :: Junk
-newState = Junk empty [] [] [] 0 0 empty
+newState = Junk empty [] [] 0 0 empty
 
 storeToRegister :: Reg -> RetLoc -> ARM Instructions
 storeToRegister r (PRL k)     = return $ storeToRegisterPure r k

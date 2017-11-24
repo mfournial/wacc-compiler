@@ -34,10 +34,11 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   left                <- expression e
   (pushleft,_)        <- push [R0]
   right               <- expression e'
+  let strRight         = storeToRegisterPure R1 (Register R0) 
   popleft             <- pop [R0]
   bins                <- evalBExp bop
   resReg              <- pop [R1]
-  return $ saveReg <| ((left >< (pushleft <| (right >< (popleft <| bins)))) |> resReg)
+  return $ saveReg <| ((left >< (pushleft <| (right >< strRight >< (popleft <| bins)))) |> resReg)
 
 expression (ArrayExpr (ae, _)) = fmap (>< storeToRegisterPure R0 (RegLoc R0)) $ getArrayEPtr ae 
   

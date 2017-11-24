@@ -225,6 +225,7 @@ genScopeBlock (sts, NewScope scp) = do
   instructions <- mapM generate (fromList sts)
   stck <- fmap (M.size . head . stack) get --Exclude number of program args
   mapM_ (\i -> decrementStack) [1..stck]
+  closeEnv
   return $ concat instructions >< immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * stck)))
 
 

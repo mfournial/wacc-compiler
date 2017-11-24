@@ -158,7 +158,7 @@ updateWithRegister r l           = modifyRegister updateWithRegister' r l
 modifyRegister :: RegMod -> Reg -> RetLoc -> ARM Instructions
 modifyRegister f r (StackPtr i) = do
   off <- getOffsetFromStackPtr i
-  return $ f r (OffReg StackPointer (offsetToARMOffset off) False)   
+  return $ f r (OffReg StackPointer (Int off) False)   
 
 modifyRegister f r (PRL k) = return $ modifyRegisterPure f r k
 

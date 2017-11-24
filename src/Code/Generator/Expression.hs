@@ -34,12 +34,12 @@ expression (UExpr (uexp, _) (e, _)) = do
   uns                 <- evalUExp uexp
   return $ (sub >< strRegIns >< uns, (PRL (Register R0)))
 
-expression (BExp (e, _) (bop, _) (e', _)) = do
+expression (BExp (e, _) (bop, _) (e’, _)) = do
   (saveReg, _)  <- push [R1]
   (left, lloc)        <- expression e
   strLeft             <- storeToRegister R0 lloc
   (pushleft,_)        <- push [R0]
-  (right, rloc)       <- expression e'
+  (right, rloc)       <- expression e’
   strRight            <- storeToRegister R1 rloc
   popleft             <- pop [R0]
   bins                <- evalBExp bop
@@ -52,9 +52,10 @@ expression (ArrayExpr (ae, _)) = do
   return $ (getptr >< deref, PRL (Register R0))
   
 expression (StringExpr str) = do
-  lit <- newStringLiteral str
-  let deref = storeToRegisterPure R0 lit
-  return (deref, PRL (Register R0))
+  let arrayStr = ArrayLiteral $ zip (map (CharExpr) str) (repeat (0,0))
+  instrs <- assignVar’ (PRL (Register R2)) arrayStr
+  let save = updateWithRegisterPure R2 (Register R0)
+  return (instrs >< save, PRL (Register R0))
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e
@@ -72,8 +73,8 @@ evalBExp BTimes     = do
   checkov  <- branchToIf Neq ThrowOverflowErr
   return $ empty |> smull |> cmp |> checkov 
 
-evalBExp BDivide    = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idiv"
-evalBExp BModulus   = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL "__aeabi_idivmod" |> MOV AL F R0 (ShiftReg R1 NSH) 
+evalBExp BDivide    = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL “__aeabi_idiv”
+evalBExp BModulus   = branchTo Checkdbz >>= \b -> return $ singleton b |> BL AL “__aeabi_idivmod” |> MOV AL F R0 (ShiftReg R1 NSH) 
 evalBExp BPlus      = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (ADD AL T R0 R0 (ShiftReg R1 NSH)) |> e
 evalBExp BMinus     = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (SUB AL T R0 R0 (ShiftReg R1 NSH)) |> e
 evalBExp BAnd       = return $ singleton (AND AL F R0 R0 (ShiftReg R1 NSH))
@@ -106,9 +107,9 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   (saveregs, _) <- push [R1, R2]
   pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
   let (pushins, pushlocs) = unzip pushed
-  ptr  <- getVar' i id >>= getOffsetFromStackPtr
+  ptr  <- getVar’ i id >>= getOffsetFromStackPtr
   let addptr   = ADD AL F R0 StackPointer (ImmOpInt ptr) 
-  ins    <- foldM arrayExp' empty $ pushlocs
+  ins    <- foldM arrayExp’ empty $ pushlocs
   let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * Prelude.length pushlocs))
   mapM_ (\k -> decrementStack) pushlocs
   restore <- pop [R2, R1]
@@ -119,15 +120,29 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
       str <- storeToRegister R0 loc
       (pushins, pushlocs) <- push [R0]
       return ((ins >< str) |> pushins, head pushlocs)
-    arrayExp' :: Instructions -> RetLoc -> ARM Instructions
-    arrayExp' is loc = do
+    arrayExp’ :: Instructions -> RetLoc -> ARM Instructions
+    arrayExp’ is loc = do
       checknulls  <- branchTo NullCheck 
       let deref   = storeToRegisterPure R0 (RegLoc R0)
-      checknulls' <- branchTo NullCheck
+      checknulls’ <- branchTo NullCheck
       str <- storeToRegister R1 loc
       ac  <- branchTo ArrayCheck
       let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
       let strfour = storeToRegisterPure R2 (ImmInt 4)
       let mulins = MUL AL F R1 R1 R2 
       let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
-      return (is >< singleton checknulls >< deref >< singleton checknulls' >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
+      return (is >< singleton checknulls >< deref >< singleton checknulls’ >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
+
+assignVar’ :: RetLoc
+                    -> ArrayLiteral
+                    -> ARM Instructions
+assignVar’ loc (ArrayLiteral pes) = do
+  let es      = zip (map getVal pes) (map (4*) [1..length pes])
+  let nwords  = length es + 1 -- We need 1 word for the length of the array
+  let bytes   = nwords * 4
+  let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL “malloc” 
+  let moveMal = storeToRegisterPure R1 (Register R0)
+  assignArr  <- updateWithRegister R1 loc
+  let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
+  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
+  return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr

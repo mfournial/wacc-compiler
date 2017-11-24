@@ -1,7 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 module Code.Instructions where
 
-import Data.Sequence
+import Data.List (sort)
+import Data.Sequence hiding (sort)
 
 class PrintARM a where
   printARM :: a -> String
@@ -59,7 +60,7 @@ data Reg =
     | StackPointer
     | LinkRegister
     | PC
-  deriving (Eq, Enum, Show)
+  deriving (Eq, Ord, Enum, Show)
 
 data Op2 = 
       ShiftReg Reg Shift -- ^  Shift Register
@@ -158,8 +159,8 @@ instance PrintARM Instr where
   printARM (MLA  cond set reg oReg oReg1) = "\t\t" ++ "MLA" ++ printARM(cond) ++ printARM (set) ++ " " ++ printARM (reg) ++ ", " ++ printARM(oReg) ++ ", " ++ printARM(oReg1)
   printARM (LDR  cond mem reg address)    = "\t\t" ++ "LDR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
   printARM (STR  cond mem reg address)    = "\t\t" ++ "STR" ++ printARM(cond) ++ printARM (mem) ++ " " ++ printARM (reg) ++ ", " ++ printARM(address)
-  printARM (PUSH regs)                    = "\t\t" ++ "PUSH "++ printARM regs
-  printARM (POP  regs)                    = "\t\t" ++ "POP " ++ printARM regs
+  printARM (PUSH regs)                    = "\t\t" ++ "PUSH "++ printARM (sort regs)
+  printARM (POP  regs)                    = "\t\t" ++ "POP " ++ printARM (sort regs)
   printARM DIVIDER                        = "\n"
  
 

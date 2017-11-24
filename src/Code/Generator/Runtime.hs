@@ -71,7 +71,7 @@ generate Free = do
         |> LDR Eq W R0 (address sloc)
         |> B Eq (label ThrowDerefRuntimeErr)
         |> BL AL "free"
-        |> POP [R1, R0, PC]
+        |> POP [R0, R1, PC]
 
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"
@@ -183,17 +183,17 @@ generate ReadChar = do
 generate Checkdbz = do
   zloc <- newStringLiteral "DivideByZeroError: divide or modulo by zero\0"
   return $ Define (label Checkdbz)
-        <| PUSH [LinkRegister, R0, R1]
+        <| PUSH [R0, R1, LinkRegister]
         <| CMP AL R1 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
         <| BL Eq (label ThrowRuntimeErr)
-        <| POP [R1, R0, PC]
+        <| POP [R0, R1, PC]
         <| empty
 
 generate NullCheck = do
   zloc <- newStringLiteral "NullReferenceError: dereference a null reference\0"
   return $ Define (label NullCheck)
-        <| PUSH [LinkRegister, R0]
+        <| PUSH [R0, LinkRegister]
         <| CMP AL R0 (ImmOpInt 0)
         <| LDR Eq W R0 (address zloc)
         <| BL Eq (label ThrowRuntimeErr)
@@ -211,11 +211,11 @@ generate ThrowOverflowErr = do
         |> BL AL (label ThrowRuntimeErr))
 
 scanfCall :: PureRetLoc -> Instructions
-scanfCall loc = (PUSH [LinkRegister] <| storeToRegisterPure R1 (Register R0))
+scanfCall loc = (PUSH [R0, R1, LinkRegister] <| storeToRegisterPure R1 (Register R0))
              >< (storeToRegisterPure R0 loc
              |> ADD AL F R0 R0 (ImmOpInt 4)
              |> BL AL "scanf"
-             |> POP [PC])
+             |> POP [R0, R1, PC])
 
 address :: PureRetLoc -> Address
 address (StringLit s) = Label s

@@ -32,8 +32,8 @@ genCode' (WaccTree (Program fcs sb)) = do
   let rinstr = concat instrs
   return $ ((empty
            |> Section "text" |> DIVIDER)
-           >< (finstr
-           |> Global |> Define "main" |> PUSH [LinkRegister]))
+           >< ((Global <| finstr)
+           |> Define "main" |> PUSH [LinkRegister]))
            >< (minstr
            |> LDR AL W R0 (Const 0) |> POP [PC] |> FunSection "ltorg")
            >< rinstr

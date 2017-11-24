@@ -61,7 +61,7 @@ newStringLiteral str = do
   maybe (put j{strLits = strs |> str} >> return (StringLit (listPosToLabel (length strs)))) (return . StringLit . listPosToLabel) ind
 
 getStringLiterals :: ARM Data
-getStringLiterals = state (\junk -> (strLits junk, junk))
+getStringLiterals = fmap strLits get
 
 dataSection :: Data -> Instructions
 dataSection strs
@@ -75,23 +75,18 @@ listPosToLabel :: Int -> String
 listPosToLabel = ("msg_" ++) . show 
 
 newEnv :: NewScope -> ARM ()
-newEnv s = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk, scope = s : scope junk}))
+newEnv s = modify (\j -> j{stack = M.empty : stack j, heap = M.empty : heap j, scope = s : scope j})
 
 newFunctionEnv :: [String] -- ^ Add the parameters to the function environment
                -> ARM ()
-newFunctionEnv params = state (\junk -> ((), junk{stack = M.empty : stack junk, heap = M.empty : heap junk}))
-  >> mapM_ pushVar params
+newFunctionEnv params = modify (\j -> j{stack = M.empty : stack j, heap = M.empty : heap j}) >> mapM_ pushVar params
 
 closeEnv :: ARM ()
-closeEnv = state (\junk -> ((), junk{stack = tail (stack junk), heap = tail (heap junk), scope = tail (scope junk)}))
+closeEnv = modify (\j -> j{stack = tail (stack j), heap = tail (heap j), scope = tail (scope j)})
 
 closeFunctionEnv :: Int -- ^ Number of parameters of the function
                  -> ARM ()
-closeFunctionEnv i = state (\junk -> ((), junk{
-    stack = tail (stack junk),
-    heap = tail (heap junk),
-    sp = sp junk - 4 * i
-  }))
+closeFunctionEnv i = modify (\j -> j{stack = tail (stack j), heap = tail (heap j), sp = sp j - 4 * i})
 
 removeFromTable :: String -> Int -> VarTable -> VarTable
 removeFromTable s addr (m : mps) = M.insert s addr m : mps
@@ -100,13 +95,13 @@ pushVar :: String -> ARM RetLoc
 pushVar name = incrementStack >> state (\junk -> (StackPtr (sp junk), junk{stack = addToTable name (sp junk) (stack junk)}))
 
 getOffsetFromStackPtr :: Int -> ARM Int
-getOffsetFromStackPtr p = state (\junk -> (sp junk - p, junk))
+getOffsetFromStackPtr p = fmap ((subtract p) . sp) get
 
 getVar' :: String -> (Int -> a) -> ARM a
-getVar' name f = state (\junk -> (f $ varAddr name junk, junk))
+getVar' name f = fmap (f . (varAddr name)) get
 
 addToRuntime :: RCID -> ARM ()
-addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r (runtime junk))}))
+addToRuntime r = modify(\j -> j{runtime = addDependencies r (tryAdd r (runtime j))})
   where
     tryAdd :: Eq a => a -> Seq a -> Seq a
     tryAdd a as = if a `elem` as then as else a <| as
@@ -133,10 +128,10 @@ getStackVar :: String -> ARM RetLoc
 getStackVar s = getVar' s StackPtr
 
 incrementStack :: ARM ()
-incrementStack = state (\junk -> ((), junk{sp = sp junk + 4}))
+incrementStack = modify (\j -> j{sp = sp j + 4})
 
 decrementStack :: ARM ()
-decrementStack = state (\junk -> ((), junk{sp = sp junk - 4}))
+decrementStack = modify (\j -> j{sp = sp j - 4})
 
 getSP :: ARM Int
 getSP = fmap sp get 
@@ -169,7 +164,7 @@ modifyRegister f r (StackPtr i) = do
 modifyRegister f r (PRL k) = return $ modifyRegisterPure f r k
 
 runtimeInstructions :: ARM (Seq RCID)
-runtimeInstructions = state (\junk -> (runtime junk, junk))
+runtimeInstructions = fmap runtime get
 
 push :: [Reg] -> ARM (Instr, [RetLoc])
 push rs = do

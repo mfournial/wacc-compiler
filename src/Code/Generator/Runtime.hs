@@ -12,17 +12,20 @@ import Code.Instructions
 import Code.Generator.ARM
 import Code.Generator.State
 
+-- | generates runtime ARM Instructions based on the runtime Id
 generateRuntime :: RCID -> ARM Instructions
 generateRuntime = generate
 
 branchTo :: RCID -> ARM Instr
 branchTo = branchToIf AL
 
+-- | Creates an branch instruction to jump to the correct label if condition is met
 branchToIf :: Condition -> RCID -> ARM Instr
 branchToIf cond name = do
   addToRuntime name
   return $ BL cond (label name)
 
+-- | All the runtime component identifiers with their coressponding string labels
 names :: [(RCID, String)]
 names = [ (PrintStr, "runtime_print_string")
         , (PrintInt, "runtime_print_int")
@@ -41,9 +44,11 @@ names = [ (PrintStr, "runtime_print_string")
         , (ThrowOverflowErr, "runtime_throw_overflow")
         ]
 
+-- | Returns the label for each runtime component
 label :: RCID -> String
 label = fromJust . flip lookup names
 
+-- | Generates ARM instructions which prints the error and tells the system to exit with exit code -1
 generate :: RCID -> ARM Instructions
 generate ThrowRuntimeErr =
   return $ Define (label ThrowRuntimeErr)
@@ -52,6 +57,7 @@ generate ThrowRuntimeErr =
         <| BL AL "exit"
         <| empty
 
+-- | Tells the system to exit with code 134 when the program tries to deref a null
 generate ThrowDerefRuntimeErr =
   return $ Define (label ThrowDerefRuntimeErr)
         <| BL AL (label PrintStr)
@@ -59,6 +65,7 @@ generate ThrowDerefRuntimeErr =
         <| BL AL "exit"
         <| empty
 
+-- | Generates ARM instructions to try and free heap elements
 generate Free = do
   sloc <- newStringLiteral "NullReferenceError: dereference a null reference\n\0"
   return $ (Define (label Free)
@@ -73,6 +80,7 @@ generate Free = do
         |> BL AL "free"
         |> POP [R0, R1, PC]
 
+-- | Generate ARM instructions to print a bool to output
 generate PrintBool = do
   trueloc  <- newStringLiteral "true\0"
   falseloc <- newStringLiteral "false\0"
@@ -88,6 +96,7 @@ generate PrintBool = do
         <| POP [R0, PC]
         <| empty
 
+-- | Generate ARM instructions to print a char to output
 generate PrintChar =
   return $ Define (label PrintChar)
         <| PUSH [LinkRegister, R0]
@@ -96,6 +105,7 @@ generate PrintChar =
         <| empty
 
 
+-- | Generate ARM instructions to print a char array to output
 generate PrintCharArray =
   return $ Define (label PrintCharArray)
         <| PUSH [LinkRegister, R0, R1, R2, R3]
@@ -122,6 +132,7 @@ generate PrintCharArray =
         <| POP [R3, R2, R1, R0, PC]
         <| empty
 
+-- | Generate ARM instructions to print a address to output
 generate PrintRef = do
   refloc <- newStringLiteral "%p\0"
   return $ (Define (label PrintRef)
@@ -134,6 +145,8 @@ generate PrintRef = do
         |> BL AL "fflush"
         |> POP [R1, R0, PC])
 
+-- | Generates ARM Instructions to check if array access is correct 
+-- | Thow a runtime error if the index is out of bounds
 generate ArrayCheck = do
   negIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: negative index\n\0"
   badIndex <- newStringLiteral "ArrayIndexOutOfBoundsError: index too large\n\0"
@@ -151,6 +164,7 @@ generate ArrayCheck = do
         |> BL GE (label ThrowRuntimeErr)
         |> POP [R2, R1, R0, PC])
 
+-- | Generate ARM instructions to print a int to output
 generate PrintInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label PrintInt)
@@ -164,6 +178,7 @@ generate PrintInt = do
        <| POP [R1, R0, PC]
        <| empty)
 
+-- | Generate ARM instructions to print a string to output
 generate PrintStr = do
  sloc <- newStringLiteral "%.*s\0"
  return $ (Define (label PrintStr) 
@@ -176,10 +191,7 @@ generate PrintStr = do
        <| POP [R2, R1, R0, PC]
        <| empty)
 
-generate ReadChar = do
-  chloc <- newStringLiteral " %c\0"
-  return $ Define (label ReadChar) <| scanfCall chloc
-
+-- | Check if the divisor or the modulus is zero and throws an error if it is zero
 generate Checkdbz = do
   zloc <- newStringLiteral "DivideByZeroError: divide or modulo by zero\0"
   return $ Define (label Checkdbz)
@@ -190,6 +202,7 @@ generate Checkdbz = do
         <| POP [R0, R1, PC]
         <| empty
 
+-- | Check if the value is null and tell the system to throw an error if it is null
 generate NullCheck = do
   zloc <- newStringLiteral "NullReferenceError: dereference a null reference\0"
   return $ Define (label NullCheck)
@@ -200,22 +213,31 @@ generate NullCheck = do
         <| POP [R0, PC]
         <| empty
 
+-- | Generates instructions to get  char value from input 
+generate ReadChar = do
+  chloc <- newStringLiteral " %c\0"
+  return $ Define (label ReadChar) <| scanfCall chloc
+
+-- | Generates instructions to get int value from input
 generate ReadInt = do
   intloc <- newStringLiteral "%d\0"
   return $ Define (label ReadInt) <| scanfCall intloc
 
+-- | Generates ARM instructions to tell the system to throw an OverflowError
 generate ThrowOverflowErr = do
   err <- newStringLiteral "Over/UnderflowError: the result is too large/small to store in a 4-byte signed-integer.\n\0"
   return $ Define (label ThrowOverflowErr)
         <| (storeToRegisterPure R0 err
         |> BL AL (label ThrowRuntimeErr))
 
+-- | Generates ARM Instructions to get value from input
 scanfCall :: PureRetLoc -> Instructions
 scanfCall loc = (PUSH [R0, R1, LinkRegister] <| storeToRegisterPure R1 (Register R0))
              >< (storeToRegisterPure R0 loc
              |> ADD AL F R0 R0 (ImmOpInt 4)
              |> BL AL "scanf"
              |> POP [R0, R1, PC])
+
 
 address :: PureRetLoc -> Address
 address (StringLit s) = Label s

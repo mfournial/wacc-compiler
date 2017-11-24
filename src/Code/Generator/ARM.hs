@@ -68,6 +68,7 @@ storeToRegisterPure r (Register r') = storeRegs r r'
 storeToRegisterPure r k             = modifyRegisterPure storeToRegister' r k
 
 -- | store the value from register into a different register or memory
+-- | throw an error if trying to update an immediate value
 updateWithRegisterPure :: Reg -> PureRetLoc -> Instructions
 updateWithRegisterPure r (ImmInt i)    = error "Attempting to update immediate value"
 updateWithRegisterPure r (ImmChar c)   = error "Attempting to update immediate value"

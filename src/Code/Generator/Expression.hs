@@ -12,7 +12,8 @@ import Data.Sequence ((><), (<|), (|>), empty, singleton)
 
 import Control.Monad
 
-
+-- | expression will take an expression and produce the ARM instructions required to evaluate it.
+-- | POST: Registers R1-R10 will be preserved.
 expression :: Expression -> ARM Instructions
 expression (BracketExp (e, _)) = expression e
 
@@ -86,13 +87,16 @@ evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))
                   |> MOV b F R0 (ImmOpInt 0)
 
 
+-- | intToReg Places a constant into a register
 intToReg :: Int -> Reg -> ARM Instructions
 intToReg i r = return $ pure (LDR AL W r (Const i))
 
+-- | getArrayEPtr produces the instructions to store the address of an array element in R0
+-- | POST: R1-R10 are preserved
 getArrayEPtr :: ArrayElem -> ARM Instructions
 getArrayEPtr (ArrayElem (i, _) indexps) = do
   (saveregs, _) <- push [R1, R2]
-  pushed <- mapM ((pusher =<<) . expression . getVal) indexps 
+  pushed <- mapM ((joinedPush =<<) . expression . getVal) indexps 
   let (pushins, pushlocs) = unzip pushed
   ptr  <- getVar' i id >>= getOffsetFromStackPtr
   let addptr   = ADD AL F R0 StackPointer (ImmOpInt ptr) 
@@ -102,23 +106,33 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   restore <- pop [R2, R1]
   return $ (saveregs <| (mconcat pushins >< singleton addptr >< ins)) |> restorestack |> restore
   where
-    pusher :: Instructions -> ARM (Instructions, RetLoc)
-    pusher ins = do
-      (pushins, pushlocs) <- push [R0]
-      return (ins |> pushins, head pushlocs)
-    arrayExp' :: Instructions -> RetLoc -> ARM Instructions
-    arrayExp' is loc = do
-      checknulls  <- branchTo NullCheck 
-      let deref   = storeToRegisterPure R0 (RegLoc R0)
-      checknulls' <- branchTo NullCheck
-      str <- storeToRegister R1 loc
-      ac  <- branchTo ArrayCheck
-      let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
-      let strfour = storeToRegisterPure R2 (ImmInt 4)
-      let mulins = MUL AL F R1 R1 R2 
-      let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
-      return (is >< singleton checknulls >< deref >< singleton checknulls' >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
 
+-- | joinedPush will take a sequence of instructions and return a pair representing 
+-- | a list of instructions plus PUSH [R0] along with a location token representing our internal notion
+-- | of where the item was pushed.
+joinedPush :: Instructions -> ARM (Instructions, RetLoc)
+joinedPush ins = do
+  (pushins, pushlocs) <- push [R0]
+  return (ins |> pushins, head pushlocs)
+
+-- | indexIntoArray takes a reference to a reference to an array
+-- | it assumes that the instructions passed to it as a parameter
+-- | store the index of an array element in R0
+-- | It will then return instructions designed to place a reference to the requried
+-- | Array element in R0.
+indexIntoArray :: Instructions -> RetLoc -> ARM Instructions
+indexIntoArray is loc = do
+  checknulls  <- branchTo NullCheck 
+  let deref   = storeToRegisterPure R0 (RegLoc R0)
+  checknulls' <- branchTo NullCheck
+  str <- storeToRegister R1 loc
+  ac  <- branchTo ArrayCheck
+  let skiplen = ADD AL F R0 R0 (ImmOpInt 4)
+  let strfour = storeToRegisterPure R2 (ImmInt 4)
+  let mulins = MUL AL F R1 R1 R2 
+  let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
+  return (is >< singleton checknulls >< deref >< singleton checknulls' >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
+      
 assignVar' :: RetLoc
                     -> ArrayLiteral
                     -> ARM Instructions

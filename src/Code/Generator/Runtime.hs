@@ -53,7 +53,7 @@ generate ThrowRuntimeErr =
         <| empty
 
 generate ThrowDerefRuntimeErr =
-  return $ Define (label ThrowDerefRuntimeErr)
+  return $ Define (label ThrowRuntimeErr)
         <| BL AL (label PrintStr)
         <| MOV AL F R0 (ImmOpInt (134))
         <| BL AL "exit"

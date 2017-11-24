@@ -7,8 +7,10 @@ import qualified Data.HashMap.Strict as M
 
 import Code.Instructions
 
+-- | State for ARM generation
 type ARM = State Junk
-
+ 
+-- | State fields
 data Junk = Junk {
   strLits :: Data,
   stack :: VarTable,
@@ -18,9 +20,13 @@ data Junk = Junk {
   runtime :: Seq RCID
 } 
 
+-- | A Hashmap of Variables and Addresses 
 type VarTable = [M.HashMap String Int]
+
+-- | Data represented as a sequence of Strings
 type Data = Seq String
 
+-- | RuntimeComponent type 
 data RuntimeComponent = RC RCID Instructions
 
 instance Eq RuntimeComponent where
@@ -45,6 +51,7 @@ data RCID =
     | Checkdbz
   deriving (Eq)
 
+-- | Storeable that can be of Address type or a StackPtr
 data RetLoc = PRL PureRetLoc | StackPtr Int 
   deriving (Show)
 
@@ -58,6 +65,7 @@ data PureRetLoc =
     | ImmInt Int
   deriving (Show)
 
+-- | Function type that returns ARM instructions that use Addresses
 type RegMod = Reg -> Address -> Instructions
 
 -- | store to register from an immediate val or register

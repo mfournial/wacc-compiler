@@ -16,6 +16,7 @@ import Code.Generator.State
 generateRuntime :: RCID -> ARM Instructions
 generateRuntime = generate
 
+-- | Creates a branch instructions and always jumps to the label
 branchTo :: RCID -> ARM Instr
 branchTo = branchToIf AL
 
@@ -223,7 +224,7 @@ scanfCall loc = (PUSH [R0, R1, LinkRegister] <| storeToRegisterPure R1 (Register
              |> BL AL "scanf"
              |> POP [R0, R1, PC])
 
-
+-- | returns an address  
 address :: PureRetLoc -> Address
 address (StringLit s) = Label s
-address _ = error "Kyyyyyyyyle"
+address _ = error "Address type is not a String Literal"

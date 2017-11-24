@@ -104,7 +104,7 @@ addToRuntime r = state (\junk -> ((), junk{runtime = addDependencies r (tryAdd r
     tryAdd a as = if a `elem` as then as else a <| as
     addDependencies :: RCID -> Seq RCID-> Seq RCID
     addDependencies name names
-      | name == ThrowRuntimeErr = tryAdd PrintStr names
+      | name == ThrowRuntimeErr || name == PrintCharArray = tryAdd PrintStr names
       | name == ThrowDerefRuntimeErr = tryAdd PrintStr names
       | name == Free
           = tryAdd PrintStr $ tryAdd ThrowDerefRuntimeErr names

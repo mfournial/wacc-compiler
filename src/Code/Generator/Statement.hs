@@ -22,9 +22,7 @@ import Control.Monad.State.Lazy (get)
 generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
 
-generate (StatementOperator (StatExit (i, _), _)) = do
-  ins <- expression i
-  return $ ins |> BL AL "exit"
+generate (StatementOperator (StatExit (i, _), _)) = fmap (|> BL AL "exit") $ expression i
 
 generate (StatementOperator (StatReturn (e, _), _)) = do
   ins <- expression e
@@ -82,9 +80,7 @@ generate (StatementOperator (StatDecAss t (s, _) ae, p)) = do
   assins              <- assignVar loc ae
   return $ decin <| assins
 
-generate (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = do
-  loc <- getStackVar i
-  assignVar loc ae
+generate (StatementOperator (StatAss (AssignToIdent (i,_)) ae, _)) = getStackVar i >>= \l -> assignVar l ae
 
 generate (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
   getptr <- getArrayEPtr arre
@@ -115,9 +111,7 @@ generate (StatementOperator (StatFree (IdentExpr (s, _), _), _)) = do
   clear  <- updateWithRegister R0 loc
   return $ (ins |> brFree |> clearReg) >< clear
 
-generate (StatScope sb) = do
-  body <- genScopeBlock sb
-  return $ body
+generate (StatScope sb) = genScopeBlock sb
 
 generate (StatIf posexp sb sb') = do
   expInstr  <- expression (getVal posexp)
@@ -158,10 +152,7 @@ genScopeBlock'  (sts, NewScope scp)
 --PRE: AssignVar does not modify R10, even if it pushes it beforehand
 --This is so we may pass it [R10] as a retloc
 assignVar :: RetLoc -> AssignRhs -> ARM Instructions
-assignVar loc (AssignExp (e, _)) = do
-  ins            <- expression e
-  strExp         <- updateWithRegister R0 loc
-  return $ ins >< strExp
+assignVar loc (AssignExp (e, _)) = (><) <$> expression e <*> updateWithRegister R0 loc
 
 assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   let es      = zip (map getVal pes) (map (4*) [1..length pes])

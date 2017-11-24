@@ -52,10 +52,12 @@ expression (ArrayExpr (ae, _)) = do
   return $ (getptr >< deref, PRL (Register R0))
   
 expression (StringExpr str) = do
+  (savereg, _) <- push [R1, R2]
   let arrayStr = ArrayLiteral $ zip (map (CharExpr) str) (repeat (0,0))
   instrs <- assignVar' (PRL (Register R2)) arrayStr
   let save = updateWithRegisterPure R2 (Register R0)
-  return (instrs >< save, PRL (Register R0))
+  restorereg <- pop [R2, R1]
+  return ((savereg <| ((instrs >< save) |> restorereg)), PRL (Register R0))
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e

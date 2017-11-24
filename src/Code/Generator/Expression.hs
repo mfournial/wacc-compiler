@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Code.Generator.Expression (expression, expressionReg, getArrayEPtr) where
+module Code.Generator.Expression (expression, getArrayEPtr) where
 
 import Code.Instructions
 import Code.Generator.State
@@ -13,42 +13,39 @@ import Data.Sequence ((><), (<|), (|>), empty, singleton)
 import Control.Monad
 
 
-expression :: Expression -> ARM (Instructions, RetLoc)
+expression :: Expression -> ARM Instructions
 expression (BracketExp (e, _)) = expression e
 
 expression (IntExp i)         = intToReg i       R0
 expression (BoolExp True)     = intToReg 1       R0
 expression (BoolExp False)    = intToReg 0       R0
-expression (CharExpr c)       = return (singleton (MOV AL F R0 (ImmOpCh c)), PRL (Register R0))
+expression (CharExpr c)       = return $ singleton (MOV AL F R0 (ImmOpCh c))
 expression PairExpr           = intToReg 0       R0
 
 expression (IdentExpr (s, _)) = do
   sv <- getStackVar s
   ins <- storeToRegister R0 sv 
-  return (ins, PRL (Register R0))
+  return ins
 
 expression (UExpr (uexp, _) (e, _)) = do
-  (sub, loc)          <- expression e
-  strRegIns           <- storeToRegister R0 loc
+  sub                 <- expression e
   uns                 <- evalUExp uexp
-  return (sub >< strRegIns >< uns, PRL (Register R0))
+  return $ sub >< uns
 
 expression (BExp (e, _) (bop, _) (e', _)) = do
-  (saveReg, _)  <- push [R1]
-  (left, lloc)        <- expression e
-  strLeft             <- storeToRegister R0 lloc
+  (saveReg, _)        <- push [R1]
+  left                <- expression e
   (pushleft,_)        <- push [R0]
-  (right, rloc)       <- expression e'
-  strRight            <- storeToRegister R1 rloc
+  right               <- expression e'
   popleft             <- pop [R0]
   bins                <- evalBExp bop
   resReg              <- pop [R1]
-  return (saveReg <| ((left >< strLeft >< (pushleft <| (right >< strRight >< (popleft <| bins)))) |> resReg), PRL (Register R0))
+  return $ saveReg <| ((left >< (pushleft <| (right >< (popleft <| bins)))) |> resReg)
 
 expression (ArrayExpr (ae, _)) = do
   getptr <- getArrayEPtr ae
   let deref = storeToRegisterPure R0 (RegLoc R0)
-  return (getptr >< deref, PRL (Register R0))
+  return $ getptr >< deref
   
 expression (StringExpr str) = do
   (savereg, _) <- push [R1, R2]
@@ -56,7 +53,7 @@ expression (StringExpr str) = do
   instrs <- assignVar' (PRL (Register R2)) arrayStr
   let save = updateWithRegisterPure R2 (Register R0)
   restorereg <- pop [R2, R1]
-  return (savereg <| ((instrs >< save) |> restorereg), PRL (Register R0))
+  return $ savereg <| ((instrs >< save) |> restorereg)
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e
@@ -94,14 +91,8 @@ evalBBoolExp a b  = singleton (CMP AL R0 (ShiftReg R1 NSH))
                   |> MOV b F R0 (ImmOpInt 0)
 
 
-intToReg :: Int -> Reg -> ARM (Instructions, RetLoc)
-intToReg i r = return (pure (LDR AL W r (Const i)), PRL (Register r))
-
-expressionReg :: Expression -> Reg -> ARM Instructions
-expressionReg e r = do
-  (is, rl) <- expression e
-  iStore <- storeToRegister r rl
-  return (is >< iStore)
+intToReg :: Int -> Reg -> ARM Instructions
+intToReg i r = return $ pure (LDR AL W r (Const i))
 
 getArrayEPtr :: ArrayElem -> ARM Instructions
 getArrayEPtr (ArrayElem (i, _) indexps) = do
@@ -116,11 +107,10 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   restore <- pop [R2, R1]
   return $ (saveregs <| (mconcat pushins >< singleton addptr >< ins)) |> restorestack |> restore
   where
-    pusher :: (Instructions, RetLoc) -> ARM (Instructions, RetLoc)
-    pusher (ins, loc) = do
-      str <- storeToRegister R0 loc
+    pusher :: Instructions -> ARM (Instructions, RetLoc)
+    pusher ins = do
       (pushins, pushlocs) <- push [R0]
-      return ((ins >< str) |> pushins, head pushlocs)
+      return (ins |> pushins, head pushlocs)
     arrayExp' :: Instructions -> RetLoc -> ARM Instructions
     arrayExp' is loc = do
       checknulls  <- branchTo NullCheck 
@@ -145,5 +135,5 @@ assignVar' loc (ArrayLiteral pes) = do
   let moveMal = storeToRegisterPure R1 (Register R0)
   assignArr  <- updateWithRegister R1 loc
   let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
-  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
+  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off))) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr

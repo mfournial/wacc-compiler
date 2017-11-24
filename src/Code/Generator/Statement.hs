@@ -23,32 +23,29 @@ generate :: Statement -> ARM Instructions
 generate StatSkip = return empty
 
 generate (StatementOperator (StatExit (i, _), _)) = do
-  (ins, eloc) <- expression i
-  strIns      <- storeToRegister R0 eloc
-  return $ (ins >< strIns) |> BL AL "exit"
+  ins <- expression i
+  return $ ins |> BL AL "exit"
 
 generate (StatementOperator (StatReturn (e, _), _)) = do
-  ins <- expressionReg e R0
+  ins <- expression e
   stck <- fmap (M.size . head . stack) get
   let stackChange = immOpIntCheck (ADD AL F StackPointer StackPointer (ImmOpInt (4 * (stck))))
   return $ ins >< stackChange >< singleton (POP [PC])
 
 generate (StatementOperator (StatPrint (e, _), _)) = do
-  (ins, eloc) <- expression e
-  strIns      <- storeToRegister R0 eloc
+  ins         <- expression e
   t <- lookupType e
   printrt     <- branchTo $ selectPrint t
-  return $ (ins >< strIns) |> printrt
+  return $ ins |> printrt
 
 generate (StatementOperator (StatPrintLn (e, _), _)) = do
-  (ins, eloc) <- expression e
-  strIns      <- storeToRegister R0 eloc
+  ins         <- expression e
   t           <- lookupType e
   printrt     <- branchTo $ selectPrint t
   newline     <- newStringLiteral "\n"
   let strnl   = storeToRegisterPure R0 newline
   printnl     <- branchTo PrintStr
-  return $ (((ins >< strIns) |> printrt) >< strnl) |> printnl
+  return $ ((ins |> printrt) >< strnl) |> printnl
 
 generate (StatementOperator ((StatRead (AssignToIdent i@(s,_))), _)) = do
   (StackPtr isp)  <- getStackVar s
@@ -97,14 +94,14 @@ generate (StatementOperator (StatAss (AssignToArrayElem (arre, _)) rhs, _)) = do
 
 
 generate (StatementOperator (StatAss (AssignToPair (Left (e, _), _)) rhs, _)) = do
-  (lftins, _) <- expression e
+  lftins      <- expression e
   checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLoc R10)) rhs
   return $ (lftins |> checkderef) >< movtoten >< ass
 
 generate (StatementOperator (StatAss (AssignToPair (Right (e, _), _)) rhs, _)) = do
-  (rgtins, _) <- expression e
+  rgtins      <- expression e
   checkderef  <- branchTo NullCheck
   let movtoten = storeToRegisterPure R10 (Register R0)
   ass <- assignVar (PRL (RegLocOffset R10 4)) rhs
@@ -123,10 +120,10 @@ generate (StatScope sb) = do
   return $ body
 
 generate (StatIf posexp sb sb') = do
-  (expInstr, loc) <- expression (getVal posexp)
+  expInstr  <- expression (getVal posexp)
   elseLabel <- nextLabel "else"
   fiLabel <- nextLabel "fi"
-  storeIns <- storeToRegister R4 loc
+  let storeIns = storeToRegisterPure R4 (Register R0)
   thenCode <- genScopeBlock sb
   elseCode <- genScopeBlock sb'
   return $ expInstr
@@ -137,10 +134,10 @@ generate (StatIf posexp sb sb') = do
         >< ((Define elseLabel <| elseCode) |> Define fiLabel))
 
 generate (StatWhile posexp sb) = do
-  (expInstr, loc) <- expression (getVal posexp)
+  expInstr  <- expression (getVal posexp)
   doLabel <- nextLabel "do"
   conditionLabel <- nextLabel "whileCond"
-  storeIns <- storeToRegister R4 loc
+  let storeIns = storeToRegisterPure R4 (Register R0)
   bodyCode <- genScopeBlock sb
   return $ (B AL conditionLabel <| Define doLabel <| bodyCode)
          >< (Define conditionLabel <| expInstr) 
@@ -162,10 +159,9 @@ genScopeBlock'  (sts, NewScope scp)
 --This is so we may pass it [R10] as a retloc
 assignVar :: RetLoc -> AssignRhs -> ARM Instructions
 assignVar loc (AssignExp (e, _)) = do
-  (ins, eloc)    <- expression e
-  strIns         <- storeToRegister    R0 eloc
+  ins            <- expression e
   strExp         <- updateWithRegister R0 loc
-  return $ ins >< strIns >< strExp
+  return $ ins >< strExp
 
 assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   let es      = zip (map getVal pes) (map (4*) [1..length pes])
@@ -175,7 +171,7 @@ assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
   let moveMal = storeToRegisterPure R1 (Register R0)
   assignArr  <- updateWithRegister R1 loc
   let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
-  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off)) . fst) es
+  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off))) es
   return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
 
 
@@ -184,19 +180,19 @@ assignVar loc (AssignPair (e, _) (e', _)) = do
   let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc"
   let moveMal = storeToRegisterPure R1 (Register R0)
   assignPair <- updateWithRegister R1 loc
-  assleft    <- expression e >>= return . (>< updateWithRegisterPure R0 (RegLoc R1)) . fst
-  assright   <- expression e'>>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 4)) . fst
+  assleft    <- expression e >>= return . (>< updateWithRegisterPure R0 (RegLoc R1))
+  assright   <- expression e'>>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 4))
   return $ mallins >< moveMal >< assignPair >< assleft >< assright
 
 assignVar loc (AssignPairElem (Left (e, _), _)) = do
-  (eins, _) <- expression e
+  eins  <- expression e
   checkderef  <- branchTo NullCheck
   let getlft = storeToRegisterPure R0 (RegLoc R0)
   assign    <- updateWithRegister R0 loc
   return $ (eins |> checkderef) >< getlft >< assign
 
 assignVar loc (AssignPairElem (Right (e, _), _)) = do
-  (eins, _) <- expression e
+  eins <- expression e
   checkderef  <- branchTo NullCheck
   let getrgt = storeToRegisterPure R0 (RegLocOffset R0 4)
   assign    <- updateWithRegister R0 loc
@@ -213,9 +209,7 @@ assignVar loc (AssignCall (fname, _) posexprs) = do
   where
     getVal' [] = []
     getVal' (e : es) = getVal' es ++ [getVal e]
-    evalAndPush e = expression e >>= \(instr, reg) -> return $ instr |> PUSH [getReg reg]
-    getReg (PRL (Register r)) = r
-    getReg _ = error "In assignVar (AssignCall): expression didn't return a reg"
+    evalAndPush e = expression e >>= \instr -> return $ instr |> PUSH [R0]
 
 genScopeBlock :: ScopeBlock 
               -> ARM Instructions

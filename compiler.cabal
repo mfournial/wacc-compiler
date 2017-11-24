@@ -40,7 +40,6 @@ library
                    , Code.Generator.State
                    , Code.Generator.Statement
                    , Code.Generator.Runtime
-                   , Code.Generator.StateInstructions
                    , Code.Instructions
                    , Data.Sequence.Util
                    , Data.Waskell.Types

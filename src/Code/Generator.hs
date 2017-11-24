@@ -6,7 +6,6 @@ import Data.Sequence.Util
 import Prelude hiding (null, concat)
 
 import Code.Generator.State
-import Code.Generator.StateInstructions
 import Code.Generator.Statement
 import Code.Generator.Runtime
 import Code.Instructions
@@ -40,7 +39,7 @@ genCode' (WaccTree (Program fcs sb)) = do
            >< rinstr
   where
     genFuncsCode :: Seq Function -> ARM Instructions
-    genFuncsCode fs = fmap concat $ mapM genFuncCode fs
+    genFuncsCode fs = concat <$> mapM genFuncCode fs
 
 genFuncCode :: Function -> ARM Instructions
 genFuncCode (Function _ iden params sb) = do
@@ -48,16 +47,16 @@ genFuncCode (Function _ iden params sb) = do
   mapM_ pushVar (getIden params)
   (lr, _) <- push [LinkRegister]
   body <- genScopeBlock sb
-  mapM_ (\i -> decrementStack) [0.. length params] -- Note we're canceling our local effect of pushing the args to the stack plus the Linkregister
+  mapM_ (const decrementStack) [0.. length params] -- Note we're canceling our local effect of pushing the args to the stack plus the Linkregister
   closeEnv
-  return $ ((Define ("fun_" ++ (getVal iden))
+  return $ ((Define ("fun_" ++ getVal iden)
         <| lr
         <| body)
         |> FunSection "ltorg"
         |> DIVIDER)
   where
     getIden [] = []
-    getIden ((Param _ piden) : ps) = getIden ps ++ [getVal piden]
+    getIden (Param _ piden : ps) = getIden ps ++ [getVal piden]
 
 writeCode :: FilePath -> Instructions -> IO ()
 writeCode = (. (unlines . toList . fmap printARM)) . writeFile

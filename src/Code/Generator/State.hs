@@ -29,14 +29,18 @@ module Code.Generator.State (
   updateWithRegister,
   modifyRegister,
   runtimeInstructions,
+  push,
+  pop,
+  referencedPush,
   get
 )
 where
 
-import Data.Waskell.ADT(NewScope, Type, Expression)
-import Data.Waskell.Types(unsfType)
+import Data.Waskell.ADT (NewScope, Type, Expression)
+import Data.Waskell.Types (unsfType)
 
-import Data.Maybe(fromJust)
+import Data.Bifunctor(first)
+import Data.Maybe (fromJust, isNothing)
 import Data.Sequence
 import Data.Sequence.Util
 import Control.Monad.State.Lazy
@@ -54,7 +58,7 @@ newStringLiteral str = do
   j <- get
   let strs = strLits j
   let ind = elemIndexL str strs
-  maybe (put j{strLits = strs |> str} >> return (StringLit (listPosToLabel (length strs)))) (\i -> return (StringLit (listPosToLabel i))) ind
+  maybe (put j{strLits = strs |> str} >> return (StringLit (listPosToLabel (length strs)))) (return . StringLit . listPosToLabel) ind
 
 getStringLiterals :: ARM Data
 getStringLiterals = state (\junk -> (strLits junk, junk))
@@ -86,7 +90,7 @@ closeFunctionEnv :: Int -- ^ Number of parameters of the function
 closeFunctionEnv i = state (\junk -> ((), junk{
     stack = tail (stack junk),
     heap = tail (heap junk),
-    sp = (sp junk) - 4 * i
+    sp = sp junk - 4 * i
   }))
 
 removeFromTable :: String -> Int -> VarTable -> VarTable
@@ -122,7 +126,7 @@ varAddr name j = varAddr' name (stack j)
   where
     varAddr' [] _ = error "in VarAddr: Could not find the requested param"
     varAddr' name' (t : ts)
-      | Nothing == M.lookup name' t = varAddr' name' ts
+      | isNothing (M.lookup name' t) = varAddr' name' ts
       | otherwise = fromJust $  M.lookup name' t
 
 getStackVar :: String -> ARM RetLoc
@@ -144,7 +148,7 @@ nextLabel :: String -> ARM String
 nextLabel s = state (\junk -> ("lab_" ++ show (ref junk) ++ "_" ++ s, junk{ref = ref junk + 1}))
 
 lookupType :: Expression -> ARM Type
-lookupType e = fmap scope get >>= return . (unsfType e)
+lookupType = (`fmap` fmap scope get) . unsfType
 
 newState :: Junk
 newState = Junk empty [] [] [] 0 0 empty
@@ -166,3 +170,14 @@ modifyRegister f r (PRL k) = return $ modifyRegisterPure f r k
 
 runtimeInstructions :: ARM (Seq RCID)
 runtimeInstructions = state (\junk -> (runtime junk, junk))
+
+push :: [Reg] -> ARM (Instr, [RetLoc])
+push rs = do
+  locs <- mapM (\r -> incrementStack>> getSP >>= return . StackPtr) rs
+  return (PUSH rs, locs)
+
+pop :: [Reg] -> ARM Instr
+pop = fmap POP . (mapM (\r -> decrementStack >> return r))
+
+referencedPush :: [Reg] -> [String] -> ARM (Instr, [RetLoc])
+referencedPush = ((.).(.)) ((fmap (first PUSH . P.unzip)) . (mapM (\ (r,n) -> pushVar n >>= \k -> return (r,k)))) P.zip

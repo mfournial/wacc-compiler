@@ -14,7 +14,6 @@ import Code.Instructions
 import Code.Generator.Expression
 import Code.Generator.State
 import Code.Generator.ARM
-import Code.Generator.StateInstructions
 import Code.Generator.Runtime
 
 import qualified Data.HashMap.Strict as M

@@ -4,12 +4,11 @@ module Code.Generator.Expression (expression, expressionReg, getArrayEPtr) where
 
 import Code.Instructions
 import Code.Generator.State
-import Code.Generator.StateInstructions
 import Code.Generator.ARM
 import Code.Generator.Runtime
 import Data.Waskell.ADT
 
-import Data.Sequence((><), (<|), (|>), empty, singleton)
+import Data.Sequence ((><), (<|), (|>), empty, singleton)
 
 import Control.Monad
 
@@ -32,7 +31,7 @@ expression (UExpr (uexp, _) (e, _)) = do
   (sub, loc)          <- expression e
   strRegIns           <- storeToRegister R0 loc
   uns                 <- evalUExp uexp
-  return $ (sub >< strRegIns >< uns, (PRL (Register R0)))
+  return (sub >< strRegIns >< uns, PRL (Register R0))
 
 expression (BExp (e, _) (bop, _) (e', _)) = do
   (saveReg, _)  <- push [R1]
@@ -44,20 +43,20 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   popleft             <- pop [R0]
   bins                <- evalBExp bop
   resReg              <- pop [R1]
-  return $ ((saveReg <| ((left >< strLeft >< (pushleft <| (right >< strRight >< (popleft <| bins)))) |> resReg)), (PRL (Register R0)))
+  return (saveReg <| ((left >< strLeft >< (pushleft <| (right >< strRight >< (popleft <| bins)))) |> resReg), PRL (Register R0))
 
 expression (ArrayExpr (ae, _)) = do
   getptr <- getArrayEPtr ae
   let deref = storeToRegisterPure R0 (RegLoc R0)
-  return $ (getptr >< deref, PRL (Register R0))
+  return (getptr >< deref, PRL (Register R0))
   
 expression (StringExpr str) = do
   (savereg, _) <- push [R1, R2]
-  let arrayStr = ArrayLiteral $ zip (map (CharExpr) str) (repeat (0,0))
+  let arrayStr = ArrayLiteral $ zip (map CharExpr str) (repeat (0,0))
   instrs <- assignVar' (PRL (Register R2)) arrayStr
   let save = updateWithRegisterPure R2 (Register R0)
   restorereg <- pop [R2, R1]
-  return ((savereg <| ((instrs >< save) |> restorereg)), PRL (Register R0))
+  return (savereg <| ((instrs >< save) |> restorereg), PRL (Register R0))
 
 evalUExp :: UnaryOperator -> ARM Instructions
 evalUExp UMinus  = branchToIf VS ThrowOverflowErr >>= \e -> return $ singleton (RSB AL T R0 R0 (ImmOpInt 0)) |> e
@@ -111,9 +110,9 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   let (pushins, pushlocs) = unzip pushed
   ptr  <- getVar' i id >>= getOffsetFromStackPtr
   let addptr   = ADD AL F R0 StackPointer (ImmOpInt ptr) 
-  ins    <- foldM arrayExp' empty $ pushlocs
+  ins    <- foldM arrayExp' empty pushlocs
   let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * Prelude.length pushlocs))
-  mapM_ (\k -> decrementStack) pushlocs
+  mapM_ (const decrementStack) pushlocs
   restore <- pop [R2, R1]
   return $ (saveregs <| (mconcat pushins >< singleton addptr >< ins)) |> restorestack |> restore
   where

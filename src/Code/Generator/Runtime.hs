@@ -34,7 +34,7 @@ names = [ (PrintStr, "runtime_print_string")
         , (ReadChar, "runtime_read_char")
         , (ThrowRuntimeErr, "runtime_throw_err")
         , (ThrowDerefRuntimeErr, "runtime_throw_deref_err")
-        , (Free, "runtime_free_pair")
+        , (Free, "runtime_free")
         , (ArrayCheck, "runtime_array_check")
         , (Checkdbz, "runtime_check_division_by_zero")
         , (NullCheck, "runtime_null_check")
@@ -53,7 +53,7 @@ generate ThrowRuntimeErr =
         <| empty
 
 generate ThrowDerefRuntimeErr =
-  return $ Define (label ThrowRuntimeErr)
+  return $ Define (label ThrowDerefRuntimeErr)
         <| BL AL (label PrintStr)
         <| MOV AL F R0 (ImmOpInt (134))
         <| BL AL "exit"

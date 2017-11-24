@@ -27,10 +27,7 @@ expression (IdentExpr (s, _)) = do
   ins <- storeToRegister R0 sv 
   return ins
 
-expression (UExpr (uexp, _) (e, _)) = do
-  sub                 <- expression e
-  uns                 <- evalUExp uexp
-  return $ sub >< uns
+expression (UExpr (uexp, _) (e, _)) = (><) <$> expression e <*> evalUExp uexp
 
 expression (BExp (e, _) (bop, _) (e', _)) = do
   (saveReg, _)        <- push [R1]
@@ -42,10 +39,7 @@ expression (BExp (e, _) (bop, _) (e', _)) = do
   resReg              <- pop [R1]
   return $ saveReg <| ((left >< (pushleft <| (right >< (popleft <| bins)))) |> resReg)
 
-expression (ArrayExpr (ae, _)) = do
-  getptr <- getArrayEPtr ae
-  let deref = storeToRegisterPure R0 (RegLoc R0)
-  return $ getptr >< deref
+expression (ArrayExpr (ae, _)) = fmap (>< storeToRegisterPure R0 (RegLoc R0)) $ getArrayEPtr ae 
   
 expression (StringExpr str) = do
   (savereg, _) <- push [R1, R2]

@@ -1,23 +1,21 @@
 module Code.Generator.Statement (
-  generate,
   genScopeBlock
 )
 where
 
 
+import qualified Data.HashMap.Strict as M
 import Data.Sequence hiding (zip, length, reverse)
 import Data.Sequence.Util
 import Prelude hiding (concat)
 
 import Data.Waskell.ADT
-import Code.Instructions
+import Code.Generator.ARM
 import Code.Generator.Expression
 import Code.Generator.State
-import Code.Generator.ARM
 import Code.Generator.Runtime
+import Code.Instructions
 
-import qualified Data.HashMap.Strict as M
-import Control.Monad.State.Lazy (get)
 
 -- | Generate takes a statement and then produces the arm instructions required to execute the
 -- | statement. Note generate makes no guarentees about the registers that it uses and in

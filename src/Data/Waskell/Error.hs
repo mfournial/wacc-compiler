@@ -146,7 +146,7 @@ displayResult :: Show a => ErrorList a -> IO ()
 displayResult (ErrorList b []) = putStrLn (show b)
 displayResult (ErrorList _ eds) = mapM_ printError (sort eds)
 
-dieOnError :: Show a => Int -> ErrorList a -> IO (a)
+dieOnError :: Int -> ErrorList a -> IO (a)
 dieOnError v (ErrorList (Just a) []) = if v > 1 then putStrLn "SUCCESS CHECKING VALIDITY" >> return a else return a
 dieOnError v (ErrorList _ eds) = mapM printError (sort eds) >> maybe (if v > 1 then putStrLn "SUCCESS" >> exitWith ExitSuccess else exitWith ExitSuccess) (\e -> exitWith (ExitFailure (exitCode e))) (safeHead (filter isFatal eds))
 

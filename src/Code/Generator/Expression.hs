@@ -98,7 +98,7 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   (saveregs, _) <- push [R1, R2]
   pushed <- mapM ((joinedPush =<<) . expression . getVal) indexps 
   let (pushins, pushlocs) = unzip pushed
-  ptr  <- getVar' i id >>= getOffsetFromStackPtr
+  ptr  <- getVar i >>= getOffsetFromStackPtr
   let addptr   = ADD AL F R0 StackPointer (ImmOpInt ptr) 
   ins    <- foldM indexIntoArray empty pushlocs
   let restorestack = ADD AL F StackPointer StackPointer (ImmOpInt (4 * Prelude.length pushlocs))

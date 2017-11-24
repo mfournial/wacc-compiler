@@ -154,17 +154,7 @@ genScopeBlock'  (sts, NewScope scp)
 assignVar :: RetLoc -> AssignRhs -> ARM Instructions
 assignVar loc (AssignExp (e, _)) = (><) <$> expression e <*> updateWithRegister R0 loc
 
-assignVar loc (AssignArrayLit (ArrayLiteral pes)) = do
-  let es      = zip (map getVal pes) (map (4*) [1..length pes])
-  let nwords  = length es + 1 -- We need 1 word for the length of the array
-  let bytes   = nwords * 4
-  let mallins = storeToRegisterPure R0 (ImmInt bytes) |> BL AL "malloc" 
-  let moveMal = storeToRegisterPure R1 (Register R0)
-  assignArr  <- updateWithRegister R1 loc
-  let strlent = storeToRegisterPure R0 (ImmInt (length es)) >< updateWithRegisterPure R0 (RegLoc R1)
-  esinstr <- mapM (\(e,off) -> expression e >>= return . (>< updateWithRegisterPure R0 (RegLocOffset R1 off))) es
-  return $ mallins >< moveMal >< assignArr >< strlent >< mconcat esinstr
-
+assignVar loc (AssignArrayLit al) = allocateArray loc al
 
 assignVar loc (AssignPair (e, _) (e', _)) = do
   let bytes   = 2 * 4  --One word for the value of each expression

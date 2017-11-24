@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Code.Generator.Expression (expression, getArrayEPtr) where
+module Code.Generator.Expression (expression, getArrayEPtr, allocateArray) where
 
 import Code.Instructions
 import Code.Generator.State
@@ -46,7 +46,7 @@ expression (ArrayExpr (ae, _)) = fmap (>< storeToRegisterPure R0 (RegLoc R0)) $ 
 expression (StringExpr str) = do
   (savereg, _) <- push [R1, R2]
   let arrayStr = ArrayLiteral $ zip (map CharExpr str) (repeat (0,0))
-  instrs <- assignVar' (PRL (Register R2)) arrayStr
+  instrs <- allocateArray (PRL (Register R2)) arrayStr
   let save = updateWithRegisterPure R2 (Register R0)
   restorereg <- pop [R2, R1]
   return $ savereg <| ((instrs >< save) |> restorereg)
@@ -105,7 +105,6 @@ getArrayEPtr (ArrayElem (i, _) indexps) = do
   mapM_ (const decrementStack) pushlocs
   restore <- pop [R2, R1]
   return $ (saveregs <| (mconcat pushins >< singleton addptr >< ins)) |> restorestack |> restore
-  where
 
 -- | joinedPush will take a sequence of instructions and return a pair representing 
 -- | a list of instructions plus PUSH [R0] along with a location token representing our internal notion
@@ -133,10 +132,11 @@ indexIntoArray is loc = do
   let addins = ADD AL F R0 R0 (ShiftReg R1 NSH)
   return (is >< singleton checknulls >< deref >< singleton checknulls' >< str >< singleton ac >< (skiplen <| (strfour >< (empty |> mulins |> addins)))) 
       
-assignVar' :: RetLoc
+-- | Allocate an array on the heap place the resulting address in loc
+allocateArray :: RetLoc
                     -> ArrayLiteral
                     -> ARM Instructions
-assignVar' loc (ArrayLiteral pes) = do
+allocateArray loc (ArrayLiteral pes) = do
   let es      = zip (map getVal pes) (map (4*) [1..length pes])
   let nwords  = length es + 1 -- We need 1 word for the length of the array
   let bytes   = nwords * 4

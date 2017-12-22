@@ -13,8 +13,8 @@ These resources should suffice to provide all information required to understand
 As for global the project structure:
 * `src` will contain all the library files we have written
 * `src-test` contains tests for the library
-* `src-exe` contains the executable
-* `src-benchmark` contains a quick benmarking routine
+* `src-exe` contains the main executable and usage of the library
+* `src-benchmark` contains benchmark informations
 * `Makefile` will make the project and create and executable that can be run by
   `./compile [-v] (file)+`
 
@@ -23,7 +23,7 @@ is generated automatically by the pipeline, go check
 it out!
 
 Go checkout the [test coverage](https://gitlab.doc.ic.ac.uk/waskell/compiler/-/jobs/artifacts/master/download?job=test)
-too! 
+too!
 
 ## Communication
 

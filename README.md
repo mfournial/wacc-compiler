@@ -18,12 +18,12 @@ As for global the project structure:
 * `Makefile` will make the project and create and executable that can be run by
   `./compile [-v] (file)+`
 
-The [Haddock documentation](https://gitlab.doc.ic.ac.uk/waskell/compiler/-/jobs/artifacts/master/download?job=doc)
+The [Haddock documentation](https://www.doc.ic.ac.uk/~mmf115/Waskell-docs/)
 is generated automatically by the pipeline, go check
 it out!
 
-Go checkout the [test coverage](https://gitlab.doc.ic.ac.uk/waskell/compiler/-/jobs/artifacts/master/download?job=test)
-too!
+
+The test coverage unfortunately is no longer available online. It requires to run `stack test` with the coverage option set in your terminal.
 
 ## Communication
 
